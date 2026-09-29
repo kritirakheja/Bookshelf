@@ -29,6 +29,9 @@ create table if not exists public.books (
 
 create index if not exists books_user_updated on public.books (user_id, updated_at);
 
+-- The finish date's day is unknown; only its year (stored as 1 Jan) is meaningful.
+alter table public.books add column if not exists date_read_year_only boolean not null default false;
+
 -- Lending history: [{id, borrower_name, contact_id, lent_at, returned_at}, ...]
 alter table public.books add column if not exists loans jsonb not null default '[]';
 

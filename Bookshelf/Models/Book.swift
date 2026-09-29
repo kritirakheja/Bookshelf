@@ -16,6 +16,8 @@ final class Book {
     var isReading: Bool = false
     var dateStarted: Date?
     var dateRead: Date?
+    /// Only the year of `dateRead` is known (it's stored as 1 January of that year).
+    var dateReadYearOnly: Bool = false
     var dateAdded: Date = Date.now
     var notes: String = ""
     /// 1–5 stars, nil = not rated.
@@ -56,6 +58,20 @@ final class Book {
     }
 
     var isFavorite: Bool { favoriteRank != nil }
+
+    /// "14 Mar 2026", or "2025" when only the year is known.
+    var finishDateText: String? {
+        guard let dateRead else { return nil }
+        return dateReadYearOnly
+            ? String(Calendar.current.component(.year, from: dateRead))
+            : dateRead.formatted(date: .abbreviated, time: .omitted)
+    }
+
+    /// Records the year a book was finished when the exact day isn't known.
+    func setFinishYear(_ year: Int, calendar: Calendar = .current) {
+        dateRead = calendar.date(from: DateComponents(year: year, month: 1, day: 1))
+        dateReadYearOnly = true
+    }
 
     var sortedCategories: [BookCategory] {
         categories.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
@@ -130,15 +146,18 @@ final class Book {
             isReading = false
             dateStarted = nil
             dateRead = nil
+            dateReadYearOnly = false
         case .reading:
             isRead = false
             isReading = true
             dateStarted = .now
             dateRead = nil
+            dateReadYearOnly = false
         case .read:
             isRead = true
             isReading = false
             dateRead = .now
+            dateReadYearOnly = false
         }
     }
 }

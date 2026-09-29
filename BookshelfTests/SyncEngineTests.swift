@@ -219,6 +219,16 @@ final class SyncEngineTests: XCTestCase {
         XCTAssertNil(record.isBorrowed)   // treated as a lend when applied
     }
 
+    func testYearOnlyFinishDateSyncs() async throws {
+        let book = phone.add("Year-end read")
+        book.isRead = true
+        book.setFinishYear(2025)
+        try await phone.sync()
+        try await ipad.sync()
+        XCTAssertEqual(ipad.book("Year-end read")?.dateReadYearOnly, true)
+        XCTAssertEqual(ipad.book("Year-end read")?.finishDateText, "2025")
+    }
+
     func testClearingAFieldSyncs() async throws {
         let dune = phone.add("Dune")
         dune.rating = 4

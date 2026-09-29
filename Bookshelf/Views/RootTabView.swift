@@ -17,7 +17,10 @@ struct RootTabView: View {
             ProfileView()
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
         }
-        .task { SampleData.seedSimulatorIfEmpty(context) }
+        .task {
+            SampleData.seedSimulatorIfEmpty(context)
+            LibraryFixes.runPending(in: context)
+        }
         // Sync when the app opens and when you leave it, so the backup is never far behind.
         .onChange(of: scenePhase) { _, phase in
             if phase == .active || phase == .background {

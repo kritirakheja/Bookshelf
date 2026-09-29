@@ -19,7 +19,7 @@ struct BookRow: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                 if showsFinishDate {
-                    Text(book.dateRead.map { "Finished \($0.formatted(date: .abbreviated, time: .omitted))" } ?? "No finish date")
+                    Text(book.finishDateText.map { book.dateReadYearOnly ? "Finished in \($0)" : "Finished \($0)" } ?? "No finish date")
                         .font(.caption)
                         .foregroundStyle(book.dateRead == nil ? .tertiary : .secondary)
                 }

@@ -68,7 +68,18 @@ struct BookDetailView: View {
                     LabeledContent("Started", value: dateStarted.formatted(date: .abbreviated, time: .omitted))
                 }
                 if book.status == .read {
-                    if let dateRead = book.dateRead {
+                    if book.dateReadYearOnly, let year = book.finishDateText {
+                        LabeledContent("Finished") {
+                            HStack {
+                                Text("In \(year)")
+                                Button("Set exact date") {
+                                    book.dateReadYearOnly = false
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                            }
+                        }
+                    } else if let dateRead = book.dateRead {
                         DatePicker(
                             "Finished",
                             selection: Binding(get: { dateRead }, set: { book.dateRead = $0 }),

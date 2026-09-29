@@ -118,6 +118,7 @@ struct SyncEngine {
         book.isReading = row.isReading
         book.dateStarted = row.dateStarted
         book.dateRead = row.dateRead
+        book.dateReadYearOnly = row.dateReadYearOnly ?? false
         book.dateAdded = row.dateAdded
         book.notes = row.notes
         book.rating = row.rating
