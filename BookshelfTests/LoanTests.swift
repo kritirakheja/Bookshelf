@@ -72,6 +72,25 @@ final class LoanTests: XCTestCase {
         XCTAssertTrue(try context.fetch(FetchDescriptor<Loan>()).isEmpty)
     }
 
+    func testLentBooksGroupByFriend() {
+        func book(_ title: String) -> Book {
+            let book = Book(title: title)
+            context.insert(book)
+            return book
+        }
+        let circe = book("Circe"), dune = book("Dune"), sapiens = book("Sapiens"), home = book("At home")
+        dune.lend(to: "Priya", on: day(5))
+        circe.lend(to: "priya ", on: day(1))     // same friend, typed differently
+        sapiens.lend(to: "Arjun", on: day(3))
+        home.lend(to: "Arjun", on: day(2)); home.markReturned(on: day(4))   // back home
+
+        let groups = LentBooksView.groups(from: [circe, dune, sapiens, home])
+
+        XCTAssertEqual(groups.map(\.name), ["Arjun", "Priya"], "Newest spelling of the name")
+        XCTAssertEqual(groups[0].books.map(\.title), ["Sapiens"], "Returned books aren't listed")
+        XCTAssertEqual(groups[1].books.map(\.title), ["Circe", "Dune"], "Longest away first")
+    }
+
     func testLentCountInStats() {
         let a = newBook(), b = newBook()
         _ = newBook()

@@ -5,7 +5,7 @@ import Charts
 
 struct ProfileView: View {
     enum Route: Hashable {
-        case allBooks, read, categories
+        case allBooks, read, lent, categories
     }
 
     @Query private var books: [Book]
@@ -36,6 +36,9 @@ struct ProfileView: View {
                     }
                     NavigationLink(value: Route.read) {
                         LabeledContent { Text("\(stats.readCount)") } label: { Label("Read", systemImage: "checkmark.circle") }
+                    }
+                    NavigationLink(value: Route.lent) {
+                        LabeledContent { Text("\(stats.lentCount)") } label: { Label("Lent out", systemImage: "arrow.up.forward.circle") }
                     }
                     NavigationLink(value: Route.categories) {
                         Label("Categories", systemImage: "square.grid.2x2")
@@ -84,6 +87,8 @@ struct ProfileView: View {
                     LibraryView()
                 case .read:
                     StatusBooksList(status: .read).navigationTitle("Read")
+                case .lent:
+                    LentBooksView()
                 case .categories:
                     CategoriesView()
                 }
