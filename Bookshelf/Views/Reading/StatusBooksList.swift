@@ -16,6 +16,7 @@ extension ReadingStatus {
 struct StatusBooksList: View {
     let status: ReadingStatus
     @Query private var books: [Book]
+    @State private var bookToDelete: Book?
 
     private var visible: [Book] {
         let matching = books.filter { $0.status == status }
@@ -43,7 +44,11 @@ struct StatusBooksList: View {
                     .tint(newStatus.tint)
                 }
             }
+            .swipeActions(edge: .trailing) {
+                Button("Delete", systemImage: "trash", role: .destructive) { bookToDelete = book }
+            }
         }
+        .confirmDeletingBook($bookToDelete)
         .overlay {
             if visible.isEmpty {
                 ContentUnavailableView(emptyTitle, systemImage: status.systemImage, description: Text(emptyMessage))
@@ -80,4 +85,5 @@ struct CurrentlyReadingView: View {
 #Preview {
     CurrentlyReadingView()
         .modelContainer(SampleData.previewContainer)
+        .environment(AccountStore(container: SampleData.previewContainer))
 }

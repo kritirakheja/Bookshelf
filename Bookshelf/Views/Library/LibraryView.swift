@@ -27,6 +27,7 @@ struct LibraryView: View {
     @State private var sort: LibrarySort = .title
     @State private var showingAdd = false
     @State private var fillingCovers = false
+    @State private var bookToDelete: Book?
     @State private var coverResult: (found: Int, total: Int)?
 
     private var booksWithoutCovers: [Book] { books.filter { $0.coverImage == nil } }
@@ -46,9 +47,12 @@ struct LibraryView: View {
                 NavigationLink(value: book) {
                     BookRow(book: book)
                 }
+                .swipeActions(edge: .trailing) {
+                    Button("Delete", systemImage: "trash", role: .destructive) { bookToDelete = book }
+                }
             }
-            .onDelete(perform: delete)
         }
+        .confirmDeletingBook($bookToDelete)
         .navigationTitle("All Books")
         .searchable(text: $searchText, prompt: "Title or author")
         .toolbar {
@@ -118,22 +122,10 @@ struct LibraryView: View {
         }
     }
 
-    private func delete(at offsets: IndexSet) {
-        let current = visibleBooks
-        for index in offsets {
-            let book = current[index]
-            if book.isFavorite {
-                FavoritesShelf.remove(book, library: books)
-            }
-            if let remoteID = book.remoteID {
-                context.insert(DeletedBook(remoteID: remoteID))
-            }
-            context.delete(book)
-        }
-    }
 }
 
 #Preview {
     NavigationStack { LibraryView() }
         .modelContainer(SampleData.previewContainer)
+        .environment(AccountStore(container: SampleData.previewContainer))
 }

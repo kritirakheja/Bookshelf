@@ -195,6 +195,31 @@ final class SyncEngineTests: XCTestCase {
         XCTAssertTrue(try phone.context.fetch(FetchDescriptor<DeletedBook>()).isEmpty, "Deletion markers are cleared once sent")
     }
 
+    func testDeletingABookFromTheAppRemovesItEverywhere() async throws {
+        let dune = phone.add("Dune")
+        let circe = phone.add("Circe")
+        FavoritesShelf.add(dune, library: phone.books)
+        FavoritesShelf.add(circe, library: phone.books)
+        try await phone.sync()
+        try await ipad.sync()
+
+        phone.context.deleteBook(dune)
+
+        XCTAssertEqual(phone.book("Circe")?.favoriteRank, 1, "The shelf closes the gap")
+        XCTAssertEqual(try phone.context.fetch(FetchDescriptor<DeletedBook>()).count, 1)
+        try await phone.sync()
+        try await ipad.sync()
+        XCTAssertEqual(ipad.books.map(\.title), ["Circe"])
+        XCTAssertEqual(ipad.book("Circe")?.favoriteRank, 1)
+    }
+
+    func testDeletingANeverSyncedBookLeavesNoMarker() throws {
+        let draft = phone.add("Just added")
+        phone.context.deleteBook(draft)
+        XCTAssertTrue(try phone.context.fetch(FetchDescriptor<DeletedBook>()).isEmpty)
+        XCTAssertTrue(phone.books.isEmpty)
+    }
+
     func testDeletedBookDoesNotComeBack() async throws {
         let dune = phone.add("Dune")
         try await phone.sync()

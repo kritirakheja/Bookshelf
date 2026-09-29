@@ -7,6 +7,7 @@ struct ExploreView: View {
     @State private var category: String?
     @State private var searchText = ""
     @State private var showingAdd = false
+    @State private var bookToDelete: Book?
 
     private var unread: [Book] { books.filter { $0.status == .unread } }
 
@@ -48,11 +49,16 @@ struct ExploreView: View {
                             Button("Mark as read", systemImage: ReadingStatus.read.systemImage) {
                                 withAnimation { book.setStatus(.read) }
                             }
+                            Divider()
+                            Button("Delete", systemImage: "trash", role: .destructive) {
+                                bookToDelete = book
+                            }
                         }
                     }
                 }
                 .padding()
             }
+            .confirmDeletingBook($bookToDelete)
             .navigationTitle("Explore")
             .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
             .searchable(text: $searchText, prompt: "Search unread books")
@@ -125,4 +131,5 @@ private struct ExploreTile: View {
 #Preview {
     ExploreView()
         .modelContainer(SampleData.previewContainer)
+        .environment(AccountStore(container: SampleData.previewContainer))
 }

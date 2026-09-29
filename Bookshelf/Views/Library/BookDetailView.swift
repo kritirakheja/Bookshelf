@@ -8,6 +8,8 @@ struct BookDetailView: View {
     @State private var showingShelfFull = false
     @State private var searchingCover = false
     @State private var coverNotFound = false
+    @State private var bookToDelete: Book?
+    @Environment(\.dismiss) private var dismiss
     @Query(filter: #Predicate<Book> { $0.favoriteRank != nil }) private var shelf: [Book]
 
     var body: some View {
@@ -127,6 +129,17 @@ struct BookDetailView: View {
                 TextField("Your thoughts on this book", text: $book.notes, axis: .vertical)
                     .lineLimit(3...10)
             }
+
+            Section {
+                Button("Delete book", systemImage: "trash", role: .destructive) {
+                    bookToDelete = book
+                }
+            }
+        }
+        .confirmDeletingBook($bookToDelete) {
+            // Leave this page first, so it never shows a deleted book.
+            dismiss()
+            try? await Task.sleep(for: .milliseconds(450))
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -160,4 +173,5 @@ struct BookDetailView: View {
     let book = try! container.mainContext.fetch(FetchDescriptor<Book>()).first!
     return NavigationStack { BookDetailView(book: book) }
         .modelContainer(container)
+        .environment(AccountStore(container: container))
 }
