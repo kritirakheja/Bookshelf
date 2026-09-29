@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Entry point for adding a book: scan a barcode, type an ISBN, photograph the front
-/// cover, or enter details manually. Lookups hand a pre-filled draft to `BookFormView`.
+/// Entry point for adding a book: search by title or author, scan a barcode, type an
+/// ISBN, photograph the front cover, or enter details manually. Lookups hand a pre-filled draft to `BookFormView`.
 struct AddBookSheet: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -34,6 +34,14 @@ struct AddBookSheet: View {
     private var chooser: some View {
         NavigationStack {
             Form {
+                Section {
+                    NavigationLink {
+                        BookSearchView(isLoading: progress != nil) { doc in add(doc) }
+                    } label: {
+                        Label("Search by title or author", systemImage: "magnifyingglass")
+                    }
+                }
+
                 Section {
                     Button {
                         scanning = true
@@ -152,6 +160,16 @@ struct AddBookSheet: View {
                     ?? "Couldn't reach Open Library. You can fill in the details yourself."
                 form = FormState(draft: draft, notice: message)
             }
+        }
+    }
+
+    /// A search result picked: fetch its cover, then review it in the form.
+    private func add(_ doc: OpenLibraryClient.SearchDoc) {
+        guard progress == nil else { return }
+        progress = "Getting book details…"
+        Task {
+            defer { progress = nil }
+            form = FormState(draft: await client.draft(for: doc))
         }
     }
 

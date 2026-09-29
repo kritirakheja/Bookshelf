@@ -71,6 +71,34 @@ final class OpenLibraryClientTests: XCTestCase {
         }
     }
 
+    @MainActor
+    func testSearchResultsMatchOwnedBooksLoosely() {
+        XCTAssertEqual(
+            BookSearchView.key(title: "The Housemaid", author: "Freida McFadden"),
+            BookSearchView.key(title: "HOUSEMAID", author: "freida mcfadden")
+        )
+        XCTAssertNotEqual(
+            BookSearchView.key(title: "The Housemaid", author: "Freida McFadden"),
+            BookSearchView.key(title: "The Housemaid's Secret", author: "Freida McFadden")
+        )
+    }
+
+    func testLiveSearchAndAdd() async throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["LIVE_TESTS"] == "1", "Set LIVE_TESTS=1 to call Open Library")
+        let client = OpenLibraryClient()
+
+        let results = try await client.search("circe madeline miller")
+        let circe = try XCTUnwrap(results.first { $0.title == "Circe" && $0.authorName?.contains("Madeline Miller") == true })
+        let draft = await client.draft(for: circe)
+        XCTAssertEqual(draft.title, "Circe")
+        XCTAssertEqual(draft.authors, "Madeline Miller")
+        XCTAssertNotNil(draft.coverImage)
+        XCTAssertEqual(draft.isbn, "", "A search doesn't know which edition you own")
+
+        let empty = try await client.search("c")
+        XCTAssertTrue(empty.isEmpty, "Too short to search")
+    }
+
     func testCategorySuggestionsAvoidFalseMatches() {
         XCTAssertEqual(CategorySuggestions.categories(forSubjects: ["Science fiction", "Space warfare"]), ["Science Fiction"])
         XCTAssertEqual(CategorySuggestions.categories(forSubjects: ["Historical fiction"]), ["Historical Fiction"])

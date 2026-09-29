@@ -60,6 +60,30 @@ struct OpenLibraryClient {
         return LookupResult(draft: draft, coverURL: doc.coverID.map(coverURL(id:)))
     }
 
+    // MARK: Search by title or author
+
+    /// Books matching free text such as "circe" or "madeline miller", best matches first.
+    func search(_ text: String) async throws -> [SearchDoc] {
+        let query = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard query.count >= 2 else { return [] }
+        let data = try await get(Self.searchURL([URLQueryItem(name: "q", value: query)], limit: 20))
+        return try JSONDecoder().decode(SearchResponse.self, from: data).docs.filter { $0.title != nil }
+    }
+
+    /// A search result as a draft, with its cover downloaded. The edition (and so the
+    /// ISBN) isn't known from a search, so the ISBN is left for the user.
+    func draft(for doc: SearchDoc) async -> BookDraft {
+        guard let result = Self.draft(from: doc, isbn: "") else { return BookDraft() }
+        var draft = result.draft
+        draft.coverImage = await firstCover(from: [result.coverURL])
+        return draft
+    }
+
+    /// Small cover image for search results.
+    static func thumbnailURL(id: Int) -> URL {
+        URL(string: "https://covers.openlibrary.org/b/id/\(id)-M.jpg")!
+    }
+
     // MARK: Identify from the front cover
 
     /// Searches Open Library for the book whose title and author best match the text
