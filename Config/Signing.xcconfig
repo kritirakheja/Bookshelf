@@ -1,0 +1,9 @@
+// Signing settings shared by all targets.
+//
+// Personal values (Apple team ID, bundle ID) live in Config/Local.xcconfig,
+// which is git-ignored. Copy Config/Local.xcconfig.example to get started.
+
+BOOKSHELF_BUNDLE_ID = com.example.Bookshelf
+DEVELOPMENT_TEAM =
+
+#include? "Local.xcconfig"

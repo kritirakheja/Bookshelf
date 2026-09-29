@@ -1,0 +1,5 @@
+// Copy to Config/Local.xcconfig and fill in your own values.
+// Find your team ID in Xcode → Settings → Accounts (or developer.apple.com → Membership).
+
+BOOKSHELF_BUNDLE_ID = com.yourname.Bookshelf
+DEVELOPMENT_TEAM = ABCDE12345

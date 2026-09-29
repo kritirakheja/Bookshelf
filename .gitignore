@@ -1,0 +1,7 @@
+*.xcodeproj/
+DerivedData/
+build/
+.DS_Store
+xcuserdata/
+Config/Local.xcconfig
+Bookshelf/Info.plist
