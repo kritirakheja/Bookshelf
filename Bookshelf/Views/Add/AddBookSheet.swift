@@ -237,7 +237,8 @@ struct AddBookSheet: View {
             let prominent = CoverTextReader.prominentLines(lines)
 
             progress = "Finding the book…"
-            if var draft = await client.identify(coverLines: prominent, isbn: isbn) {
+            let queries = CoverTextReader.searchQueries(lines)
+            if var draft = await client.identify(coverLines: prominent, queries: queries, isbn: isbn) {
                 if draft.coverImage == nil {
                     draft.coverImage = photo.coverJPEG()
                 }
@@ -247,7 +248,7 @@ struct AddBookSheet: View {
 
             // Not found online: keep what the cover says, and the scan as the cover.
             var draft = BookDraft()
-            let guess = CoverTextReader.guess(from: prominent)
+            let guess = CoverTextReader.guess(from: lines)
             draft.title = guess.title
             draft.authors = guess.author ?? ""
             draft.isbn = isbn

@@ -78,4 +78,21 @@ final class GoogleBooksTests: XCTestCase {
         let identified = await lookup.identify(coverLines: ["STORIES OF WORDS", "AND PHRASES", "SUMANTO CHATTOPADHYAY"], isbn: "")
         XCTAssertEqual(identified?.title, "Stories of Words and Phrases")
     }
+
+    /// The real cover, read with the phone's text recognition. It has a "Foreword by
+    /// SHASHI THAROOR" line that mustn't be taken for the author.
+    func testLiveIdentifyStoriesOfWordsFromItsCover() async throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["LIVE_TESTS"] == "1", "Set LIVE_TESTS=1")
+        try XCTSkipIf(GoogleBooksClient.fromBundle() == nil, "No Google Books key in this build")
+        let url = URL(string: "https://books.google.com/books/content?id=SbWP0QEACAAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api&fife=w800")!
+        let (data, _) = try await URLSession.shared.data(from: url)
+        let image = try XCTUnwrap(UIImage(data: data))
+
+        let lines = try await CoverTextReader.read(image)
+        let prominent = CoverTextReader.prominentLines(lines)
+        let draft = await BookLookup().identify(coverLines: prominent, queries: CoverTextReader.searchQueries(lines), isbn: "")
+        print("STORIES read \(prominent) → \(draft.map { "\($0.title) / \($0.authors)" } ?? "no match")")
+        XCTAssertEqual(draft?.title, "Stories of Words and Phrases")
+        XCTAssertEqual(draft?.authors, "Sumanto Chattopadhyay")
+    }
 }

@@ -17,25 +17,36 @@ struct GoogleBooksClient {
         case badResponse(Int)
     }
 
-    /// The edition with this ISBN, if Google Books knows it.
+    /// The edition with this ISBN, if Google Books knows it. Only a result that really
+    /// carries the ISBN counts: Google sometimes answers with unrelated books.
     func lookup(isbn: String) async throws -> BookCandidate? {
-        try await volumes(query: "isbn:\(isbn)", limit: 1).first
+        // No printType filter here: with it, Google ignores `isbn:` and returns anything.
+        try await volumes(query: "isbn:\(isbn)", limit: 5, booksOnly: false)
+            .first { $0.isbns.contains(isbn) }
     }
 
+    /// Google's plain search ranks exact titles poorly (a book can miss the top 20 for
+    /// its own title), so an exact-phrase search runs alongside and its results come first.
     func search(_ text: String, limit: Int = 20) async throws -> [BookCandidate] {
         let query = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "\"", with: "")
         guard query.count >= 2 else { return [] }
-        return try await volumes(query: query, limit: limit)
+        async let exact = try? volumes(query: "\"\(query)\"", limit: 10)
+        let plain = try await volumes(query: query, limit: limit)
+        var seen = Set<String>()
+        return (((await exact) ?? []) + plain).filter { seen.insert($0.id).inserted }
     }
 
-    private func volumes(query: String, limit: Int) async throws -> [BookCandidate] {
+    private func volumes(query: String, limit: Int, booksOnly: Bool = true) async throws -> [BookCandidate] {
         var components = URLComponents(string: "https://www.googleapis.com/books/v1/volumes")!
         components.queryItems = [
             URLQueryItem(name: "q", value: query),
             URLQueryItem(name: "maxResults", value: String(min(limit, 40))),
-            URLQueryItem(name: "printType", value: "books"),
             URLQueryItem(name: "key", value: apiKey),
         ]
+        if booksOnly {
+            components.queryItems?.append(URLQueryItem(name: "printType", value: "books"))
+        }
         var request = URLRequest(url: components.url!)
         // The key is restricted to this app; Google checks this header.
         if let bundleID = Bundle.main.bundleIdentifier {
@@ -65,6 +76,7 @@ struct GoogleBooksClient {
                 pageCount: info.pageCount.flatMap { $0 > 0 ? $0 : nil },
                 subjects: info.categories ?? [],
                 isbn: isbn,
+                isbns: identifiers.filter { $0.type.hasPrefix("ISBN") }.map(\.identifier),
                 coverURL: thumbnail.flatMap { coverURL(fromThumbnail: $0, width: 800) },
                 thumbnailURL: thumbnail.flatMap { coverURL(fromThumbnail: $0, width: 200) }
             )

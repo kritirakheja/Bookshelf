@@ -17,6 +17,8 @@ struct BookCandidate: Identifiable {
     var subjects: [String] = []
     /// The edition's ISBN when the source knows it (Google Books usually does).
     var isbn: String?
+    /// Every ISBN the source lists for this edition (10- and 13-digit).
+    var isbns: [String] = []
     var coverURL: URL?
     var thumbnailURL: URL?
 

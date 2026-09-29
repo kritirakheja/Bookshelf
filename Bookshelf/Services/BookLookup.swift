@@ -65,14 +65,24 @@ struct BookLookup {
 
     /// The book whose title and author best match the text read off its cover, from
     /// either source. A result matching the author as well as the title wins.
-    func identify(coverLines prominent: [String], isbn: String) async -> BookDraft? {
+    /// - Parameter queries: searches to try, most specific first (see
+    ///   `CoverTextReader.searchQueries`); defaults to ones built from `prominent`.
+    func identify(coverLines prominent: [String], queries: [String]? = nil, isbn: String) async -> BookDraft? {
         guard !prominent.isEmpty else { return nil }
-        async let olDocs = try? openLibrary.coverCandidates(for: prominent)
-        async let gbCandidates = try? google?.search(prominent.joined(separator: " "), limit: 10)
+        let queries = queries ?? [prominent.joined(separator: " ")]
+        async let olDocs = try? openLibrary.coverCandidates(for: prominent, queries: queries)
+        async let gbCandidates = googleCandidates(for: queries)
         let candidates = ((await olDocs) ?? []).enumerated().map { BookCandidate(openLibrary: $1, index: $0) }
-            + ((await gbCandidates) ?? [])
+            + (await gbCandidates)
         guard let match = BookMatcher.rankedMatch(in: candidates, coverText: prominent) else { return nil }
         return await draft(for: match.item, isbn: isbn)
+    }
+
+    private func googleCandidates(for queries: [String]) async -> [BookCandidate] {
+        guard let google, !queries.isEmpty else { return [] }
+        async let first = try? google.search(queries[0], limit: 10)
+        async let second = queries.count > 1 ? try? google.search(queries[1], limit: 10) : nil
+        return ((await first) ?? []) + ((await second) ?? [])
     }
 
     // MARK: Covers

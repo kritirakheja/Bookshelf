@@ -97,24 +97,29 @@ struct OpenLibraryClient {
         return draft
     }
 
-    /// Search results for the text read off a cover. Tries the most specific query first
-    /// (all the big text), then the top two lines, then the biggest line, and stops once
-    /// a result matches both title and author (a title-only match might be a different
-    /// book with the same name, so it keeps looking).
-    func coverCandidates(for prominent: [String]) async throws -> [SearchDoc] {
+    /// Search results for the text read off a cover, for each query (by default: all the
+    /// big text, the top two lines, the biggest line), most specific first.
+    func coverCandidates(for prominent: [String], queries given: [String]? = nil) async throws -> [SearchDoc] {
         guard !prominent.isEmpty else { return [] }
         var queries: [String] = []
-        for query in [prominent.joined(separator: " "), prominent.prefix(2).joined(separator: " "), prominent[0]]
+        for query in given ?? [prominent.joined(separator: " "), prominent.prefix(2).joined(separator: " "), prominent[0]]
         where !queries.contains(query) {
             queries.append(query)
         }
-        var candidates: [SearchDoc] = []
-        for query in queries {
-            let data = try await get(Self.searchURL([URLQueryItem(name: "q", value: query)], limit: 8))
-            candidates += try JSONDecoder().decode(SearchResponse.self, from: data).docs
-            if Self.rankedMatch(in: candidates, coverText: prominent)?.authorMatched == true { break }
+        // All at once rather than one after another: each search takes a few seconds.
+        let results = try await withThrowingTaskGroup(of: (Int, [SearchDoc]).self) { group in
+            for (index, query) in queries.enumerated() {
+                group.addTask {
+                    let data = try await get(Self.searchURL([URLQueryItem(name: "q", value: query)], limit: 8))
+                    return (index, try JSONDecoder().decode(SearchResponse.self, from: data).docs)
+                }
+            }
+            var byIndex: [Int: [SearchDoc]] = [:]
+            for try await (index, docs) in group { byIndex[index] = docs }
+            return byIndex
         }
-        return candidates
+        // Keep the most specific search's results first.
+        return results.keys.sorted().flatMap { results[$0] ?? [] }
     }
 
     static func bestMatch(in docs: [SearchDoc], coverText: [String]) -> SearchDoc? {
