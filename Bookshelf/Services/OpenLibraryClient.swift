@@ -27,7 +27,7 @@ struct OpenLibraryClient {
 
     var session: URLSession = .shared
 
-    private static let searchFields = "title,author_name,cover_i,first_publish_year,number_of_pages_median,subject"
+    private static let searchFields = "key,title,author_name,cover_i,first_publish_year,number_of_pages_median,subject"
 
     // MARK: Lookup by ISBN
 
@@ -38,7 +38,7 @@ struct OpenLibraryClient {
             throw LookupError.notFound
         }
         var draft = result.draft
-        draft.coverImage = await firstCover(from: [result.coverURL, Self.isbnCoverURL(isbn)])
+        draft.coverImage = await downloadCover(from: [result.coverURL, Self.isbnCoverURL(isbn)])
         return draft
     }
 
@@ -75,7 +75,7 @@ struct OpenLibraryClient {
     func draft(for doc: SearchDoc) async -> BookDraft {
         guard let result = Self.draft(from: doc, isbn: "") else { return BookDraft() }
         var draft = result.draft
-        draft.coverImage = await firstCover(from: [result.coverURL])
+        draft.coverImage = await downloadCover(from: [result.coverURL])
         return draft
     }
 
@@ -89,8 +89,20 @@ struct OpenLibraryClient {
     /// Searches Open Library for the book whose title and author best match the text
     /// read off its cover. Returns nil when nothing matches well enough.
     func identify(coverLines prominent: [String], isbn: String) async throws -> BookDraft? {
-        guard !prominent.isEmpty else { return nil }
-        // Most specific first: all the big text, then the top two lines, then the biggest.
+        let docs = try await coverCandidates(for: prominent)
+        guard let doc = Self.bestMatch(in: docs, coverText: prominent),
+              let result = Self.draft(from: doc, isbn: isbn) else { return nil }
+        var draft = result.draft
+        draft.coverImage = await downloadCover(from: [result.coverURL])
+        return draft
+    }
+
+    /// Search results for the text read off a cover. Tries the most specific query first
+    /// (all the big text), then the top two lines, then the biggest line, and stops once
+    /// a result matches both title and author (a title-only match might be a different
+    /// book with the same name, so it keeps looking).
+    func coverCandidates(for prominent: [String]) async throws -> [SearchDoc] {
+        guard !prominent.isEmpty else { return [] }
         var queries: [String] = []
         for query in [prominent.joined(separator: " "), prominent.prefix(2).joined(separator: " "), prominent[0]]
         where !queries.contains(query) {
@@ -100,90 +112,28 @@ struct OpenLibraryClient {
         for query in queries {
             let data = try await get(Self.searchURL([URLQueryItem(name: "q", value: query)], limit: 8))
             candidates += try JSONDecoder().decode(SearchResponse.self, from: data).docs
-            // Stop once a result matches both title and author; a title-only match might
-            // be a different book with the same name, so keep looking.
             if Self.rankedMatch(in: candidates, coverText: prominent)?.authorMatched == true { break }
         }
-        guard let doc = Self.bestMatch(in: candidates, coverText: prominent),
-              let result = Self.draft(from: doc, isbn: isbn) else { return nil }
-        var draft = result.draft
-        draft.coverImage = await firstCover(from: [result.coverURL])
-        return draft
+        return candidates
     }
 
-    /// Picks the result whose title is best supported by the words on the cover.
-    /// Most title words must appear on the cover (so "The Housemaid's Secret" loses to
-    /// "The Housemaid" when the cover only says HOUSEMAID); a matching author surname
-    /// and covering more of the cover's words break ties.
     static func bestMatch(in docs: [SearchDoc], coverText: [String]) -> SearchDoc? {
         rankedMatch(in: docs, coverText: coverText)?.doc
     }
 
     static func rankedMatch(in docs: [SearchDoc], coverText: [String]) -> (doc: SearchDoc, authorMatched: Bool)? {
-        let coverWords = words(coverText.joined(separator: " "))
-        guard !coverWords.isEmpty else { return nil }
-
-        var best: (doc: SearchDoc, score: Double, authorMatched: Bool)?
-        for doc in docs {
-            let titleWords = words(doc.title ?? "")
-            guard !titleWords.isEmpty else { continue }
-            let shared = Double(titleWords.intersection(coverWords).count)
-            let precision = shared / Double(titleWords.count)
-            guard precision >= 0.6 else { continue }
-            let authorWords = words((doc.authorName ?? []).joined(separator: " "))
-            let authorMatched = authorWords.contains { name in
-                coverWords.contains { roughlyEqual(name, $0) }
-            }
-            let recall = shared / Double(coverWords.count)
-            let score = 2 * precision + (authorMatched ? 1 : 0) + recall
-            if score > (best?.score ?? 0) {
-                best = (doc, score, authorMatched)
-            }
-        }
-        return best.map { ($0.doc, $0.authorMatched) }
+        BookMatcher.rankedMatch(in: docs, coverText: coverText, title: { $0.title ?? "" }, authors: { $0.authorName ?? [] })
+            .map { ($0.item, $0.authorMatched) }
     }
 
-    /// Same word, allowing for text-recognition slips in longer words
-    /// ("CONWAY" read as "INWAY").
-    static func roughlyEqual(_ a: String, _ b: String) -> Bool {
-        if a == b { return true }
-        guard min(a.count, b.count) >= 5 else { return false }
-        return editDistance(a, b) <= 2
-    }
-
-    private static func editDistance(_ a: String, _ b: String) -> Int {
-        let a = Array(a), b = Array(b)
-        var previous = Array(0...b.count)
-        for i in 1...a.count {
-            var current = [i] + Array(repeating: 0, count: b.count)
-            for j in 1...b.count {
-                current[j] = a[i - 1] == b[j - 1]
-                    ? previous[j - 1]
-                    : 1 + min(previous[j - 1], previous[j], current[j - 1])
-            }
-            previous = current
-        }
-        return previous[b.count]
-    }
-
-    private static let stopWords: Set<String> = ["the", "a", "an", "of", "and", "to", "in", "on", "for", "by", "with"]
-
-    /// Lowercased words without possessives or punctuation ("Housemaid's" → "housemaid").
-    static func words(_ text: String) -> Set<String> {
-        Set(
-            text.lowercased()
-                .replacing(#/['\u{2019}]s\b/#, with: "")
-                .components(separatedBy: CharacterSet.alphanumerics.inverted)
-                .filter { $0.count >= 2 && !stopWords.contains($0) }
-        )
-    }
+    static func words(_ text: String) -> Set<String> { BookMatcher.words(text) }
 
     // MARK: Covers
 
     /// Finds a cover for a book that doesn't have one: first by ISBN, then by
     /// searching for the title and author. Returns nil if nothing turns up.
     func findCover(title: String, author: String?, isbn: String?) async -> Data? {
-        if let isbn, let data = await firstCover(from: [Self.isbnCoverURL(isbn)]) {
+        if let isbn, let data = await downloadCover(from: [Self.isbnCoverURL(isbn)]) {
             return data
         }
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -198,23 +148,11 @@ struct OpenLibraryClient {
             return nil
         }
         let candidates = response.docs.compactMap(\.coverID).prefix(3).map(Self.coverURL(id:))
-        return await firstCover(from: Array(candidates))
-    }
-
-    /// Fills in the cover of a saved book if it has none. Returns whether it has one now.
-    @MainActor
-    @discardableResult
-    func fillMissingCover(of book: Book) async -> Bool {
-        guard book.coverImage == nil else { return true }
-        let data = await findCover(title: book.title, author: book.authors.first, isbn: book.isbn)
-        if let data, book.coverImage == nil {
-            book.coverImage = data
-        }
-        return book.coverImage != nil
+        return await downloadCover(from: Array(candidates))
     }
 
     /// Downloads each URL in turn and returns the first real image.
-    private func firstCover(from urls: [URL?]) async -> Data? {
+    func downloadCover(from urls: [URL?]) async -> Data? {
         for url in urls.compactMap({ $0 }) {
             guard let data = try? await get(url),
                   let image = UIImage(data: data),
@@ -262,9 +200,10 @@ struct OpenLibraryClient {
         let firstPublishYear: Int?
         let numberOfPagesMedian: Int?
         let subject: [String]?
+        var key: String? = nil
 
         enum CodingKeys: String, CodingKey {
-            case title, subject
+            case title, subject, key
             case authorName = "author_name"
             case coverID = "cover_i"
             case firstPublishYear = "first_publish_year"

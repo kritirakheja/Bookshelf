@@ -11,4 +11,7 @@ DEVELOPMENT_TEAM =
 SUPABASE_HOST =
 SUPABASE_KEY =
 
+// Google Books, used when Open Library doesn't know a book. Leave blank to skip it.
+GOOGLE_BOOKS_KEY =
+
 #include? "Local.xcconfig"

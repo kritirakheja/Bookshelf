@@ -174,7 +174,7 @@ struct BookDetailView: View {
     private func findCover() {
         searchingCover = true
         Task {
-            let found = await OpenLibraryClient().fillMissingCover(of: book)
+            let found = await BookLookup().fillMissingCover(of: book)
             coverNotFound = !found
             searchingCover = false
         }

@@ -1,19 +1,19 @@
 import SwiftUI
 import SwiftData
 
-/// Search Open Library by title or author and pick a result to add.
+/// Search Open Library and Google Books by title or author, and pick a result to add.
 struct BookSearchView: View {
     /// Shows a "getting details" overlay while the picked book is fetched.
     var isLoading = false
-    let onPick: (OpenLibraryClient.SearchDoc) -> Void
+    let onPick: (BookCandidate) -> Void
 
     @Query private var library: [Book]
     @State private var text = ""
-    @State private var results: [OpenLibraryClient.SearchDoc] = []
+    @State private var results: [BookCandidate] = []
     @State private var searching = false
     @State private var failed = false
 
-    private let client = OpenLibraryClient()
+    private let client = BookLookup()
 
     /// Title + first author of every book already owned, to mark results as owned.
     private var owned: Set<String> {
@@ -21,18 +21,18 @@ struct BookSearchView: View {
     }
 
     static func key(title: String, author: String?) -> String {
-        "\(OpenLibraryClient.words(title).sorted())|\(OpenLibraryClient.words(author ?? "").sorted())"
+        BookMatcher.key(title: title, author: author)
     }
 
     var body: some View {
         List {
-            ForEach(Array(results.enumerated()), id: \.offset) { _, doc in
+            ForEach(results) { candidate in
                 Button {
-                    onPick(doc)
+                    onPick(candidate)
                 } label: {
                     SearchResultRow(
-                        doc: doc,
-                        isOwned: owned.contains(Self.key(title: doc.title ?? "", author: doc.authorName?.first))
+                        candidate: candidate,
+                        isOwned: owned.contains(Self.key(title: candidate.title, author: candidate.authors.first))
                     )
                 }
                 .buttonStyle(.plain)
@@ -85,12 +85,12 @@ struct BookSearchView: View {
 }
 
 private struct SearchResultRow: View {
-    let doc: OpenLibraryClient.SearchDoc
+    let candidate: BookCandidate
     let isOwned: Bool
 
     var body: some View {
         HStack(spacing: 12) {
-            AsyncImage(url: doc.coverID.map(OpenLibraryClient.thumbnailURL(id:))) { image in
+            AsyncImage(url: candidate.thumbnailURL) { image in
                 image.resizable().scaledToFill()
             } placeholder: {
                 Rectangle().fill(.quaternary)
@@ -100,15 +100,15 @@ private struct SearchResultRow: View {
             .clipShape(RoundedRectangle(cornerRadius: 4))
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(doc.title ?? "")
+                Text(candidate.title)
                     .font(.headline)
                     .lineLimit(2)
-                Text((doc.authorName ?? []).prefix(2).joined(separator: ", "))
+                Text(candidate.authors.prefix(2).joined(separator: ", "))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                 HStack(spacing: 6) {
-                    if let year = doc.firstPublishYear {
+                    if let year = candidate.year {
                         Text(String(year))
                     }
                     if isOwned {

@@ -37,6 +37,8 @@ targets:
         # Backup & sync (from Config/Local.xcconfig; blank = sync hidden).
         SupabaseHost: $(SUPABASE_HOST)
         SupabaseKey: $(SUPABASE_KEY)
+        # Second book source (from Config/Local.xcconfig; blank = Open Library only).
+        GoogleBooksKey: $(GOOGLE_BOOKS_KEY)
         NSCameraUsageDescription: Bookshelf uses the camera to scan the barcode on your books.
   BookshelfTests:
     type: bundle.unit-test

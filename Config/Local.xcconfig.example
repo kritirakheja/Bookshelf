@@ -8,3 +8,6 @@ DEVELOPMENT_TEAM = ABCDE12345
 // Host without https:// (e.g. abcdefgh.supabase.co) and the publishable (anon) key.
 SUPABASE_HOST =
 SUPABASE_KEY =
+
+// Optional: Google Books API key (Google Cloud → Books API), restricted to your bundle ID.
+GOOGLE_BOOKS_KEY =

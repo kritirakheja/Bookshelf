@@ -13,6 +13,8 @@ struct BookFormView: View {
     private let notice: String?
     @State private var draft: BookDraft
     @State private var photoItem: PhotosPickerItem?
+    @State private var choosingPhoto = false
+    @State private var scanningCover = false
     @State private var duplicate: Book?
     @State private var newCategory = ""
     @State private var coverSearch: CoverSearch = .idle
@@ -38,7 +40,10 @@ struct BookFormView: View {
 
                 Section {
                     VStack(spacing: 12) {
-                        PhotosPicker(selection: $photoItem, matching: .images) {
+                        Menu {
+                            Button("Scan cover", systemImage: "camera.viewfinder") { scanningCover = true }
+                            Button("Choose from library", systemImage: "photo.on.rectangle") { choosingPhoto = true }
+                        } label: {
                             coverPreview
                         }
                         findCoverButton
@@ -78,10 +83,16 @@ struct BookFormView: View {
                         .disabled(!draft.isValid)
                 }
             }
+            .photosPicker(isPresented: $choosingPhoto, selection: $photoItem, matching: .images)
+            .fullScreenCover(isPresented: $scanningCover) {
+                CoverCapture { image in draft.coverImage = image.coverJPEG() }
+            }
             .onChange(of: photoItem) {
                 Task {
-                    if let data = try? await photoItem?.loadTransferable(type: Data.self) {
-                        draft.coverImage = data
+                    // Library photos are full camera size; covers are shown small.
+                    if let data = try? await photoItem?.loadTransferable(type: Data.self),
+                       let image = UIImage(data: data) {
+                        draft.coverImage = image.coverJPEG()
                     }
                 }
             }
@@ -151,7 +162,7 @@ struct BookFormView: View {
         coverSearch = .searching
         let (title, author, isbn) = (draft.trimmedTitle, draft.authorList.first, draft.normalizedISBN)
         Task {
-            let data = await OpenLibraryClient().findCover(title: title, author: author, isbn: isbn)
+            let data = await BookLookup().findCover(title: title, author: author, isbn: isbn)
             if let data {
                 draft.coverImage = data
                 coverSearch = .idle
@@ -238,7 +249,7 @@ struct BookFormView: View {
             // Typed in by hand with no cover? Look one up in the background;
             // it appears in the library a moment later if found.
             if newBook.coverImage == nil {
-                Task { await OpenLibraryClient().fillMissingCover(of: newBook) }
+                Task { await BookLookup().fillMissingCover(of: newBook) }
             }
         }
         dismiss()

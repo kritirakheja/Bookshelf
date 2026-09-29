@@ -39,6 +39,7 @@ enum CategorySuggestions {
         Rule(category: "Business", keywords: ["business", "economics", "management"]),
         Rule(category: "Self-help", keywords: ["self-help", "self-actualization"]),
         Rule(category: "Cooking", keywords: ["cooking", "cookery", "recipes"]),
+        Rule(category: "Language", keywords: ["language arts", "linguistics", "etymology", "english language", "vocabulary"]),
         Rule(category: "Travel", keywords: ["travel"]),
     ]
 

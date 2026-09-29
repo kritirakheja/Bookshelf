@@ -110,7 +110,7 @@ struct LibraryView: View {
         let missing = booksWithoutCovers
         fillingCovers = true
         Task {
-            let client = OpenLibraryClient()
+            let client = BookLookup()
             var found = 0
             for book in missing {
                 if await client.fillMissingCover(of: book) {
