@@ -20,9 +20,16 @@ struct GoogleBooksClient {
     /// The edition with this ISBN, if Google Books knows it. Only a result that really
     /// carries the ISBN counts: Google sometimes answers with unrelated books.
     func lookup(isbn: String) async throws -> BookCandidate? {
-        // No printType filter here: with it, Google ignores `isbn:` and returns anything.
-        try await volumes(query: "isbn:\(isbn)", limit: 5, booksOnly: false)
-            .first { $0.isbns.contains(isbn) }
+        // Google sometimes answers an ISBN query with nothing (about 1 in 6 identical
+        // requests while testing), so an empty answer gets one retry.
+        for attempt in 0..<2 {
+            // No printType filter here: with it, Google ignores `isbn:` and returns anything.
+            let match = try await volumes(query: "isbn:\(isbn)", limit: 5, booksOnly: false)
+                .first { $0.isbns.contains(isbn) }
+            if let match { return match }
+            if attempt == 0 { try? await Task.sleep(for: .milliseconds(300)) }
+        }
+        return nil
     }
 
     /// Google's plain search ranks exact titles poorly (a book can miss the top 20 for
@@ -78,7 +85,8 @@ struct GoogleBooksClient {
                 isbn: isbn,
                 isbns: identifiers.filter { $0.type.hasPrefix("ISBN") }.map(\.identifier),
                 coverURL: thumbnail.flatMap { coverURL(fromThumbnail: $0, width: 800) },
-                thumbnailURL: thumbnail.flatMap { coverURL(fromThumbnail: $0, width: 200) }
+                thumbnailURL: thumbnail.flatMap { coverURL(fromThumbnail: $0, width: 200) },
+                language: info.language
             )
         }
     }
@@ -120,5 +128,6 @@ struct GoogleBooksClient {
         let categories: [String]?
         let industryIdentifiers: [Identifier]?
         let imageLinks: ImageLinks?
+        let language: String?
     }
 }

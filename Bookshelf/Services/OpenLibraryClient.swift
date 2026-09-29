@@ -27,7 +27,7 @@ struct OpenLibraryClient {
 
     var session: URLSession = .shared
 
-    private static let searchFields = "key,title,author_name,cover_i,first_publish_year,number_of_pages_median,subject"
+    private static let searchFields = "key,title,author_name,cover_i,first_publish_year,number_of_pages_median,subject,language"
 
     // MARK: Lookup by ISBN
 
@@ -206,9 +206,10 @@ struct OpenLibraryClient {
         let numberOfPagesMedian: Int?
         let subject: [String]?
         var key: String? = nil
+        var language: [String]? = nil
 
         enum CodingKeys: String, CodingKey {
-            case title, subject, key
+            case title, subject, key, language
             case authorName = "author_name"
             case coverID = "cover_i"
             case firstPublishYear = "first_publish_year"

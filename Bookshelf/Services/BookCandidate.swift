@@ -21,6 +21,30 @@ struct BookCandidate: Identifiable {
     var isbns: [String] = []
     var coverURL: URL?
     var thumbnailURL: URL?
+    /// Language code as the source gives it ("en", "eng", "mr", …), if known.
+    var language: String?
+
+    /// English, or not known to be anything else. Translations are ranked lower, as
+    /// Kriti reads English editions.
+    var isEnglish: Bool {
+        if let language, !["en", "eng"].contains(language.lowercased()) { return false }
+        return !Self.isTranslationTitle(title)
+    }
+
+    private static let languageNames = [
+        "hindi", "marathi", "bengali", "bangla", "tamil", "telugu", "kannada", "malayalam", "gujarati",
+        "punjabi", "urdu", "odia", "assamese", "sanskrit", "nepali", "spanish", "french", "german",
+        "italian", "portuguese", "russian", "chinese", "japanese", "korean", "arabic", "dutch",
+    ]
+
+    /// Titles like "Elon Musk (Marathi)" or "Sapiens (Hindi Edition)".
+    static func isTranslationTitle(_ title: String) -> Bool {
+        let lower = title.lowercased()
+        return languageNames.contains { name in
+            lower.contains("(\(name))") || lower.contains("(\(name) edition)") || lower.contains("\(name) edition")
+                || lower.contains("in \(name)")
+        }
+    }
 
     /// The candidate as a form draft. An ISBN from a scanned barcode wins over the source's.
     func draft(isbn scannedISBN: String? = nil) -> BookDraft {
@@ -46,7 +70,10 @@ extension BookCandidate {
             pageCount: doc.numberOfPagesMedian,
             subjects: doc.subject ?? [],
             coverURL: doc.coverID.map(OpenLibraryClient.coverURL(id:)),
-            thumbnailURL: doc.coverID.map(OpenLibraryClient.thumbnailURL(id:))
+            thumbnailURL: doc.coverID.map(OpenLibraryClient.thumbnailURL(id:)),
+            // Open Library lists every language the book exists in; English among them
+            // means the cover shown is likely the English one.
+            language: doc.language.flatMap { $0.contains("eng") || $0.isEmpty ? nil : $0.first }
         )
     }
 }
@@ -60,7 +87,8 @@ enum BookMatcher {
         in items: [Item],
         coverText: [String],
         title: (Item) -> String,
-        authors: (Item) -> [String]
+        authors: (Item) -> [String],
+        penalty: (Item) -> Double = { _ in 0 }
     ) -> (item: Item, authorMatched: Bool)? {
         let coverWords = words(coverText.joined(separator: " "))
         guard !coverWords.isEmpty else { return nil }
@@ -77,7 +105,7 @@ enum BookMatcher {
                 coverWords.contains { roughlyEqual(name, $0) }
             }
             let recall = shared / Double(coverWords.count)
-            let score = 2 * precision + (authorMatched ? 1 : 0) + recall
+            let score = 2 * precision + (authorMatched ? 1 : 0) + recall - penalty(item)
             if score > (best?.score ?? 0) {
                 best = (item, score, authorMatched)
             }
@@ -86,7 +114,9 @@ enum BookMatcher {
     }
 
     static func rankedMatch(in candidates: [BookCandidate], coverText: [String]) -> (item: BookCandidate, authorMatched: Bool)? {
-        rankedMatch(in: candidates, coverText: coverText, title: \.title, authors: \.authors)
+        // English editions first among equally good matches.
+        rankedMatch(in: candidates, coverText: coverText, title: \.title, authors: \.authors,
+                    penalty: { $0.isEnglish ? 0 : 0.75 })
     }
 
     /// Same word, allowing for text-recognition slips in longer words

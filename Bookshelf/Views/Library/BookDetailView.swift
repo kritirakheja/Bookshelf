@@ -9,6 +9,7 @@ struct BookDetailView: View {
     @State private var searchingCover = false
     @State private var coverNotFound = false
     @State private var bookToDelete: Book?
+    @State private var choosingCover = false
     @Environment(\.dismiss) private var dismiss
     @Query(filter: #Predicate<Book> { $0.favoriteRank != nil }) private var shelf: [Book]
 
@@ -36,6 +37,14 @@ struct BookDetailView: View {
                             Text("ISBN \(isbn)")
                                 .font(.caption.monospaced())
                                 .foregroundStyle(.secondary)
+                        }
+                        if book.coverImage != nil {
+                            Button("Change cover", systemImage: "photo.on.rectangle") {
+                                choosingCover = true
+                            }
+                            .font(.footnote)
+                            .buttonStyle(.bordered)
+                            .padding(.top, 4)
                         }
                         if book.coverImage == nil {
                             if searchingCover {
@@ -160,6 +169,11 @@ struct BookDetailView: View {
         }
         .sheet(isPresented: $editing) {
             BookFormView(book: book)
+        }
+        .sheet(isPresented: $choosingCover) {
+            CoverChooserView(title: book.title, author: book.authors.first, isbn: book.isbn) { data in
+                book.coverImage = data
+            }
         }
         .sheet(isPresented: $pickingCategories) {
             CategoryPickerView(book: book)

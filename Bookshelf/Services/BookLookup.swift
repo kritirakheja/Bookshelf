@@ -37,7 +37,7 @@ struct BookLookup {
             throw OpenLibraryClient.LookupError.badResponse(0)
         }
         let openLibraryResults = (ol ?? []).enumerated().map { BookCandidate(openLibrary: $1, index: $0) }
-        return Self.merge(openLibraryResults, gb ?? [])
+        return Self.englishFirst(Self.merge(openLibraryResults, gb ?? []))
     }
 
     static func merge(_ first: [BookCandidate], _ second: [BookCandidate]) -> [BookCandidate] {
@@ -52,6 +52,11 @@ struct BookLookup {
             }
         }
         return merged
+    }
+
+    /// English editions ahead of translations, otherwise keeping the order.
+    static func englishFirst(_ candidates: [BookCandidate]) -> [BookCandidate] {
+        candidates.filter(\.isEnglish) + candidates.filter { !$0.isEnglish }
     }
 
     /// A picked result as a draft, with its cover downloaded.
@@ -103,6 +108,42 @@ struct BookLookup {
         return await cover(for: match.item)
     }
 
+    /// Covers of other editions of the same book, English ones first, for choosing a
+    /// different cover. Only results whose title and author match the book count.
+    func coverOptions(title: String, author: String?, isbn: String?) async -> [BookCandidate] {
+        let shortTitle = Self.shortTitle(title)
+        async let byISBN = isbn.flatMap { $0.isEmpty ? nil : $0 }.asyncFlatMap { try? await google?.lookup(isbn: $0) }
+        async let found = try? search([shortTitle, author].compactMap { $0 }.joined(separator: " "))
+
+        let bookWords = BookMatcher.words(shortTitle)
+        let authorWords = BookMatcher.words(author ?? "")
+        let sameBook = ((await found) ?? []).filter { candidate in
+            let words = BookMatcher.words(Self.shortTitle(candidate.title))
+            guard !words.isEmpty, !bookWords.isEmpty else { return false }
+            let titleOverlap = Double(words.intersection(bookWords).count) / Double(min(words.count, bookWords.count))
+            let authorOK = authorWords.isEmpty
+                || !BookMatcher.words(candidate.authors.joined(separator: " ")).isDisjoint(with: authorWords)
+            return titleOverlap >= 0.6 && authorOK
+        }
+
+        var seen = Set<URL>()
+        return Self.englishFirst([await byISBN].compactMap { $0 } + sameBook)
+            .filter { $0.coverURL != nil && $0.thumbnailURL != nil }
+            .filter { seen.insert($0.thumbnailURL!).inserted }
+    }
+
+    /// "Elon Musk: How the Billionaire… (Marathi)" → "Elon Musk"
+    static func shortTitle(_ title: String) -> String {
+        let cut = title.firstIndex { $0 == ":" || $0 == "(" } ?? title.endIndex
+        let short = title[..<cut].trimmingCharacters(in: .whitespaces)
+        return short.isEmpty ? title : short
+    }
+
+    /// Downloads a chosen cover option.
+    func coverData(for candidate: BookCandidate) async -> Data? {
+        await cover(for: candidate)
+    }
+
     /// Fills in the cover of a saved book if it has none. Returns whether it has one now.
     @MainActor
     @discardableResult
@@ -117,5 +158,12 @@ struct BookLookup {
 
     private func cover(for candidate: BookCandidate) async -> Data? {
         await openLibrary.downloadCover(from: [candidate.coverURL, candidate.thumbnailURL])
+    }
+}
+
+private extension Optional {
+    func asyncFlatMap<T>(_ transform: (Wrapped) async -> T?) async -> T? {
+        guard let self else { return nil }
+        return await transform(self)
     }
 }

@@ -15,6 +15,7 @@ struct BookFormView: View {
     @State private var photoItem: PhotosPickerItem?
     @State private var choosingPhoto = false
     @State private var scanningCover = false
+    @State private var choosingOnline = false
     @State private var duplicate: Book?
     @State private var newCategory = ""
     @State private var coverSearch: CoverSearch = .idle
@@ -43,6 +44,9 @@ struct BookFormView: View {
                         Menu {
                             Button("Scan cover", systemImage: "camera.viewfinder") { scanningCover = true }
                             Button("Choose from library", systemImage: "photo.on.rectangle") { choosingPhoto = true }
+                            if !draft.trimmedTitle.isEmpty {
+                                Button("Choose cover online", systemImage: "globe") { choosingOnline = true }
+                            }
                         } label: {
                             coverPreview
                         }
@@ -84,6 +88,11 @@ struct BookFormView: View {
                 }
             }
             .photosPicker(isPresented: $choosingPhoto, selection: $photoItem, matching: .images)
+            .sheet(isPresented: $choosingOnline) {
+                CoverChooserView(title: draft.trimmedTitle, author: draft.authorList.first, isbn: draft.normalizedISBN) { data in
+                    draft.coverImage = data
+                }
+            }
             .fullScreenCover(isPresented: $scanningCover) {
                 CoverCapture { image in draft.coverImage = image.coverJPEG() }
             }
