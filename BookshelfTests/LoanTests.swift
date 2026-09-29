@@ -91,6 +91,67 @@ final class LoanTests: XCTestCase {
         XCTAssertEqual(groups[1].books.map(\.title), ["Circe", "Dune"], "Longest away first")
     }
 
+    // MARK: Borrowing
+
+    func testBorrowAndGiveBack() {
+        let book = newBook()
+        XCTAssertTrue(book.isOwned)
+
+        book.borrow(from: " Meera ", on: day(1))
+        XCTAssertTrue(book.isBorrowed)
+        XCTAssertFalse(book.isOwned)
+        XCTAssertEqual(book.borrowing?.borrowerName, "Meera")
+        XCTAssertNil(book.currentLoan, "Borrowing isn't lending")
+        XCTAssertTrue(book.pastLoans.isEmpty)
+
+        book.giveBack(on: day(9))
+        XCTAssertFalse(book.isBorrowed)
+        XCTAssertTrue(book.isGivenBack)
+        XCTAssertFalse(book.isOwned, "Still not mine after giving it back")
+        XCTAssertEqual(book.borrowing?.returnedAt, day(9))
+    }
+
+    func testCannotLendABorrowedBook() {
+        let book = newBook()
+        book.borrow(from: "Meera")
+        book.lend(to: "Priya")
+        XCTAssertFalse(book.isLent)
+    }
+
+    func testCannotMarkALentBookAsBorrowed() {
+        let book = newBook()
+        book.lend(to: "Priya")
+        book.borrow(from: "Meera")
+        XCTAssertFalse(book.isBorrowed)
+    }
+
+    func testStatsCountOwnedBooksAndBorrowedSeparately() {
+        let mine = newBook(), borrowed = newBook(), givenBack = newBook()
+        mine.setStatus(.read)
+        borrowed.borrow(from: "Meera")
+        borrowed.setStatus(.read)
+        givenBack.borrow(from: "Arjun"); givenBack.giveBack()
+
+        let stats = LibraryStats(books: [mine, borrowed, givenBack])
+        XCTAssertEqual(stats.total, 1, "Books = books I own")
+        XCTAssertEqual(stats.borrowedCount, 1, "Given-back books aren't with me any more")
+        XCTAssertEqual(stats.readCount, 2, "Borrowed books still count as read")
+        XCTAssertEqual(stats.unreadCount, 0, "A given-back book isn't waiting to be read")
+    }
+
+    func testBorrowedBooksGroupByOwner() {
+        let a = newBook(), b = newBook(), c = newBook(), lent = newBook()
+        a.borrow(from: "Meera", on: day(3))
+        b.borrow(from: "meera", on: day(1))
+        c.borrow(from: "Arjun"); c.giveBack()
+        lent.lend(to: "Priya")
+
+        let groups = LentBooksView.groups(from: [a, b, c, lent], direction: .borrowed)
+        XCTAssertEqual(groups.map(\.name), ["Meera"])
+        XCTAssertEqual(groups[0].books.count, 2)
+        XCTAssertEqual(LentBooksView.groups(from: [a, b, c, lent], direction: .lent).map(\.name), ["Priya"])
+    }
+
     func testLentCountInStats() {
         let a = newBook(), b = newBook()
         _ = newBook()

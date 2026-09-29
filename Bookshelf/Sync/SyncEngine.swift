@@ -158,6 +158,7 @@ struct SyncEngine {
             loan.contactID = record.contactID
             loan.lentAt = record.lentAt
             loan.returnedAt = record.returnedAt
+            loan.isBorrowed = record.isBorrowed ?? false
             return loan
         }
     }

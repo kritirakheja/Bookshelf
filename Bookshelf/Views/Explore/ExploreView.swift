@@ -9,7 +9,8 @@ struct ExploreView: View {
     @State private var showingAdd = false
     @State private var bookToDelete: Book?
 
-    private var unread: [Book] { books.filter { $0.status == .unread } }
+    /// Unread books I can pick up: not ones already given back to their owner.
+    private var unread: [Book] { books.filter { $0.status == .unread && !$0.isGivenBack } }
 
     /// Only categories that have unread books, most books first.
     private var categoryNames: [String] {

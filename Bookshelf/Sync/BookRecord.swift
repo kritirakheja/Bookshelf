@@ -79,9 +79,13 @@ struct LoanRecord: Codable, Equatable {
     var contactID: String?
     var lentAt: Date
     var returnedAt: Date?
+    /// Direction: true when I borrowed the book. Missing in entries saved before
+    /// borrowing existed, which were all lends.
+    var isBorrowed: Bool?
 
     enum CodingKeys: String, CodingKey {
         case id
+        case isBorrowed = "borrowed"
         case borrowerName = "borrower_name"
         case contactID = "contact_id"
         case lentAt = "lent_at"
@@ -94,6 +98,7 @@ struct LoanRecord: Codable, Equatable {
         contactID = loan.contactID
         lentAt = loan.lentAt
         returnedAt = loan.returnedAt
+        isBorrowed = loan.isBorrowed
     }
 }
 

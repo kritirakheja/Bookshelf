@@ -195,6 +195,30 @@ final class SyncEngineTests: XCTestCase {
         XCTAssertFalse(phone.engine.hasLocalChanges(try XCTUnwrap(ipad.book("Circe"))))
     }
 
+    func testBorrowingSyncsBetweenDevices() async throws {
+        let sapiens = phone.add("Sapiens")
+        sapiens.borrow(from: "Meera")
+        try await phone.sync()
+        try await ipad.sync()
+
+        let copy = try XCTUnwrap(ipad.book("Sapiens"))
+        XCTAssertTrue(copy.isBorrowed)
+        XCTAssertNil(copy.currentLoan, "Arrives as borrowed, not as lent")
+
+        copy.giveBack()
+        try await ipad.sync()
+        try await phone.sync()
+        XCTAssertTrue(sapiens.isGivenBack)
+    }
+
+    func testLoansSavedBeforeBorrowingExistedAreLends() throws {
+        let json = #"{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","borrower_name":"Priya","lent_at":"2026-09-01T10:00:00Z"}"#
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let record = try decoder.decode(LoanRecord.self, from: Data(json.utf8))
+        XCTAssertNil(record.isBorrowed)   // treated as a lend when applied
+    }
+
     func testClearingAFieldSyncs() async throws {
         let dune = phone.add("Dune")
         dune.rating = 4

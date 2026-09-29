@@ -1,8 +1,13 @@
 import SwiftUI
 import SwiftData
 
-/// Everything that's out on loan right now, grouped by who has it.
+/// Books that have changed hands, grouped by friend: my books out on loan
+/// (`.lent`), or friends' books I have (`.borrowed`).
 struct LentBooksView: View {
+    enum Direction {
+        case lent, borrowed
+    }
+
     struct Group: Identifiable {
         let name: String
         /// Longest-away first.
@@ -10,12 +15,16 @@ struct LentBooksView: View {
         var id: String { name.lowercased() }
     }
 
+    var direction: Direction = .lent
     @Query private var books: [Book]
 
     /// Friends alphabetically; the same name typed with different capitals or spacing
-    /// counts as one person.
-    static func groups(from books: [Book]) -> [Group] {
-        let lent = books.compactMap { book in book.currentLoan.map { (book: book, loan: $0) } }
+    /// counts as one person. Only loans still open (not yet returned / given back).
+    static func groups(from books: [Book], direction: Direction = .lent) -> [Group] {
+        let lent = books.compactMap { book -> (book: Book, loan: Loan)? in
+            let loan = direction == .lent ? book.currentLoan : book.borrowing.flatMap { $0.returnedAt == nil ? $0 : nil }
+            return loan.map { (book, $0) }
+        }
         let byFriend = Dictionary(grouping: lent) {
             $0.loan.borrowerName.trimmingCharacters(in: .whitespaces).lowercased()
         }
@@ -32,19 +41,26 @@ struct LentBooksView: View {
     }
 
     var body: some View {
-        let groups = Self.groups(from: books)
+        let groups = Self.groups(from: books, direction: direction)
         List {
             ForEach(groups) { group in
                 Section {
                     ForEach(group.books) { book in
                         NavigationLink(value: book) {
-                            LentBookRow(book: book)
+                            LentBookRow(book: book, direction: direction)
                         }
                         .swipeActions(edge: .leading) {
-                            Button("Returned", systemImage: "arrow.down.backward.circle") {
-                                withAnimation { book.markReturned() }
+                            if direction == .lent {
+                                Button("Returned", systemImage: "arrow.down.backward.circle") {
+                                    withAnimation { book.markReturned() }
+                                }
+                                .tint(.green)
+                            } else {
+                                Button("Given back", systemImage: "arrow.uturn.backward.circle") {
+                                    withAnimation { book.giveBack() }
+                                }
+                                .tint(.green)
                             }
-                            .tint(.green)
                         }
                     }
                 } header: {
@@ -56,13 +72,15 @@ struct LentBooksView: View {
                 }
             }
         }
-        .navigationTitle("Lent Out")
+        .navigationTitle(direction == .lent ? "Lent Out" : "Borrowed")
         .overlay {
             if groups.isEmpty {
                 ContentUnavailableView(
-                    "Nothing lent out",
+                    direction == .lent ? "Nothing lent out" : "Nothing borrowed",
                     systemImage: "books.vertical",
-                    description: Text("Lend a book from its page and it shows up here, under your friend's name.")
+                    description: Text(direction == .lent
+                        ? "Lend a book from its page and it shows up here, under your friend's name."
+                        : "Mark a book as borrowed from its page and it shows up here, under its owner's name.")
                 )
             }
         }
@@ -71,6 +89,7 @@ struct LentBooksView: View {
 
 private struct LentBookRow: View {
     let book: Book
+    let direction: LentBooksView.Direction
 
     var body: some View {
         HStack(spacing: 12) {
@@ -83,10 +102,14 @@ private struct LentBookRow: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                if let loan = book.currentLoan {
+                if direction == .lent, let loan = book.currentLoan {
                     Text(Self.away(since: loan.lentAt))
                         .font(.caption)
                         .foregroundStyle(.orange)
+                } else if direction == .borrowed, let borrowing = book.borrowing {
+                    Text(LendingSection.since(borrowing.lentAt, verb: "Borrowed"))
+                        .font(.caption)
+                        .foregroundStyle(.indigo)
                 }
             }
         }

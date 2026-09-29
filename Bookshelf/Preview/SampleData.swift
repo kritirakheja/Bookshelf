@@ -52,6 +52,9 @@ enum SampleData {
         let hobbit = books.first { $0.0.title == "The Hobbit" }!.0
         hobbit.lend(to: "Arjun", on: Date.now.addingTimeInterval(-86_400 * 90))
         hobbit.markReturned(on: Date.now.addingTimeInterval(-86_400 * 60))
+        // And one that's a friend's copy.
+        let sapiens = books.first { $0.0.title == "Sapiens" }!.0
+        sapiens.borrow(from: "Meera", on: Date.now.addingTimeInterval(-86_400 * 20))
     }
 
     /// Seeds sample data on first launch in the simulator only. Never runs on a real phone.

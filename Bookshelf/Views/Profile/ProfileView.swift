@@ -5,7 +5,7 @@ import Charts
 
 struct ProfileView: View {
     enum Route: Hashable {
-        case allBooks, read, lent, categories
+        case allBooks, read, lent, borrowed, categories
     }
 
     @Query private var books: [Book]
@@ -32,13 +32,16 @@ struct ProfileView: View {
 
                 Section {
                     NavigationLink(value: Route.allBooks) {
-                        LabeledContent { Text("\(stats.total)") } label: { Label("All books", systemImage: "books.vertical") }
+                        LabeledContent { Text("\(books.count)") } label: { Label("All books", systemImage: "books.vertical") }
                     }
                     NavigationLink(value: Route.read) {
                         LabeledContent { Text("\(stats.readCount)") } label: { Label("Read", systemImage: "checkmark.circle") }
                     }
                     NavigationLink(value: Route.lent) {
                         LabeledContent { Text("\(stats.lentCount)") } label: { Label("Lent out", systemImage: "arrow.up.forward.circle") }
+                    }
+                    NavigationLink(value: Route.borrowed) {
+                        LabeledContent { Text("\(stats.borrowedCount)") } label: { Label("Borrowed", systemImage: "arrow.down.backward.circle") }
                     }
                     NavigationLink(value: Route.categories) {
                         Label("Categories", systemImage: "square.grid.2x2")
@@ -88,7 +91,9 @@ struct ProfileView: View {
                 case .read:
                     StatusBooksList(status: .read).navigationTitle("Read")
                 case .lent:
-                    LentBooksView()
+                    LentBooksView(direction: .lent)
+                case .borrowed:
+                    LentBooksView(direction: .borrowed)
                 case .categories:
                     CategoriesView()
                 }
@@ -171,11 +176,14 @@ struct ProfileView: View {
             .padding(.vertical, 12)
             .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
 
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+            HStack(spacing: 10) {
                 tile(stats.pagesRead.formatted(), "Pages read", "doc.text.fill")
                 tile(stats.averageRating.map { String(format: "%.1f", $0) } ?? "–", "Avg rating", "star.fill")
                 tile("\(stats.readThisYear)", "Read in \(String(Calendar.current.component(.year, from: .now)))", "calendar")
+            }
+            HStack(spacing: 10) {
                 tile("\(stats.lentCount)", "Lent out", "arrow.up.forward.circle.fill")
+                tile("\(stats.borrowedCount)", "Borrowed", "arrow.down.backward.circle.fill")
             }
         }
     }
