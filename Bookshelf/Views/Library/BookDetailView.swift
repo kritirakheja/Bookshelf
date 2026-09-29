@@ -128,6 +128,8 @@ struct BookDetailView: View {
                 }
             }
 
+            AboutSection(book: book)
+
             LendingSection(book: book)
 
             Section("Favourites") {

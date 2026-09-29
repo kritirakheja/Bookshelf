@@ -20,6 +20,7 @@ struct RootTabView: View {
         .task {
             SampleData.seedSimulatorIfEmpty(context)
             LibraryFixes.runPending(in: context)
+            await DescriptionBackfill.run(in: context)
         }
         // Sync when the app opens and when you leave it, so the backup is never far behind.
         .onChange(of: scenePhase) { _, phase in

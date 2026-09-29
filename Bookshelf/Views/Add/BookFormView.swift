@@ -71,6 +71,11 @@ struct BookFormView: View {
                         .keyboardType(.numberPad)
                 }
 
+                Section("About this book") {
+                    TextField("Description", text: $draft.summary, axis: .vertical)
+                        .lineLimit(3...12)
+                }
+
                 // Only when adding: an existing book's categories are edited from its page.
                 if book == nil {
                     categoriesSection

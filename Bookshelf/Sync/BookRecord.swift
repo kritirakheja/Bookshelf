@@ -17,6 +17,8 @@ struct BookRecord: Codable, Equatable {
     var dateReadYearOnly: Bool?
     var dateAdded: Date
     var notes: String
+    /// Optional so rows from before descriptions existed still decode.
+    var summary: String?
     var rating: Int?
     var categories: [String]
     var favoriteRank: Int?
@@ -31,7 +33,7 @@ struct BookRecord: Codable, Equatable {
     var updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id, title, authors, isbn, notes, rating, categories, loans, deleted
+        case id, title, authors, isbn, notes, summary, rating, categories, loans, deleted
         case pageCount = "page_count"
         case publishedYear = "published_year"
         case isRead = "is_read"
@@ -65,6 +67,7 @@ struct BookRecord: Codable, Equatable {
         try c.encode(dateReadYearOnly ?? false, forKey: .dateReadYearOnly)
         try c.encode(dateAdded, forKey: .dateAdded)
         try c.encode(notes, forKey: .notes)
+        try c.encode(summary, forKey: .summary)
         try c.encode(rating, forKey: .rating)
         try c.encode(categories, forKey: .categories)
         try c.encode(favoriteRank, forKey: .favoriteRank)
@@ -123,6 +126,7 @@ extension BookRecord {
             dateReadYearOnly: book.dateReadYearOnly,
             dateAdded: book.dateAdded,
             notes: book.notes,
+            summary: book.summary,
             rating: book.rating,
             categories: book.sortedCategories.map(\.name),
             favoriteRank: book.favoriteRank,

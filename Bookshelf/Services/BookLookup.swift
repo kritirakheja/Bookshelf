@@ -11,10 +11,13 @@ struct BookLookup {
     func lookup(isbn: String) async throws -> BookDraft {
         do {
             var draft = try await openLibrary.lookup(isbn: isbn)
-            // Open Library knew the book but had no cover: Google Books may have one.
-            if draft.coverImage == nil, let candidate = try? await google?.lookup(isbn: isbn) {
-                draft.coverImage = await cover(for: candidate)
+            // Open Library knew the book; Google Books may add a cover and the description.
+            let fromGoogle = try? await google?.lookup(isbn: isbn)
+            if draft.coverImage == nil, let fromGoogle {
+                draft.coverImage = await cover(for: fromGoogle)
             }
+            draft.summary = await findDescription(title: draft.trimmedTitle, author: draft.authorList.first,
+                                                  isbn: isbn, known: fromGoogle?.summary) ?? ""
             return draft
         } catch OpenLibraryClient.LookupError.notFound {
             guard let google else { throw OpenLibraryClient.LookupError.notFound }
@@ -62,8 +65,52 @@ struct BookLookup {
     /// A picked result as a draft, with its cover downloaded.
     func draft(for candidate: BookCandidate, isbn: String? = nil) async -> BookDraft {
         var draft = candidate.draft(isbn: isbn)
-        draft.coverImage = await cover(for: candidate)
+        async let coverData = cover(for: candidate)
+        async let description = findDescription(title: candidate.title, author: candidate.authors.first,
+                                                isbn: draft.normalizedISBN, known: candidate.summary)
+        draft.coverImage = await coverData
+        draft.summary = await description ?? ""
         return draft
+    }
+
+    // MARK: Descriptions
+
+    /// The book's description: this edition's (by ISBN), else another English edition
+    /// of the same book on Google Books, else Open Library's. A proper-length one wins
+    /// in that order; otherwise the longest found. `known` is one already in hand.
+    func findDescription(title: String, author: String?, isbn: String?, known: String? = nil) async -> String? {
+        if let known, known.count >= BookDescription.goodLength { return known }
+        var found: [String?] = [known]
+
+        if let isbn, !isbn.isEmpty, known == nil, let google {
+            found.append((try? await google.lookup(isbn: isbn))?.summary)
+            if let best = BookDescription.best(found), best.count >= BookDescription.goodLength { return best }
+        }
+
+        let shortTitle = Self.shortTitle(title)
+        if let google, let editions = try? await google.search(title: shortTitle, author: author) {
+            let sameBook = editions.filter { edition in
+                edition.isEnglish && BookMatcher.words(Self.shortTitle(edition.title)) == BookMatcher.words(shortTitle)
+            }
+            found += sameBook.map(\.summary)
+            if let best = BookDescription.best(found), best.count >= BookDescription.goodLength { return best }
+        }
+
+        found.append(await openLibrary.workDescription(title: shortTitle, author: author))
+        return BookDescription.best(found)
+    }
+
+    /// Looks up a saved book's description if it has none. Returns whether it has one now.
+    @MainActor
+    @discardableResult
+    func fillMissingDescription(of book: Book) async -> Bool {
+        guard book.summary == nil else { return true }
+        let found = await findDescription(title: book.title, author: book.authors.first, isbn: book.isbn)
+        book.summaryLookupDate = .now
+        if let found, book.summary == nil {
+            book.summary = found
+        }
+        return book.summary != nil
     }
 
     // MARK: Cover text

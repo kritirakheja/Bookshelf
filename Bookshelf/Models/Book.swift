@@ -20,6 +20,11 @@ final class Book {
     var dateReadYearOnly: Bool = false
     var dateAdded: Date = Date.now
     var notes: String = ""
+    /// What the book is about: the publisher's description (usually the back-cover text).
+    var summary: String?
+    /// When a description was last looked for online (kept on this phone only), so
+    /// books with none aren't looked up on every launch.
+    var summaryLookupDate: Date?
     /// 1–5 stars, nil = not rated.
     var rating: Int?
     @Relationship(inverse: \BookCategory.books) var categories: [BookCategory] = []

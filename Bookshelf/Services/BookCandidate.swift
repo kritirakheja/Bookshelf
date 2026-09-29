@@ -21,6 +21,8 @@ struct BookCandidate: Identifiable {
     var isbns: [String] = []
     var coverURL: URL?
     var thumbnailURL: URL?
+    /// The publisher's description, if the source has one.
+    var summary: String?
     /// Language code as the source gives it ("en", "eng", "mr", …), if known.
     var language: String?
 
@@ -55,6 +57,7 @@ struct BookCandidate: Identifiable {
         draft.publishedYear = year.map(String.init) ?? ""
         draft.pageCount = pageCount.map(String.init) ?? ""
         draft.categoryNames = CategorySuggestions.categories(forSubjects: subjects)
+        draft.summary = summary ?? ""
         return draft
     }
 }

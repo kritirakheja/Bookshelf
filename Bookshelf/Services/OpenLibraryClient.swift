@@ -133,6 +133,27 @@ struct OpenLibraryClient {
 
     static func words(_ text: String) -> Set<String> { BookMatcher.words(text) }
 
+    // MARK: Descriptions
+
+    /// The description Open Library keeps for the book (on its "work", shared by all
+    /// editions), found by title and author.
+    func workDescription(title: String, author: String?) async -> String? {
+        var query = [URLQueryItem(name: "title", value: title)]
+        if let author, !author.isEmpty { query.append(URLQueryItem(name: "author", value: author)) }
+        guard let data = try? await get(Self.searchURL(query, limit: 1)),
+              let key = (try? JSONDecoder().decode(SearchResponse.self, from: data))?.docs.first?.key,
+              key.hasPrefix("/works/"),
+              let work = try? await get(URL(string: "https://openlibrary.org\(key).json")!) else { return nil }
+        return Self.parseWorkDescription(work)
+    }
+
+    /// Work records hold the description either as text or as {"value": text}.
+    static func parseWorkDescription(_ data: Data) -> String? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        let raw = (json["description"] as? String) ?? ((json["description"] as? [String: Any])?["value"] as? String)
+        return raw.map(BookDescription.clean).flatMap { $0.isEmpty ? nil : $0 }
+    }
+
     // MARK: Covers
 
     /// Finds a cover for a book that doesn't have one: first by ISBN, then by

@@ -10,6 +10,7 @@ struct BookDraft {
     var publishedYear = ""
     var pageCount = ""
     var coverImage: Data?
+    var summary = ""
     /// Categories to attach when a new book is saved (edit them on the book's page afterwards).
     var categoryNames: [String] = []
 
@@ -22,6 +23,7 @@ struct BookDraft {
         publishedYear = book.publishedYear.map(String.init) ?? ""
         pageCount = book.pageCount.map(String.init) ?? ""
         coverImage = book.coverImage
+        summary = book.summary ?? ""
     }
 
     var trimmedTitle: String { title.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -47,6 +49,8 @@ struct BookDraft {
         book.publishedYear = Int(publishedYear)
         book.pageCount = Int(pageCount)
         book.coverImage = coverImage
+        let trimmedSummary = summary.trimmingCharacters(in: .whitespacesAndNewlines)
+        book.summary = trimmedSummary.isEmpty ? nil : trimmedSummary
     }
 
     func makeBook() -> Book {

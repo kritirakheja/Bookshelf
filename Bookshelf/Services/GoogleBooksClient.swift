@@ -44,6 +44,12 @@ struct GoogleBooksClient {
         return (((await exact) ?? []) + plain).filter { seen.insert($0.id).inserted }
     }
 
+    /// Editions of a particular book, by title and author words.
+    func search(title: String, author: String?, limit: Int = 10) async throws -> [BookCandidate] {
+        let query = ["intitle:\(title)", author.map { "inauthor:\($0)" }].compactMap { $0 }.joined(separator: " ")
+        return try await volumes(query: query, limit: limit)
+    }
+
     private func volumes(query: String, limit: Int, booksOnly: Bool = true) async throws -> [BookCandidate] {
         var components = URLComponents(string: "https://www.googleapis.com/books/v1/volumes")!
         components.queryItems = [
@@ -86,6 +92,7 @@ struct GoogleBooksClient {
                 isbns: identifiers.filter { $0.type.hasPrefix("ISBN") }.map(\.identifier),
                 coverURL: thumbnail.flatMap { coverURL(fromThumbnail: $0, width: 800) },
                 thumbnailURL: thumbnail.flatMap { coverURL(fromThumbnail: $0, width: 200) },
+                summary: info.description.map(BookDescription.clean),
                 language: info.language
             )
         }
@@ -129,5 +136,6 @@ struct GoogleBooksClient {
         let industryIdentifiers: [Identifier]?
         let imageLinks: ImageLinks?
         let language: String?
+        let description: String?
     }
 }

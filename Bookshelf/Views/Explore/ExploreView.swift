@@ -109,7 +109,7 @@ private struct FeaturedCarousel: View {
         }
         .tabViewStyle(.page(indexDisplayMode: books.count > 1 ? .always : .never))
         .indexViewStyle(.page(backgroundDisplayMode: .always))
-        .frame(height: 440)
+        .frame(height: 480)
     }
 }
 
@@ -138,6 +138,14 @@ private struct FeaturedCard: View {
                         Text(book.sortedCategories.map(\.name).joined(separator: " · "))
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                    }
+                    if let summary = book.summary {
+                        Text(summary)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .padding(.top, 4)
                     }
                 }
                 .padding(.horizontal)
