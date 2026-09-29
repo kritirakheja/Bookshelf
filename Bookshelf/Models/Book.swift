@@ -24,6 +24,8 @@ final class Book {
     /// nil = not on the favourites shelf; 1...N = position on the shelf.
     var favoriteRank: Int?
     var recommendationNote: String?
+    /// Every time this book was lent out, including the current loan (if any).
+    @Relationship(deleteRule: .cascade, inverse: \Loan.book) var loans: [Loan] = []
 
     // Backup & sync bookkeeping (see SyncEngine).
     /// The book's id in the online library; nil until first synced.
@@ -57,6 +59,29 @@ final class Book {
 
     var sortedCategories: [BookCategory] {
         categories.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    // MARK: Lending
+
+    /// Who has the book right now, if anyone.
+    var currentLoan: Loan? { loans.first { $0.returnedAt == nil } }
+
+    var isLent: Bool { currentLoan != nil }
+
+    /// Returned loans, most recent first.
+    var pastLoans: [Loan] {
+        loans.filter { $0.returnedAt != nil }.sorted { $0.lentAt > $1.lentAt }
+    }
+
+    /// Records the book as lent. Does nothing if it's already out (return it first).
+    func lend(to name: String, contactID: String? = nil, on date: Date = .now) {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, !isLent else { return }
+        loans.append(Loan(borrowerName: name, contactID: contactID, lentAt: date))
+    }
+
+    func markReturned(on date: Date = .now) {
+        currentLoan?.returnedAt = date
     }
 
     var status: ReadingStatus {

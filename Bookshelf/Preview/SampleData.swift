@@ -45,6 +45,13 @@ enum SampleData {
             // Stagger dates so "Recently added" sorting is visible.
             book.dateAdded = Date.now.addingTimeInterval(TimeInterval(-86_400 * index))
         }
+
+        // One book out with a friend, one borrowed and returned before.
+        let circe = books.first { $0.0.title == "Circe" }!.0
+        circe.lend(to: "Priya Sharma", on: Date.now.addingTimeInterval(-86_400 * 12))
+        let hobbit = books.first { $0.0.title == "The Hobbit" }!.0
+        hobbit.lend(to: "Arjun", on: Date.now.addingTimeInterval(-86_400 * 90))
+        hobbit.markReturned(on: Date.now.addingTimeInterval(-86_400 * 60))
     }
 
     /// Seeds sample data on first launch in the simulator only. Never runs on a real phone.
@@ -59,7 +66,7 @@ enum SampleData {
     @MainActor
     static let previewContainer: ModelContainer = {
         let container = try! ModelContainer(
-            for: Book.self, BookCategory.self, DeletedBook.self,
+            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         insert(into: container.mainContext)

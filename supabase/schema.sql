@@ -29,6 +29,9 @@ create table if not exists public.books (
 
 create index if not exists books_user_updated on public.books (user_id, updated_at);
 
+-- Lending history: [{id, borrower_name, contact_id, lent_at, returned_at}, ...]
+alter table public.books add column if not exists loans jsonb not null default '[]';
+
 -- Profile: name and photo.
 create table if not exists public.profiles (
   user_id    uuid primary key default auth.uid() references auth.users on delete cascade,

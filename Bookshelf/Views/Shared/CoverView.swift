@@ -18,7 +18,33 @@ struct CoverView: View {
         }
         .frame(width: width, height: width * 1.5)
         .clipShape(RoundedRectangle(cornerRadius: width > 60 ? 8 : 4))
+        .overlay(alignment: .bottomTrailing) {
+            if book.isLent { lentBadge }
+        }
         .shadow(color: .black.opacity(0.15), radius: width > 60 ? 4 : 1, y: 1)
+    }
+
+    /// Marks a book that's currently with a friend: a label on big covers,
+    /// just an icon on list thumbnails.
+    @ViewBuilder
+    private var lentBadge: some View {
+        if width >= 80 {
+            Label("Lent", systemImage: "arrow.up.forward")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(.orange, in: Capsule())
+                .padding(5)
+                .accessibilityLabel("Lent out")
+        } else {
+            Image(systemName: "arrow.up.forward.circle.fill")
+                .font(.system(size: width / 3))
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(.white, .orange)
+                .offset(x: 4, y: 4)
+                .accessibilityLabel("Lent out")
+        }
     }
 
     private var placeholder: some View {

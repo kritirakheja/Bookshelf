@@ -19,6 +19,7 @@ struct LibraryStats {
     let readingCount: Int
     let unreadCount: Int
     let pagesRead: Int
+    let lentCount: Int
     let averageRating: Double?
     let readThisYear: Int
     /// Only books with a finish date count here.
@@ -36,6 +37,7 @@ struct LibraryStats {
         readingCount = books.filter { $0.status == .reading }.count
         unreadCount = books.filter { $0.status == .unread }.count
         pagesRead = read.compactMap(\.pageCount).reduce(0, +)
+        lentCount = books.filter(\.isLent).count
 
         let ratings = books.compactMap(\.rating)
         averageRating = ratings.isEmpty ? nil : Double(ratings.reduce(0, +)) / Double(ratings.count)

@@ -166,10 +166,11 @@ struct ProfileView: View {
             .padding(.vertical, 12)
             .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
 
-            HStack(spacing: 10) {
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                 tile(stats.pagesRead.formatted(), "Pages read", "doc.text.fill")
                 tile(stats.averageRating.map { String(format: "%.1f", $0) } ?? "–", "Avg rating", "star.fill")
                 tile("\(stats.readThisYear)", "Read in \(String(Calendar.current.component(.year, from: .now)))", "calendar")
+                tile("\(stats.lentCount)", "Lent out", "arrow.up.forward.circle.fill")
             }
         }
     }

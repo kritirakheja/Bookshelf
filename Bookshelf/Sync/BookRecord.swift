@@ -21,12 +21,15 @@ struct BookRecord: Codable, Equatable {
     var recommendationNote: String?
     var coverPath: String?
     var coverHash: String?
+    /// Lending history, stored as a JSON array in the row. Optional so rows from
+    /// before lending existed still decode.
+    var loans: [LoanRecord]?
     var deleted: Bool = false
     /// Set by the server; never sent.
     var updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id, title, authors, isbn, notes, rating, categories, deleted
+        case id, title, authors, isbn, notes, rating, categories, loans, deleted
         case pageCount = "page_count"
         case publishedYear = "published_year"
         case isRead = "is_read"
@@ -64,7 +67,33 @@ struct BookRecord: Codable, Equatable {
         try c.encode(recommendationNote, forKey: .recommendationNote)
         try c.encode(coverPath, forKey: .coverPath)
         try c.encode(coverHash, forKey: .coverHash)
+        try c.encode(loans ?? [], forKey: .loans)
         try c.encode(deleted, forKey: .deleted)
+    }
+}
+
+/// One loan inside a book's row.
+struct LoanRecord: Codable, Equatable {
+    var id: UUID
+    var borrowerName: String
+    var contactID: String?
+    var lentAt: Date
+    var returnedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case borrowerName = "borrower_name"
+        case contactID = "contact_id"
+        case lentAt = "lent_at"
+        case returnedAt = "returned_at"
+    }
+
+    init(loan: Loan) {
+        id = loan.id
+        borrowerName = loan.borrowerName
+        contactID = loan.contactID
+        lentAt = loan.lentAt
+        returnedAt = loan.returnedAt
     }
 }
 
@@ -89,6 +118,10 @@ extension BookRecord {
             favoriteRank: book.favoriteRank,
             recommendationNote: book.recommendationNote
         )
+        // Sorted so the fingerprint doesn't depend on the database's ordering.
+        loans = book.loans
+            .sorted { ($0.lentAt, $0.id.uuidString) < ($1.lentAt, $1.id.uuidString) }
+            .map(LoanRecord.init(loan:))
     }
 }
 

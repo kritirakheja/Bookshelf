@@ -124,6 +124,7 @@ struct SyncEngine {
         book.favoriteRank = row.favoriteRank
         book.recommendationNote = row.recommendationNote
         book.categories = row.categories.compactMap { BookCategory.named($0, in: context) }
+        applyLoans(row.loans ?? [], to: book)
 
         if let hash = row.coverHash, let path = row.coverPath {
             if hash != SyncHash.cover(of: book) {
@@ -137,6 +138,28 @@ struct SyncEngine {
             book.syncedCoverHash = nil
         }
         book.syncedFingerprint = SyncHash.fingerprint(of: book)
+    }
+
+    /// Makes the book's loans match the online row: update by id, add new, drop missing.
+    private func applyLoans(_ records: [LoanRecord], to book: Book) {
+        let existing = Dictionary(book.loans.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let incomingIDs = Set(records.map(\.id))
+        for loan in book.loans where !incomingIDs.contains(loan.id) {
+            context.delete(loan)
+        }
+        book.loans = records.map { record in
+            let loan = existing[record.id] ?? {
+                let loan = Loan(borrowerName: record.borrowerName)
+                loan.id = record.id
+                context.insert(loan)
+                return loan
+            }()
+            loan.borrowerName = record.borrowerName
+            loan.contactID = record.contactID
+            loan.lentAt = record.lentAt
+            loan.returnedAt = record.returnedAt
+            return loan
+        }
     }
 
     private func unsyncedMatch(for row: BookRecord, in books: [Book]) -> Book? {

@@ -23,6 +23,11 @@ struct BookRow: View {
                         .font(.caption)
                         .foregroundStyle(book.dateRead == nil ? .tertiary : .secondary)
                 }
+                if let loan = book.currentLoan {
+                    Text("Lent to \(loan.borrowerName)")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.orange)
+                }
                 if showsStartDate, let started = book.dateStarted {
                     Text("Started \(started.formatted(date: .abbreviated, time: .omitted))")
                         .font(.caption)

@@ -71,6 +71,17 @@ final class SupabaseLiveTests: XCTestCase {
             XCTAssertNil(phone.book("Dune")?.rating)
             XCTAssertEqual(phone.book("Dune")?.notes, "Read it twice")
 
+            // Lending and returning, with history, both ways.
+            phone.book("Dune")?.lend(to: "Priya Sharma", contactID: "local-only")
+            try await phone.sync()
+            try await ipad.sync()
+            XCTAssertEqual(ipad.book("Dune")?.currentLoan?.borrowerName, "Priya Sharma")
+            ipad.book("Dune")?.markReturned()
+            try await ipad.sync()
+            try await phone.sync()
+            XCTAssertEqual(phone.book("Dune")?.isLent, false)
+            XCTAssertEqual(phone.book("Dune")?.pastLoans.map(\.borrowerName), ["Priya Sharma"])
+
             // A deletion on the phone reaches the second device.
             phone.delete(try XCTUnwrap(phone.book("Circe")))
             try await phone.sync()

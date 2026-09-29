@@ -65,7 +65,7 @@ final class Device {
 
     init(remote: SyncRemote, userID: UUID) throws {
         container = try ModelContainer(
-            for: Book.self, BookCategory.self, DeletedBook.self,
+            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         engine = SyncEngine(context: container.mainContext, remote: remote, userID: userID)
@@ -166,6 +166,33 @@ final class SyncEngineTests: XCTestCase {
         let onPhone = try XCTUnwrap(phone.book("Dune"))
         XCTAssertEqual(onPhone.status, .reading)
         XCTAssertEqual(onPhone.notes, "Slow start, great ending")
+    }
+
+    func testLendingSyncsBetweenDevices() async throws {
+        let circe = phone.add("Circe")
+        try await phone.sync()
+        try await ipad.sync()
+
+        circe.lend(to: "Priya", contactID: "phone-only-id")
+        XCTAssertTrue(phone.engine.hasLocalChanges(circe), "Lending alone counts as a change")
+        try await phone.sync()
+        try await ipad.sync()
+        XCTAssertEqual(ipad.book("Circe")?.currentLoan?.borrowerName, "Priya")
+
+        // Returned on the iPad; the phone sees the history.
+        ipad.book("Circe")?.markReturned()
+        try await ipad.sync()
+        try await phone.sync()
+        XCTAssertFalse(circe.isLent)
+        XCTAssertEqual(circe.pastLoans.map(\.borrowerName), ["Priya"])
+        XCTAssertEqual(circe.loans.count, 1, "Same loan updated, not duplicated")
+
+        // Removing a history entry syncs too.
+        phone.context.delete(circe.pastLoans[0])
+        try await phone.sync()
+        try await ipad.sync()
+        XCTAssertEqual(ipad.book("Circe")?.loans.count, 0)
+        XCTAssertFalse(phone.engine.hasLocalChanges(try XCTUnwrap(ipad.book("Circe"))))
     }
 
     func testClearingAFieldSyncs() async throws {

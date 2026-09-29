@@ -108,6 +108,8 @@ struct BookDetailView: View {
                 }
             }
 
+            LendingSection(book: book)
+
             Section("Favourites") {
                 if let rank = book.favoriteRank {
                     LabeledContent("On your shelf", value: "#\(rank)")
