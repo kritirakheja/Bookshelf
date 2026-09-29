@@ -45,8 +45,11 @@ struct OpenLibraryClient {
     /// Turns a search response into a draft, or nil when nothing matched.
     static func parse(_ data: Data, isbn: String) throws -> LookupResult? {
         let response = try JSONDecoder().decode(SearchResponse.self, from: data)
-        guard let doc = response.docs.first, let title = doc.title else { return nil }
+        return response.docs.first.flatMap { draft(from: $0, isbn: isbn) }
+    }
 
+    static func draft(from doc: SearchDoc, isbn: String) -> LookupResult? {
+        guard let title = doc.title else { return nil }
         var draft = BookDraft()
         draft.title = title
         draft.authors = (doc.authorName ?? []).joined(separator: ", ")
@@ -55,6 +58,100 @@ struct OpenLibraryClient {
         draft.pageCount = doc.numberOfPagesMedian.map(String.init) ?? ""
         draft.categoryNames = CategorySuggestions.categories(forSubjects: doc.subject ?? [])
         return LookupResult(draft: draft, coverURL: doc.coverID.map(coverURL(id:)))
+    }
+
+    // MARK: Identify from the front cover
+
+    /// Searches Open Library for the book whose title and author best match the text
+    /// read off its cover. Returns nil when nothing matches well enough.
+    func identify(coverLines prominent: [String], isbn: String) async throws -> BookDraft? {
+        guard !prominent.isEmpty else { return nil }
+        // Most specific first: all the big text, then the top two lines, then the biggest.
+        var queries: [String] = []
+        for query in [prominent.joined(separator: " "), prominent.prefix(2).joined(separator: " "), prominent[0]]
+        where !queries.contains(query) {
+            queries.append(query)
+        }
+        var candidates: [SearchDoc] = []
+        for query in queries {
+            let data = try await get(Self.searchURL([URLQueryItem(name: "q", value: query)], limit: 8))
+            candidates += try JSONDecoder().decode(SearchResponse.self, from: data).docs
+            // Stop once a result matches both title and author; a title-only match might
+            // be a different book with the same name, so keep looking.
+            if Self.rankedMatch(in: candidates, coverText: prominent)?.authorMatched == true { break }
+        }
+        guard let doc = Self.bestMatch(in: candidates, coverText: prominent),
+              let result = Self.draft(from: doc, isbn: isbn) else { return nil }
+        var draft = result.draft
+        draft.coverImage = await firstCover(from: [result.coverURL])
+        return draft
+    }
+
+    /// Picks the result whose title is best supported by the words on the cover.
+    /// Most title words must appear on the cover (so "The Housemaid's Secret" loses to
+    /// "The Housemaid" when the cover only says HOUSEMAID); a matching author surname
+    /// and covering more of the cover's words break ties.
+    static func bestMatch(in docs: [SearchDoc], coverText: [String]) -> SearchDoc? {
+        rankedMatch(in: docs, coverText: coverText)?.doc
+    }
+
+    static func rankedMatch(in docs: [SearchDoc], coverText: [String]) -> (doc: SearchDoc, authorMatched: Bool)? {
+        let coverWords = words(coverText.joined(separator: " "))
+        guard !coverWords.isEmpty else { return nil }
+
+        var best: (doc: SearchDoc, score: Double, authorMatched: Bool)?
+        for doc in docs {
+            let titleWords = words(doc.title ?? "")
+            guard !titleWords.isEmpty else { continue }
+            let shared = Double(titleWords.intersection(coverWords).count)
+            let precision = shared / Double(titleWords.count)
+            guard precision >= 0.6 else { continue }
+            let authorWords = words((doc.authorName ?? []).joined(separator: " "))
+            let authorMatched = authorWords.contains { name in
+                coverWords.contains { roughlyEqual(name, $0) }
+            }
+            let recall = shared / Double(coverWords.count)
+            let score = 2 * precision + (authorMatched ? 1 : 0) + recall
+            if score > (best?.score ?? 0) {
+                best = (doc, score, authorMatched)
+            }
+        }
+        return best.map { ($0.doc, $0.authorMatched) }
+    }
+
+    /// Same word, allowing for text-recognition slips in longer words
+    /// ("CONWAY" read as "INWAY").
+    static func roughlyEqual(_ a: String, _ b: String) -> Bool {
+        if a == b { return true }
+        guard min(a.count, b.count) >= 5 else { return false }
+        return editDistance(a, b) <= 2
+    }
+
+    private static func editDistance(_ a: String, _ b: String) -> Int {
+        let a = Array(a), b = Array(b)
+        var previous = Array(0...b.count)
+        for i in 1...a.count {
+            var current = [i] + Array(repeating: 0, count: b.count)
+            for j in 1...b.count {
+                current[j] = a[i - 1] == b[j - 1]
+                    ? previous[j - 1]
+                    : 1 + min(previous[j - 1], previous[j], current[j - 1])
+            }
+            previous = current
+        }
+        return previous[b.count]
+    }
+
+    private static let stopWords: Set<String> = ["the", "a", "an", "of", "and", "to", "in", "on", "for", "by", "with"]
+
+    /// Lowercased words without possessives or punctuation ("Housemaid's" → "housemaid").
+    static func words(_ text: String) -> Set<String> {
+        Set(
+            text.lowercased()
+                .replacing(#/['\u{2019}]s\b/#, with: "")
+                .components(separatedBy: CharacterSet.alphanumerics.inverted)
+                .filter { $0.count >= 2 && !stopWords.contains($0) }
+        )
     }
 
     // MARK: Covers
@@ -114,11 +211,11 @@ struct OpenLibraryClient {
 
     // MARK: Networking
 
-    private static func searchURL(_ query: [URLQueryItem]) -> URL {
+    private static func searchURL(_ query: [URLQueryItem], limit: Int = 3) -> URL {
         var components = URLComponents(string: "https://openlibrary.org/search.json")!
         components.queryItems = query + [
             URLQueryItem(name: "fields", value: searchFields),
-            URLQueryItem(name: "limit", value: "3"),
+            URLQueryItem(name: "limit", value: String(limit)),
         ]
         return components.url!
     }
@@ -130,11 +227,11 @@ struct OpenLibraryClient {
         return data
     }
 
-    private struct SearchResponse: Decodable {
-        let docs: [Doc]
+    struct SearchResponse: Decodable {
+        let docs: [SearchDoc]
     }
 
-    private struct Doc: Decodable {
+    struct SearchDoc: Decodable {
         let title: String?
         let authorName: [String]?
         let coverID: Int?
