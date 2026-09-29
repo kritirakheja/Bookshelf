@@ -45,6 +45,17 @@ enum FavoritesShelf {
         renumber(shelf)
     }
 
+    /// Repairs ranks after merging changes from another device: closes gaps, settles
+    /// ties, and drops anything beyond capacity. Leaves an already-tidy shelf untouched.
+    static func normalize(_ library: [Book]) {
+        let shelf = ordered(library)
+        let kept = Array(shelf.prefix(capacity))
+        shelf.dropFirst(capacity).forEach { $0.favoriteRank = nil }
+        if kept.map(\.favoriteRank) != kept.indices.map({ $0 + 1 }) {
+            renumber(kept)
+        }
+    }
+
     private static func renumber(_ shelf: [Book]) {
         for (index, book) in shelf.enumerated() {
             book.favoriteRank = index + 1

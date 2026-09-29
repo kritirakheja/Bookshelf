@@ -25,6 +25,14 @@ final class Book {
     var favoriteRank: Int?
     var recommendationNote: String?
 
+    // Backup & sync bookkeeping (see SyncEngine).
+    /// The book's id in the online library; nil until first synced.
+    var remoteID: UUID?
+    /// Fingerprint of the book's details at the last sync; differs once edited.
+    var syncedFingerprint: String?
+    /// Hash of the cover at the last sync.
+    var syncedCoverHash: String?
+
     init(
         title: String,
         authors: [String] = [],

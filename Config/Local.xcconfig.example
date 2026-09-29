@@ -3,3 +3,8 @@
 
 BOOKSHELF_BUNDLE_ID = com.yourname.Bookshelf
 DEVELOPMENT_TEAM = ABCDE12345
+
+// Optional: backup & sync. From Supabase → Project Settings → API.
+// Host without https:// (e.g. abcdefgh.supabase.co) and the publishable (anon) key.
+SUPABASE_HOST =
+SUPABASE_KEY =

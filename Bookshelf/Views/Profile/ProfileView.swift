@@ -28,6 +28,8 @@ struct ProfileView: View {
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
 
+                AccountSection()
+
                 Section {
                     NavigationLink(value: Route.allBooks) {
                         LabeledContent { Text("\(stats.total)") } label: { Label("All books", systemImage: "books.vertical") }
@@ -88,6 +90,9 @@ struct ProfileView: View {
             }
             .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
             .navigationDestination(for: BookCategory.self) { CategoryBooksView(category: $0) }
+            .onReceive(NotificationCenter.default.publisher(for: .profilePhotoChanged)) { _ in
+                photo = ProfilePhotoStore.load()
+            }
             .onChange(of: photoItem) {
                 Task {
                     if let data = try? await photoItem?.loadTransferable(type: Data.self) {
@@ -231,4 +236,5 @@ struct ProfileView: View {
 #Preview {
     ProfileView()
         .modelContainer(SampleData.previewContainer)
+        .environment(AccountStore(container: SampleData.previewContainer))
 }

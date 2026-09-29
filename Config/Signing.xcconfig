@@ -1,9 +1,14 @@
-// Signing settings shared by all targets.
+// Build settings shared by all targets.
 //
-// Personal values (Apple team ID, bundle ID) live in Config/Local.xcconfig,
+// Personal values (Apple team ID, bundle ID, Supabase project) live in Config/Local.xcconfig,
 // which is git-ignored. Copy Config/Local.xcconfig.example to get started.
 
 BOOKSHELF_BUNDLE_ID = com.example.Bookshelf
 DEVELOPMENT_TEAM =
+
+// Backup & sync. Host only (e.g. abcdefgh.supabase.co): "//" starts a comment in
+// .xcconfig files, so the app adds https:// itself. Leave blank to build without sync.
+SUPABASE_HOST =
+SUPABASE_KEY =
 
 #include? "Local.xcconfig"

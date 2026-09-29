@@ -59,7 +59,7 @@ enum SampleData {
     @MainActor
     static let previewContainer: ModelContainer = {
         let container = try! ModelContainer(
-            for: Book.self, BookCategory.self,
+            for: Book.self, BookCategory.self, DeletedBook.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         insert(into: container.mainContext)

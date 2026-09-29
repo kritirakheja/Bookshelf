@@ -3,10 +3,20 @@ import SwiftData
 
 @main
 struct BookshelfApp: App {
+    private let container: ModelContainer
+    @State private var account: AccountStore
+
+    init() {
+        let container = try! ModelContainer(for: Book.self, BookCategory.self, DeletedBook.self)
+        self.container = container
+        _account = State(initialValue: AccountStore(container: container))
+    }
+
     var body: some Scene {
         WindowGroup {
             RootTabView()
+                .environment(account)
         }
-        .modelContainer(for: [Book.self, BookCategory.self])
+        .modelContainer(container)
     }
 }

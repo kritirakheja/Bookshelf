@@ -125,6 +125,9 @@ struct LibraryView: View {
             if book.isFavorite {
                 FavoritesShelf.remove(book, library: books)
             }
+            if let remoteID = book.remoteID {
+                context.insert(DeletedBook(remoteID: remoteID))
+            }
             context.delete(book)
         }
     }

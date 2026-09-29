@@ -23,6 +23,17 @@ enum ProfilePhotoStore {
         return resized
     }
 
+    /// The stored JPEG exactly as saved (for sync, so its hash stays stable).
+    static func data() -> Data? {
+        try? Data(contentsOf: url)
+    }
+
+    /// Stores already-prepared JPEG bytes as they are (a photo synced from another device).
+    static func saveExact(_ data: Data) {
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? data.write(to: url, options: .atomic)
+    }
+
     static func remove() {
         try? FileManager.default.removeItem(at: url)
     }
