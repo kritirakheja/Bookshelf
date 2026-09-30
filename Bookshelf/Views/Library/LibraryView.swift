@@ -1,6 +1,10 @@
 import SwiftUI
 import SwiftData
 
+enum LibraryLayout: String {
+    case shelves, list
+}
+
 enum LibrarySort: String, CaseIterable, Identifiable {
     case title = "Title"
     case author = "Author"
@@ -29,6 +33,8 @@ struct LibraryView: View {
     @State private var fillingCovers = false
     @State private var bookToDelete: Book?
     @State private var coverResult: (found: Int, total: Int)?
+    /// Bookshop shelves (default) or the plain list; remembered.
+    @AppStorage("libraryLayout") private var layout = LibraryLayout.shelves
 
     private var booksWithoutCovers: [Book] { books.filter { $0.coverImage == nil } }
 
@@ -42,13 +48,20 @@ struct LibraryView: View {
     }
 
     var body: some View {
-        List {
-            ForEach(visibleBooks) { book in
-                NavigationLink(value: book) {
-                    BookRow(book: book)
-                }
-                .swipeActions(edge: .trailing) {
-                    Button("Delete", systemImage: "trash", role: .destructive) { bookToDelete = book }
+        Group {
+            switch layout {
+            case .shelves:
+                BookshopShelves(books: visibleBooks) { book in bookMenu(book) }
+            case .list:
+                List {
+                    ForEach(visibleBooks) { book in
+                        NavigationLink(value: book) {
+                            BookRow(book: book)
+                        }
+                        .swipeActions(edge: .trailing) {
+                            Button("Delete", systemImage: "trash", role: .destructive) { bookToDelete = book }
+                        }
+                    }
                 }
             }
         }
@@ -58,6 +71,10 @@ struct LibraryView: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Menu {
+                    Picker("View", selection: $layout) {
+                        Label("Shelves", systemImage: "books.vertical").tag(LibraryLayout.shelves)
+                        Label("List", systemImage: "list.bullet").tag(LibraryLayout.list)
+                    }
                     Picker("Sort by", selection: $sort) {
                         ForEach(LibrarySort.allCases) { Text($0.rawValue).tag($0) }
                     }
@@ -103,6 +120,23 @@ struct LibraryView: View {
                 ContentUnavailableView.search(text: searchText)
             }
         }
+    }
+
+    /// Long-press actions on a cover.
+    @ViewBuilder
+    private func bookMenu(_ book: Book) -> some View {
+        if book.status != .reading {
+            Button("Start reading", systemImage: ReadingStatus.reading.systemImage) {
+                withAnimation { book.setStatus(.reading) }
+            }
+        }
+        if book.status != .read {
+            Button("Mark as read", systemImage: ReadingStatus.read.systemImage) {
+                withAnimation { book.setStatus(.read) }
+            }
+        }
+        Divider()
+        Button("Delete", systemImage: "trash", role: .destructive) { bookToDelete = book }
     }
 
     /// One book at a time, to go easy on Open Library's free API.
