@@ -1,7 +1,6 @@
 import SwiftUI
 import SwiftData
 import PhotosUI
-import Charts
 
 struct ProfileView: View {
     enum Route: Hashable {
@@ -45,40 +44,6 @@ struct ProfileView: View {
                     }
                     NavigationLink(value: Route.categories) {
                         Label("Categories", systemImage: "square.grid.2x2")
-                    }
-                }
-
-                if !stats.finishedPerYear.isEmpty {
-                    Section {
-                        finishedChart(stats)
-                    } header: {
-                        Text("Books finished per year")
-                    } footer: {
-                        if stats.datedReadCount < stats.readCount {
-                            Text("Based on the \(stats.datedReadCount) of \(stats.readCount) read books that have a finish date.")
-                        }
-                    }
-                }
-
-                if stats.ratingCounts.contains(where: { $0 > 0 }) {
-                    Section("How you rate books") {
-                        ratingsChart(stats)
-                    }
-                }
-
-                if !stats.topAuthors.isEmpty {
-                    Section("Most-read authors") {
-                        ForEach(stats.topAuthors) { author in
-                            LabeledContent(author.name, value: "\(author.count) books")
-                        }
-                    }
-                }
-
-                if !stats.topCategories.isEmpty {
-                    Section("Top categories") {
-                        ForEach(stats.topCategories) { category in
-                            LabeledContent(category.name, value: "\(category.count) books")
-                        }
                     }
                 }
             }
@@ -178,10 +143,6 @@ struct ProfileView: View {
 
             HStack(spacing: 10) {
                 tile(stats.pagesRead.formatted(), "Pages read", "doc.text.fill")
-                tile(stats.averageRating.map { String(format: "%.1f", $0) } ?? "–", "Avg rating", "star.fill")
-                tile("\(stats.readThisYear)", "Read in \(String(Calendar.current.component(.year, from: .now)))", "calendar")
-            }
-            HStack(spacing: 10) {
                 tile("\(stats.lentCount)", "Lent out", "arrow.up.forward.circle.fill")
                 tile("\(stats.borrowedCount)", "Borrowed", "arrow.down.backward.circle.fill")
             }
@@ -218,32 +179,6 @@ struct ProfileView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
-    }
-
-    private func finishedChart(_ stats: LibraryStats) -> some View {
-        Chart(stats.finishedPerYear) { entry in
-            BarMark(x: .value("Year", String(entry.year)), y: .value("Books", entry.count))
-                .foregroundStyle(.tint)
-                .annotation(position: .top) {
-                    Text("\(entry.count)").font(.caption2).foregroundStyle(.secondary)
-                }
-        }
-        .chartYAxis(.hidden)
-        .frame(height: 160)
-        .padding(.vertical, 8)
-    }
-
-    private func ratingsChart(_ stats: LibraryStats) -> some View {
-        Chart((1...5).reversed(), id: \.self) { star in
-            BarMark(x: .value("Books", stats.ratingCounts[star - 1]), y: .value("Stars", "\(star)★"))
-                .foregroundStyle(.yellow.gradient)
-                .annotation(position: .trailing) {
-                    Text("\(stats.ratingCounts[star - 1])").font(.caption2).foregroundStyle(.secondary)
-                }
-        }
-        .chartXAxis(.hidden)
-        .frame(height: 150)
-        .padding(.vertical, 8)
     }
 }
 

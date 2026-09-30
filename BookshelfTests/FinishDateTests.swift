@@ -59,13 +59,12 @@ final class FinishDateTests: XCTestCase {
         XCTAssertNil(book.dateRead)
     }
 
-    func testYearOnlyCountsInThatYearAndSortsAfterExactDates() {
+    func testYearOnlyShowsTheYearAndSortsAfterExactDates() {
         let exact = readBook("Exact", added: .now, finished: date(2025, 3, 10))
         let yearOnly = readBook("Year only", added: .now)
         yearOnly.setFinishYear(2025)
 
-        let stats = LibraryStats(books: [exact, yearOnly], now: date(2026, 9, 1))
-        XCTAssertEqual(stats.finishedPerYear, [.init(year: 2025, count: 2)])
+        XCTAssertEqual(yearOnly.finishDateText, "2025")
         XCTAssertLessThan(yearOnly.dateRead!, exact.dateRead!, "1 Jan sorts after dated books in the Read list")
     }
 

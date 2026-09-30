@@ -26,44 +26,17 @@ final class LibraryStatsTests: XCTestCase {
             book("C", pages: 999, status: .reading),
             book("D", status: .unread, rating: 4),
         ]
-        let stats = LibraryStats(books: books, now: date(2026, 9), calendar: calendar)
+        let stats = LibraryStats(books: books)
         XCTAssertEqual(stats.total, 4)
         XCTAssertEqual(stats.readCount, 2)
         XCTAssertEqual(stats.readingCount, 1)
         XCTAssertEqual(stats.unreadCount, 1)
         XCTAssertEqual(stats.pagesRead, 500, "Only read books count towards pages read")
-        XCTAssertEqual(stats.averageRating, 4.0)
-        XCTAssertEqual(stats.ratingCounts, [0, 0, 1, 1, 1])
-    }
-
-    func testFinishedPerYearOnlyUsesDatedBooks() {
-        let books = [
-            book("A", status: .read, finished: date(2024)),
-            book("B", status: .read, finished: date(2026, 1)),
-            book("C", status: .read, finished: date(2026, 8)),
-            book("D", status: .read, finished: nil),
-        ]
-        let stats = LibraryStats(books: books, now: date(2026, 9), calendar: calendar)
-        XCTAssertEqual(stats.finishedPerYear, [.init(year: 2024, count: 1), .init(year: 2026, count: 2)])
-        XCTAssertEqual(stats.datedReadCount, 3)
-        XCTAssertEqual(stats.readThisYear, 2)
-    }
-
-    func testTopAuthorsNeedTwoReadBooks() {
-        let books = [
-            book("A", author: "Austen", status: .read),
-            book("B", author: "Austen", status: .read),
-            book("C", author: "Herbert", status: .read),
-            book("D", author: "Herbert", status: .unread),
-        ]
-        let stats = LibraryStats(books: books, calendar: calendar)
-        XCTAssertEqual(stats.topAuthors, [.init(name: "Austen", count: 2)])
     }
 
     func testEmptyLibrary() {
-        let stats = LibraryStats(books: [], calendar: calendar)
+        let stats = LibraryStats(books: [])
         XCTAssertEqual(stats.total, 0)
-        XCTAssertNil(stats.averageRating)
-        XCTAssertEqual(stats.finishedPerYear, [])
+        XCTAssertEqual(stats.pagesRead, 0)
     }
 }
