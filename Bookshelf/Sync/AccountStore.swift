@@ -114,6 +114,10 @@ final class AccountStore {
 
             try await syncProfile(engine: engine, userID: userID)
 
+            let stores = BookstoreSync(context: context, remote: SupabaseRemote(client: client))
+            let storesPulled = defaults.object(forKey: key("lastPulledStores", userID)) as? Date
+            defaults.set(try await stores.sync(lastPulledAt: storesPulled), forKey: key("lastPulledStores", userID))
+
             lastSynced = .now
             defaults.set(lastSynced, forKey: key("lastSynced", userID))
             status = .idle
@@ -134,6 +138,13 @@ final class AccountStore {
                 book.syncedCoverHash = nil
             }
             for tombstone in (try? context.fetch(FetchDescriptor<DeletedBook>())) ?? [] {
+                context.delete(tombstone)
+            }
+            for store in (try? context.fetch(FetchDescriptor<Bookstore>())) ?? [] {
+                store.id = UUID()   // the id is also the online row's id, which belongs to the other account
+                store.syncedFingerprint = nil
+            }
+            for tombstone in (try? context.fetch(FetchDescriptor<DeletedBookstore>())) ?? [] {
                 context.delete(tombstone)
             }
         }

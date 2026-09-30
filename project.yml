@@ -39,6 +39,7 @@ targets:
         SupabaseKey: $(SUPABASE_KEY)
         # Second book source (from Config/Local.xcconfig; blank = Open Library only).
         GoogleBooksKey: $(GOOGLE_BOOKS_KEY)
+        NSLocationWhenInUseUsageDescription: Bookshelf uses your location to find bookstores near you and show how far away your saved ones are.
         NSCameraUsageDescription: Bookshelf uses the camera to scan the barcode on your books.
   BookshelfTests:
     type: bundle.unit-test

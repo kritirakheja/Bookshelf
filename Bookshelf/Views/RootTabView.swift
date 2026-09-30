@@ -5,17 +5,26 @@ struct RootTabView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
     @Environment(AccountStore.self) private var account
+    /// Reopens on the tab you were last on.
+    @AppStorage("selectedTab") private var selectedTab = "explore"
 
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             ExploreView()
                 .tabItem { Label("Explore", systemImage: "sparkle.magnifyingglass") }
+                .tag("explore")
             CurrentlyReadingView()
                 .tabItem { Label("Reading", systemImage: "book") }
+                .tag("reading")
             FavoritesShelfView()
                 .tabItem { Label("Favourites", systemImage: "star") }
+                .tag("favourites")
+            BookstoresView()
+                .tabItem { Label("Bookstores", systemImage: "map") }
+                .tag("bookstores")
             ProfileView()
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
+                .tag("profile")
         }
         .task {
             SampleData.seedSimulatorIfEmpty(context)

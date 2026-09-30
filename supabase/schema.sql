@@ -79,6 +79,37 @@ create policy "own profile" on public.profiles
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
+-- Saved bookstores (the Bookstores tab).
+create table if not exists public.bookstores (
+  id          uuid primary key,
+  user_id     uuid not null default auth.uid() references auth.users on delete cascade,
+  name        text not null,
+  address     text not null default '',
+  city        text not null default '',
+  latitude    double precision not null,
+  longitude   double precision not null,
+  phone       text,
+  website     text,
+  note        text not null default '',
+  date_saved  timestamptz not null default now(),
+  deleted     boolean not null default false,
+  updated_at  timestamptz not null default now()
+);
+
+create index if not exists bookstores_user_updated on public.bookstores (user_id, updated_at);
+
+drop trigger if exists bookstores_touch on public.bookstores;
+create trigger bookstores_touch before insert or update on public.bookstores
+  for each row execute function public.touch_updated_at();
+
+alter table public.bookstores enable row level security;
+
+drop policy if exists "own bookstores" on public.bookstores;
+create policy "own bookstores" on public.bookstores
+  for all to authenticated
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
 -- Private storage for covers and the profile photo, one folder per account:
 --   library/<user id>/covers/<book id>.jpg
 --   library/<user id>/profile.jpg

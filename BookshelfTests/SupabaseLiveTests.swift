@@ -27,6 +27,7 @@ final class SupabaseLiveTests: XCTestCase {
         _ = try? await client.storage.from("library").remove(paths: covers + ["\(folder)/profile.jpg"])
         try await client.from("books").delete().neq("id", value: UUID(uuid: UUID_NULL).uuidString).execute()
         try await client.from("profiles").delete().eq("user_id", value: folder).execute()
+        try? await client.from("bookstores").delete().neq("id", value: UUID(uuid: UUID_NULL).uuidString).execute()
         try? await client.auth.signOut()
     }
 
@@ -92,6 +93,20 @@ final class SupabaseLiveTests: XCTestCase {
             _ = try await phone.engine.syncProfile(local: .init(name: "Test Reader", photo: cover), lastSynced: nil)
             let (profile, _) = try await ipad.engine.syncProfile(local: .init(name: "", photo: nil), lastSynced: nil)
             XCTAssertEqual(profile, .init(name: "Test Reader", photo: cover))
+
+            // A saved bookstore reaches the second device, then its removal does too.
+            let storeSync = BookstoreSync(context: phone.context, remote: remote)
+            let ipadStoreSync = BookstoreSync(context: ipad.context, remote: remote)
+            let store = Bookstore(name: "Blossom Book House", latitude: 12.9756, longitude: 77.6050)
+            store.note = "Three floors"
+            phone.context.insert(store)
+            let pulled = try await storeSync.sync(lastPulledAt: nil)
+            var ipadPulled = try await ipadStoreSync.sync(lastPulledAt: nil)
+            XCTAssertEqual(try ipad.context.fetch(FetchDescriptor<Bookstore>()).map(\.note), ["Three floors"])
+            phone.context.deleteBookstore(store)
+            _ = try await storeSync.sync(lastPulledAt: pulled)
+            ipadPulled = try await ipadStoreSync.sync(lastPulledAt: ipadPulled)
+            XCTAssertEqual(try ipad.context.fetchCount(FetchDescriptor<Bookstore>()), 0)
 
             // Privacy: another account sees none of it.
             let stranger = try makeClient()

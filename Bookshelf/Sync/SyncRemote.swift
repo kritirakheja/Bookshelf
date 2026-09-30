@@ -12,6 +12,9 @@ protocol SyncRemote {
     func uploadFile(_ data: Data, path: String) async throws
     func downloadFile(path: String) async throws -> Data
     func removeFiles(paths: [String]) async throws
+    func fetchBookstores(updatedAfter: Date?) async throws -> [BookstoreRecord]
+    func upsertBookstores(_ records: [BookstoreRecord]) async throws
+    func markBookstoresDeleted(_ ids: [UUID]) async throws
 }
 
 struct ProfileRecord: Codable, Equatable {
@@ -105,6 +108,27 @@ struct SupabaseRemote: SyncRemote {
     func removeFiles(paths: [String]) async throws {
         guard !paths.isEmpty else { return }
         _ = try await client.storage.from(Self.bucket).remove(paths: paths)
+    }
+
+    func fetchBookstores(updatedAfter: Date?) async throws -> [BookstoreRecord] {
+        var query = client.from("bookstores").select()
+        if let updatedAfter {
+            query = query.gt("updated_at", value: Self.timestamp(updatedAfter))
+        }
+        return try await query.order("updated_at").execute().value
+    }
+
+    func upsertBookstores(_ records: [BookstoreRecord]) async throws {
+        guard !records.isEmpty else { return }
+        try await client.from("bookstores").upsert(records, returning: .minimal).execute()
+    }
+
+    func markBookstoresDeleted(_ ids: [UUID]) async throws {
+        guard !ids.isEmpty else { return }
+        try await client.from("bookstores")
+            .update(["deleted": true])
+            .in("id", values: ids.map { $0.uuidString.lowercased() })
+            .execute()
     }
 }
 

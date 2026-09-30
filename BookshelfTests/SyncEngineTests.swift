@@ -54,6 +54,28 @@ final class FakeRemote: SyncRemote {
     func removeFiles(paths: [String]) async throws {
         paths.forEach { files[$0] = nil }
     }
+
+    var storeRows: [UUID: BookstoreRecord] = [:]
+
+    func fetchBookstores(updatedAfter: Date?) async throws -> [BookstoreRecord] {
+        storeRows.values
+            .filter { updatedAfter == nil || $0.updatedAt! > updatedAfter! }
+            .sorted { $0.updatedAt! < $1.updatedAt! }
+    }
+
+    func upsertBookstores(_ records: [BookstoreRecord]) async throws {
+        for var record in records {
+            record.updatedAt = tick()
+            storeRows[record.id] = record
+        }
+    }
+
+    func markBookstoresDeleted(_ ids: [UUID]) async throws {
+        for id in ids where storeRows[id] != nil {
+            storeRows[id]!.deleted = true
+            storeRows[id]!.updatedAt = tick()
+        }
+    }
 }
 
 /// One phone: its own on-device library and its own "last pulled" marker.
@@ -65,7 +87,7 @@ final class Device {
 
     init(remote: SyncRemote, userID: UUID) throws {
         container = try ModelContainer(
-            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self,
+            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, Bookstore.self, DeletedBookstore.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         engine = SyncEngine(context: container.mainContext, remote: remote, userID: userID)
