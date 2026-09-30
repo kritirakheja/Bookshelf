@@ -141,10 +141,6 @@ struct ProfileView: View {
             .padding(.vertical, 12)
             .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
 
-            HStack(spacing: 10) {
-                tile("\(stats.lentCount)", "Lent out", "arrow.up.forward.circle.fill")
-                tile("\(stats.borrowedCount)", "Borrowed", "arrow.down.backward.circle.fill")
-            }
         }
     }
 
@@ -160,25 +156,6 @@ struct ProfileView: View {
         .frame(maxWidth: .infinity)
     }
 
-    private func tile(_ value: String, _ label: String, _ icon: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Image(systemName: icon)
-                .font(.footnote)
-                .foregroundStyle(.tint)
-            Text(value)
-                .font(.title3.weight(.bold))
-                .monospacedDigit()
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
-    }
 }
 
 #Preview {
