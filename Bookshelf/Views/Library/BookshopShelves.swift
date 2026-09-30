@@ -1,9 +1,9 @@
 import SwiftUI
 
 /// Books displayed like a bookshop: covers face-out, a row per wooden shelf,
-/// against a warm backdrop.
+/// against a warm backdrop, in signed sections (Fiction, Non-fiction).
 struct BookshopShelves<Menu: View>: View {
-    let books: [Book]
+    let sections: [LibrarySections.Section]
     @ViewBuilder let menu: (Book) -> Menu
 
     private let coverWidth: CGFloat = 100
@@ -14,8 +14,12 @@ struct BookshopShelves<Menu: View>: View {
             let perShelf = Self.booksPerShelf(width: proxy.size.width, coverWidth: coverWidth, spacing: spacing)
             ScrollView {
                 LazyVStack(spacing: 30) {
-                    ForEach(Self.shelves(books, perShelf: perShelf), id: \.first!.persistentModelID) { shelf in
-                        BookshopShelf(books: shelf, perShelf: perShelf, coverWidth: coverWidth, spacing: spacing, menu: menu)
+                    ForEach(sections) { section in
+                        SectionSign(title: section.title, count: section.books.count)
+                            .padding(.top, section.id == sections.first?.id ? 0 : 20)
+                        ForEach(Self.shelves(section.books, perShelf: perShelf), id: \.first!.persistentModelID) { shelf in
+                            BookshopShelf(books: shelf, perShelf: perShelf, coverWidth: coverWidth, spacing: spacing, menu: menu)
+                        }
                     }
                 }
                 .padding(.vertical, 24)
@@ -31,6 +35,28 @@ struct BookshopShelves<Menu: View>: View {
 
     static func shelves(_ books: [Book], perShelf: Int) -> [[Book]] {
         stride(from: 0, to: books.count, by: perShelf).map { Array(books[$0..<min($0 + perShelf, books.count)]) }
+    }
+}
+
+/// The sign over a section, like the boards above a bookshop's aisles.
+struct SectionSign: View {
+    let title: String
+    let count: Int
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(title.uppercased())
+                .font(.system(.title3, design: .serif, weight: .bold))
+                .tracking(2)
+            Text("\(count)")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 8)
+        .background(.background.opacity(0.85), in: Capsule())
+        .overlay(Capsule().stroke(Color.brown.opacity(0.35), lineWidth: 1))
+        .shadow(color: .black.opacity(0.08), radius: 3, y: 2)
     }
 }
 

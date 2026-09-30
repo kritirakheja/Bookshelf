@@ -51,7 +51,7 @@ struct LibraryView: View {
         Group {
             switch layout {
             case .shelves:
-                BookshopShelves(books: visibleBooks) { book in bookMenu(book) }
+                BookshopShelves(sections: LibrarySections.split(visibleBooks)) { book in bookMenu(book) }
             case .list:
                 List {
                     ForEach(visibleBooks) { book in
