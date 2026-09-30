@@ -9,7 +9,6 @@ struct LibraryStats {
     let readCount: Int
     let readingCount: Int
     let unreadCount: Int
-    let pagesRead: Int
     let lentCount: Int
 
     init(books: [Book]) {
@@ -19,7 +18,6 @@ struct LibraryStats {
         readCount = read.count
         readingCount = books.filter { $0.status == .reading }.count
         unreadCount = books.filter { $0.status == .unread && !$0.isGivenBack }.count
-        pagesRead = read.compactMap(\.pageCount).reduce(0, +)
         lentCount = books.filter(\.isLent).count
     }
 }

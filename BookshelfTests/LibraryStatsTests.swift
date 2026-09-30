@@ -31,12 +31,11 @@ final class LibraryStatsTests: XCTestCase {
         XCTAssertEqual(stats.readCount, 2)
         XCTAssertEqual(stats.readingCount, 1)
         XCTAssertEqual(stats.unreadCount, 1)
-        XCTAssertEqual(stats.pagesRead, 500, "Only read books count towards pages read")
     }
 
     func testEmptyLibrary() {
         let stats = LibraryStats(books: [])
         XCTAssertEqual(stats.total, 0)
-        XCTAssertEqual(stats.pagesRead, 0)
+        XCTAssertEqual(stats.lentCount, 0)
     }
 }

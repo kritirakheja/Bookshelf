@@ -27,8 +27,6 @@ struct ProfileView: View {
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
 
-                AccountSection()
-
                 Section {
                     NavigationLink(value: Route.allBooks) {
                         LabeledContent { Text("\(books.count)") } label: { Label("All books", systemImage: "books.vertical") }
@@ -46,6 +44,8 @@ struct ProfileView: View {
                         Label("Categories", systemImage: "square.grid.2x2")
                     }
                 }
+
+                AccountSection()
             }
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.inline)
@@ -142,7 +142,6 @@ struct ProfileView: View {
             .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
 
             HStack(spacing: 10) {
-                tile(stats.pagesRead.formatted(), "Pages read", "doc.text.fill")
                 tile("\(stats.lentCount)", "Lent out", "arrow.up.forward.circle.fill")
                 tile("\(stats.borrowedCount)", "Borrowed", "arrow.down.backward.circle.fill")
             }
