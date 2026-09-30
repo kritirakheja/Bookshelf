@@ -88,15 +88,28 @@ struct BookLookup {
         }
 
         let shortTitle = Self.shortTitle(title)
-        if let google, let editions = try? await google.search(title: shortTitle, author: author) {
-            let sameBook = editions.filter { edition in
-                edition.isEnglish && BookMatcher.words(Self.shortTitle(edition.title)) == BookMatcher.words(shortTitle)
+        // Searches ignore accents: Google lists "Ichiro Kishimi", not "Ichirō".
+        let plainAuthor = author.map(Self.withoutAccents)
+        let titleWords = BookMatcher.words(Self.withoutAccents(shortTitle))
+        let authorWords = BookMatcher.words(plainAuthor ?? "")
+        // Same book: every word of our title appears in the edition's (which may add a
+        // subtitle, like "Tech Simplified for PMs and Entrepreneurs"), and the author matches.
+        func isSameBook(_ edition: BookCandidate) -> Bool {
+            let editionWords = BookMatcher.words(Self.withoutAccents(edition.title))
+            let editionAuthors = BookMatcher.words(Self.withoutAccents(edition.authors.joined(separator: " ")))
+            return edition.isEnglish && !titleWords.isEmpty && titleWords.isSubset(of: editionWords)
+                && (authorWords.isEmpty || !authorWords.isDisjoint(with: editionAuthors))
+        }
+        if let google {
+            var editions = (try? await google.search(title: shortTitle, author: plainAuthor)) ?? []
+            if !editions.contains(where: isSameBook) {
+                editions += (try? await google.search(shortTitle, limit: 10)) ?? []
             }
-            found += sameBook.map(\.summary)
+            found += editions.filter(isSameBook).map(\.summary)
             if let best = BookDescription.best(found), best.count >= BookDescription.goodLength { return best }
         }
 
-        found.append(await openLibrary.workDescription(title: shortTitle, author: author))
+        found.append(await openLibrary.workDescription(title: shortTitle, author: plainAuthor))
         return BookDescription.best(found)
     }
 
@@ -177,6 +190,10 @@ struct BookLookup {
         return Self.englishFirst([await byISBN].compactMap { $0 } + sameBook)
             .filter { $0.coverURL != nil && $0.thumbnailURL != nil }
             .filter { seen.insert($0.thumbnailURL!).inserted }
+    }
+
+    static func withoutAccents(_ text: String) -> String {
+        text.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .init(identifier: "en"))
     }
 
     /// "Elon Musk: How the Billionaire… (Marathi)" → "Elon Musk"

@@ -41,6 +41,8 @@ final class BookDescriptionTests: XCTestCase {
             ("Stories of Words and Phrases", "Sumanto Chattopadhyay", "9789370034181"),  // this edition
             ("How to Win Friends and Influence People", "Dale Carnegie", "9780091906351"),  // another edition
             ("A Thousand Splendid Suns", "Khaled Hosseini", "9781408844441"),  // Open Library's is fuller
+            ("The Courage to Be Disliked", "Ichirō Kishimi", "9781760630720"),  // accent in the author's name
+            ("Tech Simplified", "Deepak Singh", nil),  // Google's title adds "for PMs and Entrepreneurs"
         ]
         for (title, author, isbn) in cases {
             let found = await lookup.findDescription(title: title, author: author, isbn: isbn)
