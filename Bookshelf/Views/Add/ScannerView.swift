@@ -14,7 +14,7 @@ struct ScannerView: UIViewControllerRepresentable {
         let scanner = DataScannerViewController(
             recognizedDataTypes: [.barcode(symbologies: [.ean13])],
             qualityLevel: .balanced,
-            isHighlightingEnabled: true
+            isHighlightingEnabled: false   // BarcodeScanScreen draws its own viewfinder
         )
         scanner.delegate = context.coordinator
         try? scanner.startScanning()

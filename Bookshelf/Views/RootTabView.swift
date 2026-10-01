@@ -44,6 +44,9 @@ struct RootTabView: View {
         .fullScreenCover(item: $previewBook) { book in
             NavigationStack { BookDetailView(book: book) }
         }
+        .fullScreenCover(isPresented: .constant(UserDefaults.standard.bool(forKey: "previewScanner"))) {
+            BarcodeScanScreen { _ in } onCancel: {}
+        }
         #endif
         // Sync when the app opens and when you leave it, so the backup is never far behind.
         .onChange(of: scenePhase) { _, phase in

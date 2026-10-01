@@ -106,21 +106,26 @@ struct AddBookSheet: View {
             .disabled(progress != nil)
             .overlay {
                 if let progress {
-                    ProgressView(progress)
-                        .padding()
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    VStack(spacing: 10) {
+                        Image(systemName: "books.vertical.fill")
+                            .font(.system(size: 36))
+                            .foregroundStyle(.tint)
+                            .symbolEffect(.variableColor.iterative.reversing)
+                        Text(progress)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(22)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+                    .transition(.scale(scale: 0.85).combined(with: .opacity))
                 }
             }
             .fullScreenCover(isPresented: $scanning) {
-                ScannerView { isbn in
+                BarcodeScanScreen { isbn in
                     scanning = false
                     lookUp(isbn)
-                }
-                .ignoresSafeArea()
-                .overlay(alignment: .topTrailing) {
-                    Button("Cancel") { scanning = false }
-                        .buttonStyle(.borderedProminent)
-                        .padding()
+                } onCancel: {
+                    scanning = false
                 }
             }
             .fullScreenCover(isPresented: $photographing) {
