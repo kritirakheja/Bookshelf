@@ -17,7 +17,7 @@ A personal library app for iPhone, built with SwiftUI and SwiftData. Catalogue t
 - Cover scans use the document scanner (cropped and straightened); the text is read on-device with Vision and matched by title and author.
 - Adding a book you already own (same ISBN, or same title and author) is caught before the form opens.
 
-**Each book**
+**Each book** has its own page styled like a bookshop display: the cover face-out on a lit shelf, categories as shelf labels, bookmark ribbons for status, a pinned "staff pick" card for favourites, the back-cover blurb, a library card for lending, and margin notes.
 - Status (unread / reading / read) with dates, including "finished in <year>" when only the year is known.
 - Star rating, notes, categories, and an **About this book** description (filled in automatically in the background).
 - Change the cover (scan it, pick a photo, or choose another edition's cover online).

@@ -89,8 +89,8 @@ struct BookshopShelf<Menu: View>: View {
     }
 }
 
-/// A wooden shelf: a lighter top surface over a darker front edge, casting a shadow.
-private struct Plank: View {
+/// A wooden shelf (also under the cover on a book's page): a lighter top surface over a darker front edge, casting a shadow.
+struct Plank: View {
     var body: some View {
         VStack(spacing: 0) {
             LinearGradient(colors: [Color(red: 0.72, green: 0.52, blue: 0.34), Color(red: 0.62, green: 0.43, blue: 0.27)],

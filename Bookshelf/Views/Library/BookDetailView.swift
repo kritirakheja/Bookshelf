@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
 
+/// A book's page, laid out like a book on display in a bookshop: the cover face-out
+/// on a lit shelf, shelf labels, bookmark ribbons for status, a staff-pick card,
+/// the back-cover blurb, a library card for lending, and notes in the margin.
 struct BookDetailView: View {
     @Bindable var book: Book
     @State private var editing = false
@@ -14,152 +17,24 @@ struct BookDetailView: View {
     @Query(filter: #Predicate<Book> { $0.favoriteRank != nil }) private var shelf: [Book]
 
     var body: some View {
-        List {
-            Section {
-                HStack(alignment: .top, spacing: 16) {
-                    CoverView(book: book, width: 110)
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(book.title)
-                            .font(.title2.weight(.semibold))
-                        Text(book.authorLine)
-                            .foregroundStyle(.secondary)
-                        if let year = book.publishedYear {
-                            Text("Published \(String(year))")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        if let pages = book.pageCount {
-                            Text("\(pages) pages")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        if let isbn = book.isbn {
-                            Text("ISBN \(isbn)")
-                                .font(.caption.monospaced())
-                                .foregroundStyle(.secondary)
-                        }
-                        if book.coverImage != nil {
-                            Button("Change cover", systemImage: "photo.on.rectangle") {
-                                choosingCover = true
-                            }
-                            .font(.footnote)
-                            .buttonStyle(.bordered)
-                            .padding(.top, 4)
-                        }
-                        if book.coverImage == nil {
-                            if searchingCover {
-                                ProgressView().padding(.top, 4)
-                            } else {
-                                Button("Find cover online", systemImage: "magnifyingglass") {
-                                    findCover()
-                                }
-                                .font(.footnote)
-                                .buttonStyle(.bordered)
-                                .padding(.top, 4)
-                                if coverNotFound {
-                                    Text("No cover found online.")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                    }
-                }
-                .listRowBackground(Color.clear)
-            }
-
-            Section {
-                Picker("Status", selection: Binding(get: { book.status }, set: { book.setStatus($0) })) {
-                    ForEach(ReadingStatus.allCases) { Text($0.rawValue).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                if let dateStarted = book.dateStarted, book.status != .unread {
-                    LabeledContent("Started", value: dateStarted.formatted(date: .abbreviated, time: .omitted))
-                }
-                if book.status == .read {
-                    if book.dateReadYearOnly, let year = book.finishDateText {
-                        LabeledContent("Finished") {
-                            HStack {
-                                Text("In \(year)")
-                                Button("Set exact date") {
-                                    book.dateReadYearOnly = false
-                                }
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
-                            }
-                        }
-                    } else if let dateRead = book.dateRead {
-                        DatePicker(
-                            "Finished",
-                            selection: Binding(get: { dateRead }, set: { book.dateRead = $0 }),
-                            in: ...Date.now,
-                            displayedComponents: .date
-                        )
-                    } else {
-                        LabeledContent("Finished") {
-                            Button("Add finish date") { book.dateRead = Calendar.current.startOfDay(for: .now) }
-                        }
-                    }
-                }
-                LabeledContent("Rating") {
+        ScrollView {
+            VStack(spacing: 26) {
+                hero
+                shelfLabels
+                VStack(spacing: 12) {
+                    BookmarkRibbons(book: book)
                     StarRating(rating: $book.rating)
                 }
+                StaffPickCard(book: book, shelf: shelf, showingShelfFull: $showingShelfFull)
+                BlurbCard(book: book)
+                LibraryCard(book: book)
+                MarginNotes(book: book)
+                footer
             }
-
-            Section("Categories") {
-                Button {
-                    pickingCategories = true
-                } label: {
-                    if book.categories.isEmpty {
-                        Label("Add categories", systemImage: "plus")
-                    } else {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack {
-                                ForEach(book.sortedCategories) { category in
-                                    Text(category.name)
-                                        .font(.subheadline)
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 4)
-                                        .background(.tint.opacity(0.15), in: Capsule())
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            AboutSection(book: book)
-
-            LendingSection(book: book)
-
-            Section("Favourites") {
-                if let rank = book.favoriteRank {
-                    LabeledContent("On your shelf", value: "#\(rank)")
-                    TextField("Why do you recommend it?", text: Binding(
-                        get: { book.recommendationNote ?? "" },
-                        set: { book.recommendationNote = $0.isEmpty ? nil : $0 }
-                    ), axis: .vertical)
-                    Button("Remove from favourites", role: .destructive) {
-                        FavoritesShelf.remove(book, library: shelf)
-                    }
-                } else {
-                    Button("Add to favourites", systemImage: "star") {
-                        showingShelfFull = FavoritesShelf.add(book, library: shelf) == .shelfFull
-                    }
-                }
-            }
-
-            Section("Notes") {
-                TextField("Your thoughts on this book", text: $book.notes, axis: .vertical)
-                    .lineLimit(3...10)
-            }
-
-            Section {
-                Button("Delete book", systemImage: "trash", role: .destructive) {
-                    bookToDelete = book
-                }
-            }
+            .padding(.bottom, 30)
         }
+        .background(BookPageStyle.paper.ignoresSafeArea())
+        .scrollDismissesKeyboard(.interactively)
         .confirmDeletingBook($bookToDelete) {
             // Leave this page first, so it never shows a deleted book.
             dismiss()
@@ -184,6 +59,133 @@ struct BookDetailView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("You can have up to \(FavoritesShelf.capacity) favourites. Remove one from the Favourites tab first.")
+        }
+    }
+
+    // MARK: - Display shelf
+
+    /// The cover standing face-out on a shelf under a spotlight, its own colours
+    /// blurred into the wall behind it.
+    private var hero: some View {
+        VStack(spacing: 18) {
+            ZStack(alignment: .bottom) {
+                backdrop
+                VStack(spacing: 0) {
+                    CoverView(book: book, width: 150)
+                        .shadow(color: .black.opacity(0.35), radius: 12, x: 0, y: 10)
+                        .padding(.bottom, -2)
+                    Plank()
+                        .padding(.horizontal, 50)
+                }
+                .padding(.top, 36)
+            }
+            VStack(spacing: 6) {
+                Text(book.title)
+                    .font(BookPageStyle.serif(.title, .bold))
+                    .multilineTextAlignment(.center)
+                if !book.authors.isEmpty {
+                    Text("by \(book.authorLine)")
+                        .font(BookPageStyle.serif(.title3).italic())
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                if !facts.isEmpty {
+                    Text(facts.joined(separator: "  ·  "))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 2)
+                }
+            }
+            .padding(.horizontal, 24)
+        }
+    }
+
+    private var backdrop: some View {
+        ZStack {
+            if let data = book.coverImage, let image = UIImage(data: data) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .blur(radius: 40)
+                    .opacity(0.45)
+            }
+            // Spotlight from above.
+            RadialGradient(colors: [.white.opacity(0.55), .clear], center: .top, startRadius: 10, endRadius: 260)
+                .blendMode(.softLight)
+            LinearGradient(colors: [.clear, BookPageStyle.paper], startPoint: .center, endPoint: .bottom)
+        }
+        .frame(height: 290)
+        .frame(maxWidth: .infinity)
+        .clipped()
+        .mask(LinearGradient(colors: [.clear, .black, .black], startPoint: .top, endPoint: .bottom))
+    }
+
+    private var facts: [String] {
+        var facts: [String] = []
+        if let year = book.publishedYear { facts.append(String(year)) }
+        if let pages = book.pageCount { facts.append("\(pages) pages") }
+        return facts
+    }
+
+    // MARK: - Shelf labels
+
+    /// Categories as the little paper labels bookshops pin to their shelves.
+    private var shelfLabels: some View {
+        FlowLayout(spacing: 8) {
+            ForEach(book.sortedCategories) { category in
+                Button { pickingCategories = true } label: {
+                    shelfLabel(category.name)
+                }
+            }
+            Button { pickingCategories = true } label: {
+                shelfLabel(book.categories.isEmpty ? "Add a shelf" : "Edit", systemImage: book.categories.isEmpty ? "plus" : "pencil", faded: true)
+            }
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 24)
+    }
+
+    private func shelfLabel(_ text: String, systemImage: String? = nil, faded: Bool = false) -> some View {
+        HStack(spacing: 4) {
+            if let systemImage { Image(systemName: systemImage).font(.caption2) }
+            Text(text)
+        }
+        .font(BookPageStyle.serif(.footnote, .semibold))
+        .foregroundStyle(faded ? AnyShapeStyle(.secondary) : AnyShapeStyle(BookPageStyle.brown))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(faded ? Color.clear : BookPageStyle.card, in: RoundedRectangle(cornerRadius: 3))
+        .overlay(RoundedRectangle(cornerRadius: 3)
+            .stroke(BookPageStyle.brown.opacity(faded ? 0.35 : 0.55),
+                    style: StrokeStyle(lineWidth: 1, dash: faded ? [3, 3] : [])))
+    }
+
+    // MARK: - Footer
+
+    private var footer: some View {
+        VStack(spacing: 14) {
+            HStack(spacing: 12) {
+                if book.coverImage != nil {
+                    Button("Change cover", systemImage: "photo.on.rectangle") { choosingCover = true }
+                } else if searchingCover {
+                    ProgressView()
+                } else {
+                    Button("Find cover online", systemImage: "magnifyingglass") { findCover() }
+                }
+                Button("Edit details", systemImage: "pencil") { editing = true }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .tint(BookPageStyle.brown)
+            if coverNotFound {
+                Text("No cover found online.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Button("Delete book", systemImage: "trash", role: .destructive) {
+                bookToDelete = book
+            }
+            .font(.footnote)
         }
     }
 
