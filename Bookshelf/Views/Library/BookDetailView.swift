@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 /// A book's full details, in order of importance: the cover on a gradient of its own
-/// colours, its name, what it's about, its categories, reading status, then the rest.
+/// colours, its name and categories, what it's about, reading status, then the rest.
 struct BookDetailView: View {
     @Bindable var book: Book
     @State private var editing = false
@@ -31,7 +31,6 @@ struct BookDetailView: View {
                     Group {
                         name
                         AboutBlock(book: book)
-                        categories
                         StatusSection(book: book)
                     }
                     .padding(.horizontal, 20)
@@ -128,6 +127,8 @@ struct BookDetailView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
+            categories
+                .padding(.vertical, 6)
             if !facts.isEmpty {
                 Text(facts.joined(separator: "  ·  "))
                     .font(.inter(.footnote))
@@ -149,7 +150,7 @@ struct BookDetailView: View {
 
     /// Categories as chips; tap to change them.
     private var categories: some View {
-        FlowLayout(spacing: 8, centered: false) {
+        FlowLayout(spacing: 8) {
             ForEach(book.sortedCategories) { category in
                 Button { pickingCategories = true } label: {
                     chip(category.name)
@@ -161,7 +162,6 @@ struct BookDetailView: View {
             }
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func chip(_ text: String, systemImage: String? = nil, quiet: Bool = false) -> some View {
