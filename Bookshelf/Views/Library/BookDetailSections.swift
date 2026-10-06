@@ -204,7 +204,7 @@ struct LendingRows: View {
         Group {
             current
             ForEach(book.pastLoans) { loan in
-                MoreRow(label: loan.borrowerName) { Text(Self.range(loan)) }
+                MoreRow(label: loan.borrowerName) { Text(loan.rangeText) }
                     .foregroundStyle(.secondary)
                     .contextMenu {
                         Button("Remove from history", systemImage: "trash", role: .destructive) {
@@ -245,7 +245,7 @@ struct LendingRows: View {
     @ViewBuilder
     private var current: some View {
         if let borrowing = book.borrowing, borrowing.returnedAt == nil {
-            place("Borrowed from \(borrowing.borrowerName)", Self.since(borrowing.lentAt, verb: "Borrowed")) {
+            place("Borrowed from \(borrowing.borrowerName)", borrowing.sinceText(verb: "Borrowed")) {
                 Menu {
                     Button("Give back", systemImage: "arrow.uturn.backward") { withAnimation { book.giveBack() } }
                     Button("Not borrowed", systemImage: "xmark", role: .destructive) {
@@ -256,9 +256,9 @@ struct LendingRows: View {
                 }
             }
         } else if let borrowing = book.borrowing {
-            place("Returned to \(borrowing.borrowerName)", "Borrowed \(Self.range(borrowing))") { EmptyView() }
+            place("Returned to \(borrowing.borrowerName)", "Borrowed \(borrowing.rangeText)") { EmptyView() }
         } else if let loan = book.currentLoan {
-            place("Lent to \(loan.borrowerName)", Self.since(loan.lentAt, verb: "Lent")) {
+            place("Lent to \(loan.borrowerName)", loan.sinceText(verb: "Lent")) {
                 Button("Mark returned") { withAnimation { book.markReturned() } }
             }
         } else if book.isOwned {
@@ -298,21 +298,5 @@ struct LendingRows: View {
             case .borrow: book.borrow(from: name, contactID: contactID)
             }
         }
-    }
-
-    static func since(_ date: Date, verb: String) -> String {
-        let calendar = Calendar.current
-        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: date), to: calendar.startOfDay(for: .now)).day ?? 0
-        switch days {
-        case 0: return "\(verb) today"
-        case 1: return "\(verb) yesterday"
-        default: return "\(verb) \(date.formatted(date: .abbreviated, time: .omitted)) · \(days) days ago"
-        }
-    }
-
-    static func range(_ loan: Loan) -> String {
-        let start = loan.lentAt.formatted(.dateTime.day().month(.abbreviated))
-        let end = (loan.returnedAt ?? .now).formatted(.dateTime.day().month(.abbreviated).year())
-        return "\(start) – \(end)"
     }
 }

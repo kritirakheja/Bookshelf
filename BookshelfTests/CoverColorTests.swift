@@ -32,6 +32,6 @@ final class CoverColorTests: XCTestCase {
     }
 
     func testBarcodeIsDrawnForAnISBN() {
-        XCTAssertNotNil(CoverColor.barcode(for: "9780141439518"))
+        XCTAssertNotNil(BookArt.barcode(for: "9780141439518"))
     }
 }

@@ -13,6 +13,14 @@ extension ModelContext {
         }
         delete(book)
     }
+
+    /// Removes a saved bookstore, leaving a marker so the removal syncs.
+    func deleteBookstore(_ store: Bookstore) {
+        if store.syncedFingerprint != nil {
+            insert(DeletedBookstore(remoteID: store.id))
+        }
+        delete(store)
+    }
 }
 
 extension View {

@@ -159,4 +159,25 @@ final class LoanTests: XCTestCase {
         b.lend(to: "Arjun"); b.markReturned()
         XCTAssertEqual(LibraryStats(books: [a, b]).lentCount, 1)
     }
+
+    func testSinceTextCountsWholeDays() {
+        let calendar = Calendar(identifier: .gregorian)
+        let now = calendar.date(from: DateComponents(year: 2026, month: 10, day: 6, hour: 9))!
+        func loan(daysAgo: Int) -> Loan {
+            Loan(borrowerName: "Neha", lentAt: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
+        }
+        XCTAssertEqual(loan(daysAgo: 0).sinceText(verb: "Lent", now: now, calendar: calendar), "Lent today")
+        XCTAssertEqual(loan(daysAgo: 1).sinceText(verb: "Borrowed", now: now, calendar: calendar), "Borrowed yesterday")
+        XCTAssertTrue(loan(daysAgo: 7).sinceText(verb: "Lent", now: now, calendar: calendar).hasSuffix("· 7 days ago"))
+    }
+
+    func testRangeTextEndsAtTheReturnDate() {
+        let calendar = Calendar.current
+        let start = calendar.date(from: DateComponents(year: 2026, month: 9, day: 29))!
+        let loan = Loan(borrowerName: "Neha", lentAt: start)
+        loan.returnedAt = calendar.date(from: DateComponents(year: 2026, month: 10, day: 6))!
+        XCTAssertTrue(loan.rangeText.contains(" – "))
+        XCTAssertTrue(loan.rangeText.hasSuffix("2026"))
+        XCTAssertTrue(loan.rangeText.contains("29"))
+    }
 }

@@ -27,3 +27,22 @@ final class Loan {
         self.isBorrowed = isBorrowed
     }
 }
+
+extension Loan {
+    /// When it started, in words: "Lent today", "Borrowed 29 Sep 2026 · 7 days ago".
+    func sinceText(verb: String, now: Date = .now, calendar: Calendar = .current) -> String {
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: lentAt), to: calendar.startOfDay(for: now)).day ?? 0
+        switch days {
+        case 0: return "\(verb) today"
+        case 1: return "\(verb) yesterday"
+        default: return "\(verb) \(lentAt.formatted(date: .abbreviated, time: .omitted)) · \(days) days ago"
+        }
+    }
+
+    /// From when to when: "29 Sep – 6 Oct 2026" (to today if it isn't back yet).
+    var rangeText: String {
+        let start = lentAt.formatted(.dateTime.day().month(.abbreviated))
+        let end = (returnedAt ?? .now).formatted(.dateTime.day().month(.abbreviated).year())
+        return "\(start) – \(end)"
+    }
+}

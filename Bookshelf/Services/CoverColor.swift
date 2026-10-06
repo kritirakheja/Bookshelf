@@ -2,7 +2,7 @@ import UIKit
 import CoreImage
 import CoreImage.CIFilterBuiltins
 
-/// Colours taken from a book's cover, for drawing its back and the page behind it.
+/// Colours taken from a book's cover, for drawing its back and spine.
 enum CoverColor {
     struct RGB: Equatable {
         var r: Double
@@ -37,15 +37,5 @@ enum CoverColor {
         func linear(_ c: Double) -> Double { c <= 0.03928 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4) }
         let luminance = 0.2126 * linear(color.r) + 0.7152 * linear(color.g) + 0.0722 * linear(color.b)
         return luminance < 0.4
-    }
-
-    /// A barcode image for an ISBN, as printed on a back cover.
-    static func barcode(for isbn: String) -> UIImage? {
-        let filter = CIFilter.code128BarcodeGenerator()
-        filter.message = Data(isbn.utf8)
-        filter.quietSpace = 2
-        guard let output = filter.outputImage,
-              let cgImage = context.createCGImage(output, from: output.extent) else { return nil }
-        return UIImage(cgImage: cgImage)
     }
 }
