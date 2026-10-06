@@ -183,18 +183,19 @@ struct OpenLibraryClient {
             guard let data = try? await get(url),
                   let image = UIImage(data: data),
                   image.size.width > 10 else { continue }  // skip 1×1 "no cover" placeholders
-            return data
+            return CoverImage.capped(data)
         }
         return nil
     }
 
+    /// The original scan: Open Library's "-L" size is only about 300 pixels wide.
     static func coverURL(id: Int) -> URL {
-        URL(string: "https://covers.openlibrary.org/b/id/\(id)-L.jpg")!
+        URL(string: "https://covers.openlibrary.org/b/id/\(id).jpg")!
     }
 
     /// `default=false` makes Open Library answer 404 instead of a blank image when there's no cover.
     static func isbnCoverURL(_ isbn: String) -> URL {
-        URL(string: "https://covers.openlibrary.org/b/isbn/\(isbn)-L.jpg?default=false")!
+        URL(string: "https://covers.openlibrary.org/b/isbn/\(isbn).jpg?default=false")!
     }
 
     // MARK: Networking

@@ -44,6 +44,7 @@ struct RootTabView: View {
             }
             #endif
             await DescriptionBackfill.run(in: context)
+            await CoverUpgrade.run(in: context)
         }
         #if DEBUG
         .fullScreenCover(item: $previewBook) { book in

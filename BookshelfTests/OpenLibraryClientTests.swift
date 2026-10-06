@@ -22,7 +22,7 @@ final class OpenLibraryClientTests: XCTestCase {
         XCTAssertEqual(result.draft.isbn, "9780753559178")
         XCTAssertEqual(result.draft.pageCount, "512")
         XCTAssertEqual(result.draft.publishedYear, "2023")
-        XCTAssertEqual(result.coverURL?.absoluteString, "https://covers.openlibrary.org/b/id/14591884-L.jpg")
+        XCTAssertEqual(result.coverURL?.absoluteString, "https://covers.openlibrary.org/b/id/14591884.jpg")
     }
 
     func testMapsSubjectsToCategories() throws {
@@ -45,8 +45,8 @@ final class OpenLibraryClientTests: XCTestCase {
     }
 
     func testCoverURLs() {
-        XCTAssertEqual(OpenLibraryClient.coverURL(id: 14591884).absoluteString, "https://covers.openlibrary.org/b/id/14591884-L.jpg")
-        XCTAssertEqual(OpenLibraryClient.isbnCoverURL("9780753559178").absoluteString, "https://covers.openlibrary.org/b/isbn/9780753559178-L.jpg?default=false")
+        XCTAssertEqual(OpenLibraryClient.coverURL(id: 14591884).absoluteString, "https://covers.openlibrary.org/b/id/14591884.jpg")
+        XCTAssertEqual(OpenLibraryClient.isbnCoverURL("9780753559178").absoluteString, "https://covers.openlibrary.org/b/isbn/9780753559178.jpg?default=false")
     }
 
     /// Hits the real API, since that's what broke before (`/api/books` started returning 404).

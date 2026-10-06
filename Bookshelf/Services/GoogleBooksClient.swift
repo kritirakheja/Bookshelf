@@ -90,7 +90,7 @@ struct GoogleBooksClient {
                 subjects: info.categories ?? [],
                 isbn: isbn,
                 isbns: identifiers.filter { $0.type.hasPrefix("ISBN") }.map(\.identifier),
-                coverURL: thumbnail.flatMap { coverURL(fromThumbnail: $0, width: 800) },
+                coverURL: thumbnail.flatMap { coverURL(fromThumbnail: $0, width: 1200) },
                 thumbnailURL: thumbnail.flatMap { coverURL(fromThumbnail: $0, width: 200) },
                 summary: info.description.map(BookDescription.clean),
                 language: info.language

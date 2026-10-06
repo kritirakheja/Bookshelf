@@ -37,7 +37,7 @@ final class GoogleBooksTests: XCTestCase {
         let cover = try XCTUnwrap(book.coverURL?.absoluteString)
         XCTAssertTrue(cover.hasPrefix("https://"))
         XCTAssertFalse(cover.contains("edge=curl"))
-        XCTAssertTrue(cover.contains("fife=w800"))
+        XCTAssertTrue(cover.contains("fife=w1200"))
     }
 
     func testNoResults() throws {

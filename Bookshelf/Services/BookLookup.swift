@@ -168,6 +168,28 @@ struct BookLookup {
         return await cover(for: match.item)
     }
 
+    /// A sharper copy of the cover a book already has: its own edition first (by
+    /// ISBN), then other editions that happen to share the artwork. Nil if nothing
+    /// online is both the same cover and clearly larger.
+    func sharperCover(than current: Data, title: String, author: String?, isbn: String?) async -> Data? {
+        func firstSharper(_ urls: [URL?]) async -> Data? {
+            for url in urls.compactMap({ $0 }) {
+                if let data = await openLibrary.downloadCover(from: [url]), CoverImage.isSharperCopy(data, of: current) {
+                    return data
+                }
+            }
+            return nil
+        }
+        if let isbn, !isbn.isEmpty {
+            if let found = await firstSharper([OpenLibraryClient.isbnCoverURL(isbn)]) { return found }
+            if let candidate = try? await google?.lookup(isbn: isbn), let found = await firstSharper([candidate.coverURL]) {
+                return found
+            }
+        }
+        let editions = await coverOptions(title: title, author: author, isbn: isbn)
+        return await firstSharper(editions.prefix(6).map(\.coverURL))
+    }
+
     /// Covers of other editions of the same book, English ones first, for choosing a
     /// different cover. Only results whose title and author match the book count.
     func coverOptions(title: String, author: String?, isbn: String?) async -> [BookCandidate] {
