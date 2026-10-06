@@ -101,7 +101,7 @@ struct ProfileView: View {
                     .clipShape(Circle())
 
                     Image(systemName: "camera.circle.fill")
-                        .font(.title)
+                        .font(.inter(.title))
                         .symbolRenderingMode(.palette)
                         .foregroundStyle(.white, Theme.accent)
                         .background(Circle().fill(Theme.paper))
@@ -119,7 +119,7 @@ struct ProfileView: View {
             }
 
             TextField("Your name", text: $name)
-                .font(Theme.serif(.title2, .semibold))
+                .font(Font.inter(.title2, .semibold))
                 .multilineTextAlignment(.center)
                 .submitLabel(.done)
         }
@@ -149,10 +149,10 @@ struct ProfileView: View {
     private func countStat(_ value: String, _ label: String) -> some View {
         VStack(spacing: 2) {
             Text(value)
-                .font(.title2.weight(.bold))
+                .font(.inter(.title2, .bold))
                 .monospacedDigit()
             Text(label)
-                .font(.caption)
+                .font(.inter(.caption))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)

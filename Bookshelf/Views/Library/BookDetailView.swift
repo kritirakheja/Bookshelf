@@ -72,17 +72,17 @@ struct BookDetailView: View {
             }
             VStack(spacing: 6) {
                 Text(book.title)
-                    .font(Theme.serif(.title, .bold))
+                    .font(Font.inter(.title, .bold))
                     .multilineTextAlignment(.center)
                 if !book.authors.isEmpty {
                     Text("by \(book.authorLine)")
-                        .font(Theme.serif(.title3).italic())
+                        .font(Font.inter(.title3).italic())
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
                 if !facts.isEmpty {
                     Text(facts.joined(separator: "  ·  "))
-                        .font(.caption)
+                        .font(.inter(.caption))
                         .foregroundStyle(.secondary)
                         .padding(.top, 2)
                 }
@@ -138,10 +138,10 @@ struct BookDetailView: View {
 
     private func shelfLabel(_ text: String, systemImage: String? = nil, faded: Bool = false) -> some View {
         HStack(spacing: 4) {
-            if let systemImage { Image(systemName: systemImage).font(.caption2) }
+            if let systemImage { Image(systemName: systemImage).font(.inter(.caption2)) }
             Text(text)
         }
-        .font(.footnote.weight(.medium))
+        .font(.inter(.footnote, .medium))
         .foregroundStyle(faded ? AnyShapeStyle(.secondary) : AnyShapeStyle(Theme.accent))
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
@@ -168,13 +168,13 @@ struct BookDetailView: View {
             .tint(Theme.accent)
             if coverNotFound {
                 Text("No cover found online.")
-                    .font(.caption)
+                    .font(.inter(.caption))
                     .foregroundStyle(.secondary)
             }
             Button("Delete book", systemImage: "trash", role: .destructive) {
                 bookToDelete = book
             }
-            .font(.footnote)
+            .font(.inter(.footnote))
         }
     }
 

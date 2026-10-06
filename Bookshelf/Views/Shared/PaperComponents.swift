@@ -6,7 +6,7 @@ struct ShelfHeading: View {
 
     var body: some View {
         Text(text.uppercased())
-            .font(.caption.weight(.semibold))
+            .font(.inter(.caption, .semibold))
             .tracking(2)
             .foregroundStyle(Theme.accent)
     }

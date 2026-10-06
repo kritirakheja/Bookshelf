@@ -113,7 +113,7 @@ struct AddBookSheet: View {
                             .foregroundStyle(.tint)
                             .symbolEffect(.variableColor.iterative.reversing)
                         Text(progress)
-                            .font(.subheadline)
+                            .font(.inter(.subheadline))
                             .foregroundStyle(.secondary)
                     }
                     .padding(22)

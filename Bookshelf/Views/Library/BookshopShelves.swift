@@ -46,10 +46,10 @@ struct SectionSign: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(title.uppercased())
-                .font(.system(.title3, design: .serif, weight: .bold))
+                .font(.inter(.title3, .bold))
                 .tracking(2)
             Text("\(count)")
-                .font(.subheadline)
+                .font(.inter(.subheadline))
                 .foregroundStyle(.secondary)
         }
         .padding(.horizontal, 18)

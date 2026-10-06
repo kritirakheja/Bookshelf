@@ -102,10 +102,10 @@ private struct SearchResultRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(candidate.title)
-                    .font(.headline)
+                    .font(.inter(.headline))
                     .lineLimit(2)
                 Text(candidate.authors.prefix(2).joined(separator: ", "))
-                    .font(.subheadline)
+                    .font(.inter(.subheadline))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                 HStack(spacing: 6) {
@@ -117,7 +117,7 @@ private struct SearchResultRow: View {
                             .foregroundStyle(.green)
                     }
                 }
-                .font(.caption)
+                .font(.inter(.caption))
                 .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)

@@ -71,7 +71,7 @@ struct CoverChooserView: View {
                 }
             }
             Text(caption(option))
-                .font(.caption2)
+                .font(.inter(.caption2))
                 .foregroundStyle(option.isEnglish ? .secondary : .tertiary)
                 .lineLimit(1)
         }

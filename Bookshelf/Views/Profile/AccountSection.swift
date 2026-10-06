@@ -53,7 +53,7 @@ struct AccountSection: View {
         case .failed(let message):
             Label(message, systemImage: "exclamationmark.triangle")
                 .foregroundStyle(.red)
-                .font(.footnote)
+                .font(.inter(.footnote))
         case .idle:
             LabeledContent("Last synced") {
                 if let lastSynced = account.lastSynced {

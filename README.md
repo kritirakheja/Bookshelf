@@ -1,6 +1,6 @@
 # Bookshelf
 
-A personal library app for iPhone, built with SwiftUI and SwiftData, with one warm look throughout (soft off-white background, deep green accent, serif titles; see `Views/Shared/Theme.swift`). Catalogue the books you own, track what you're reading, keep a shelf of favourite recommendations, remember who has your books, and save the bookstores you love.
+A personal library app for iPhone, built with SwiftUI and SwiftData, with one warm look throughout (soft off-white background, deep green accent, the [Inter](https://rsms.me/inter/) typeface, bundled under the SIL Open Font License; see `Views/Shared/Theme.swift`). Catalogue the books you own, track what you're reading, keep a shelf of favourite recommendations, remember who has your books, and save the bookstores you love.
 
 ## Features
 

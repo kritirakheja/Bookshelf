@@ -28,7 +28,7 @@ struct ReadingCard: View {
             withAnimation(.snappy) { book.setStatus(status) }
         } label: {
             Label(status.rawValue, systemImage: status.systemImage)
-                .font(.subheadline.weight(.semibold))
+                .font(.inter(.subheadline, .semibold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .frame(maxWidth: .infinity)
@@ -67,7 +67,7 @@ struct ReadingCard: View {
                     }
                 }
             }
-            .font(.footnote)
+            .font(.inter(.footnote))
             .foregroundStyle(.secondary)
         }
     }
@@ -92,13 +92,13 @@ struct FavouriteCard: View {
                         Button("Remove") {
                             withAnimation { FavoritesShelf.remove(book, library: shelf) }
                         }
-                        .font(.footnote)
+                        .font(.inter(.footnote))
                     }
                     TextField("Why would you recommend it?", text: Binding(
                         get: { book.recommendationNote ?? "" },
                         set: { book.recommendationNote = $0.isEmpty ? nil : $0 }
                     ), axis: .vertical)
-                    .font(Theme.serif(.callout).italic())
+                    .font(Font.inter(.callout).italic())
                     .lineLimit(1...6)
                 }
             }
@@ -109,7 +109,7 @@ struct FavouriteCard: View {
                 }
             } label: {
                 Label("Add to Favourites", systemImage: "star")
-                    .font(.subheadline.weight(.semibold))
+                    .font(.inter(.subheadline, .semibold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
             }
@@ -136,7 +136,7 @@ struct BlurbCard: View {
                 ShelfHeading(text: "About this book")
                 if let summary = book.summary {
                     Text(summary)
-                        .font(Theme.serif(.callout))
+                        .font(Font.inter(.callout))
                         .lineSpacing(3)
                         .lineLimit(expanded || !isLong ? nil : 7)
                         .textSelection(.enabled)
@@ -144,7 +144,7 @@ struct BlurbCard: View {
                         Button(expanded ? "Less" : "Read more") {
                             withAnimation { expanded.toggle() }
                         }
-                        .font(.footnote.weight(.semibold))
+                        .font(.inter(.footnote, .semibold))
                     }
                 } else if searching {
                     HStack {
@@ -162,7 +162,7 @@ struct BlurbCard: View {
                     }
                     if notFound {
                         Text("No description found online. You can add one with Edit.")
-                            .font(.caption)
+                            .font(.inter(.caption))
                             .foregroundStyle(.secondary)
                     }
                 }

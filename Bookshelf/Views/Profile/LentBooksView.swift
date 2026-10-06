@@ -97,19 +97,19 @@ private struct LentBookRow: View {
             CoverView(book: book)
             VStack(alignment: .leading, spacing: 2) {
                 Text(book.title)
-                    .font(.headline)
+                    .font(.inter(.headline))
                     .lineLimit(2)
                 Text(book.authorLine)
-                    .font(.subheadline)
+                    .font(.inter(.subheadline))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                 if direction == .lent, let loan = book.currentLoan {
                     Text(Self.away(since: loan.lentAt))
-                        .font(.caption)
+                        .font(.inter(.caption))
                         .foregroundStyle(.orange)
                 } else if direction == .borrowed, let borrowing = book.borrowing {
                     Text(LibraryCard.since(borrowing.lentAt, verb: "Borrowed"))
-                        .font(.caption)
+                        .font(.inter(.caption))
                         .foregroundStyle(.indigo)
                 }
             }

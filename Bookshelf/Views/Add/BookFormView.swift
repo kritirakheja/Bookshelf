@@ -138,12 +138,12 @@ struct BookFormView: View {
                     .overlay {
                         Label("Add cover", systemImage: "photo")
                             .labelStyle(.iconOnly)
-                            .font(.title)
+                            .font(.inter(.title))
                             .foregroundStyle(.secondary)
                     }
             }
             Image(systemName: "pencil.circle.fill")
-                .font(.title2)
+                .font(.inter(.title2))
                 .symbolRenderingMode(.multicolor)
                 .offset(x: 8, y: 8)
         }
@@ -155,17 +155,17 @@ struct BookFormView: View {
     private var findCoverButton: some View {
         if coverSearch == .searching {
             ProgressView("Searching for a cover…")
-                .font(.footnote)
+                .font(.inter(.footnote))
         } else if draft.coverImage == nil {
             VStack(spacing: 4) {
                 Button("Find cover online", systemImage: "magnifyingglass") {
                     findCover()
                 }
-                .font(.footnote)
+                .font(.inter(.footnote))
                 .disabled(draft.trimmedTitle.isEmpty && draft.normalizedISBN == nil)
                 if coverSearch == .notFound {
                     Text("No cover found. Tap the cover to pick a photo instead.")
-                        .font(.caption)
+                        .font(.inter(.caption))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }

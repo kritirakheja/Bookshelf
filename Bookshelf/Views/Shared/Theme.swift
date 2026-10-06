@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 /// The app's one look: soft off-white behind every screen, white cards, a single
-/// deep green accent, serif titles. Colours adapt to dark mode.
+/// deep green accent, and Inter for all text. Colours adapt to dark mode.
 enum Theme {
     /// Behind every screen.
     static let paper = adaptive(light: (0.968, 0.970, 0.960), dark: (0.055, 0.062, 0.058))
@@ -13,21 +13,19 @@ enum Theme {
     /// The accent: buttons, links, labels. Same as the AccentColor asset.
     static let accent = adaptive(light: (0.10, 0.35, 0.26), dark: (0.46, 0.78, 0.62))
 
-    static func serif(_ style: Font.TextStyle, _ weight: Font.Weight = .regular) -> Font {
-        .system(style, design: .serif, weight: weight)
-    }
-
-    /// Serif titles in every navigation bar. Call once at launch.
-    static func applyNavigationFonts() {
-        func serif(_ style: UIFont.TextStyle, bold: Bool) -> UIFont {
-            let base = UIFontDescriptor.preferredFontDescriptor(withTextStyle: style)
-            let design = base.withDesign(.serif) ?? base
-            let descriptor = bold ? (design.withSymbolicTraits(.traitBold) ?? design) : design
-            return UIFont(descriptor: descriptor, size: 0)
+    /// Inter in every navigation bar, tab label and search box (the parts SwiftUI's
+    /// fonts don't reach). Call once at launch.
+    static func applyBarFonts() {
+        func inter(_ face: String, _ size: CGFloat, _ style: UIFont.TextStyle) -> UIFont {
+            let font = UIFont(name: face, size: size) ?? .systemFont(ofSize: size)
+            return UIFontMetrics(forTextStyle: style).scaledFont(for: font)
         }
         let bar = UINavigationBar.appearance()
-        bar.largeTitleTextAttributes = [.font: serif(.title1, bold: true)]
-        bar.titleTextAttributes = [.font: serif(.headline, bold: true)]
+        bar.largeTitleTextAttributes = [.font: inter("Inter-Bold", 28, .title1)]
+        bar.titleTextAttributes = [.font: inter("Inter-SemiBold", 17, .headline)]
+        UIBarButtonItem.appearance().setTitleTextAttributes([.font: inter("Inter-Medium", 17, .body)], for: .normal)
+        UITabBarItem.appearance().setTitleTextAttributes([.font: inter("Inter-Medium", 10, .caption2)], for: .normal)
+        UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).font = inter("Inter-Regular", 17, .body)
     }
 
     private static func adaptive(light: (Double, Double, Double), dark: (Double, Double, Double)) -> Color {
@@ -43,5 +41,32 @@ extension View {
     func paperScreen() -> some View {
         scrollContentBackground(.hidden)
             .background(Theme.paper.ignoresSafeArea())
+    }
+}
+
+extension Font {
+    /// The app's typeface, Inter, at a text style's size (it grows with the reader's
+    /// text-size setting). Every screen uses this instead of the system font.
+    static func inter(_ style: TextStyle, _ weight: Weight? = nil) -> Font {
+        let size: CGFloat = switch style {
+        case .largeTitle: 34
+        case .title: 28
+        case .title2: 22
+        case .title3: 20
+        case .headline, .body: 17
+        case .callout: 16
+        case .subheadline: 15
+        case .footnote: 13
+        case .caption: 12
+        case .caption2: 11
+        @unknown default: 17
+        }
+        let face = switch weight ?? (style == .headline ? .semibold : .regular) {
+        case .medium: "Inter-Medium"
+        case .semibold: "Inter-SemiBold"
+        case .bold, .heavy, .black: "Inter-Bold"
+        default: "Inter-Regular"
+        }
+        return .custom(face, size: size, relativeTo: style)
     }
 }

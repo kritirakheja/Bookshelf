@@ -28,13 +28,13 @@ struct BookstoreDetailView: View {
 
                 Section {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(store.name).font(.title2.weight(.bold))
+                        Text(store.name).font(.inter(.title2, .bold))
                         if !store.address.isEmpty {
                             Text(store.address).foregroundStyle(.secondary)
                         }
                         if let here {
                             Label(BookstoreSearch.distanceText(here.distance(from: store.location)) + " away", systemImage: "figure.walk")
-                                .font(.caption)
+                                .font(.inter(.caption))
                                 .foregroundStyle(.secondary)
                         }
                     }

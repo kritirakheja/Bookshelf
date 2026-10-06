@@ -101,17 +101,17 @@ struct FavoritesShelfView: View {
     private func caption(_ book: Book) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(book.title)
-                .font(.subheadline.weight(.semibold))
+                .font(.inter(.subheadline, .semibold))
                 .lineLimit(3)
             Text(book.authorLine)
-                .font(.caption)
+                .font(.inter(.caption))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
             tag(book)
                 .padding(.top, 2)
             if let note = book.recommendationNote, !note.isEmpty {
                 Text("“\(note)”")
-                    .font(.caption.italic())
+                    .font(.inter(.caption).italic())
                     .foregroundStyle(.secondary)
                     .lineLimit(3)
                     .padding(.top, 2)
@@ -133,7 +133,7 @@ struct FavoritesShelfView: View {
                     .background(Theme.accent)
             }
         }
-        .font(.caption.weight(.semibold).monospacedDigit())
+        .font(.inter(.caption, .semibold).monospacedDigit())
         .frame(height: 22)
         .clipShape(Capsule())
         .overlay(Capsule().stroke(Theme.accent, lineWidth: 1))
@@ -170,12 +170,12 @@ private struct FavoriteEditRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("#\(book.favoriteRank ?? 0)  \(book.title)")
-                .font(.headline)
+                .font(.inter(.headline))
             TextField("Why do you recommend it?", text: Binding(
                 get: { book.recommendationNote ?? "" },
                 set: { book.recommendationNote = $0.isEmpty ? nil : $0 }
             ), axis: .vertical)
-            .font(.subheadline)
+            .font(.inter(.subheadline))
         }
         .padding(.vertical, 4)
     }

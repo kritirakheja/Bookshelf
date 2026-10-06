@@ -9,7 +9,7 @@ struct BookshelfApp: App {
     init() {
         let container = try! ModelContainer(for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, Bookstore.self, DeletedBookstore.self)
         self.container = container
-        Theme.applyNavigationFonts()
+        Theme.applyBarFonts()
         _account = State(initialValue: AccountStore(container: container))
     }
 
@@ -18,6 +18,7 @@ struct BookshelfApp: App {
             RootTabView()
                 .environment(account)
                 .tint(Theme.accent)
+                .font(.inter(.body))
         }
         .modelContainer(container)
     }

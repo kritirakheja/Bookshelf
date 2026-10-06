@@ -46,7 +46,7 @@ struct BookstoresView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Bookstores").font(Theme.serif(.headline, .bold))
+                    Text("Bookstores").font(Font.inter(.headline, .bold))
                 }
             }
             // A solid bar, so the search box doesn't sit on top of the map.
@@ -287,14 +287,14 @@ private struct StoreRow: View {
         HStack(spacing: 12) {
             Pin(symbol: symbol, tint: tint, size: 30)
             VStack(alignment: .leading, spacing: 2) {
-                Text(name).font(.headline).lineLimit(1)
+                Text(name).font(.inter(.headline)).lineLimit(1)
                 if !detail.isEmpty {
-                    Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    Text(detail).font(.inter(.caption)).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
             Spacer(minLength: 4)
             if let distance {
-                Text(distance).font(.caption).foregroundStyle(.secondary)
+                Text(distance).font(.inter(.caption)).foregroundStyle(.secondary)
             }
         }
         .contentShape(Rectangle())
@@ -309,12 +309,12 @@ private struct ResultCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(result.name).font(.title3.weight(.bold))
+            Text(result.name).font(.inter(.title3, .bold))
             if !result.address.isEmpty {
-                Text(result.address).font(.subheadline).foregroundStyle(.secondary)
+                Text(result.address).font(.inter(.subheadline)).foregroundStyle(.secondary)
             }
             if let distance {
-                Label(distance + " away", systemImage: "figure.walk").font(.caption).foregroundStyle(.secondary)
+                Label(distance + " away", systemImage: "figure.walk").font(.inter(.caption)).foregroundStyle(.secondary)
             }
             Button(action: onSave) {
                 Label("Save bookstore", systemImage: "bookmark.fill").frame(maxWidth: .infinity)

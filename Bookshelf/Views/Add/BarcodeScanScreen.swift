@@ -131,9 +131,9 @@ struct ScanViewfinder: View {
         if let found {
             VStack(spacing: 6) {
                 Text("Got it")
-                    .font(.headline)
+                    .font(.inter(.headline))
                 Text(found)
-                    .font(.title3.monospacedDigit().weight(.semibold))
+                    .font(.inter(.title3).monospacedDigit().weight(.semibold))
                     .tracking(2)
             }
             .foregroundStyle(.white)
@@ -141,9 +141,9 @@ struct ScanViewfinder: View {
         } else {
             VStack(spacing: 6) {
                 Image(systemName: "barcode.viewfinder")
-                    .font(.title2)
+                    .font(.inter(.title2))
                 Text("Point at the barcode on the back cover")
-                    .font(.subheadline.weight(.medium))
+                    .font(.inter(.subheadline, .medium))
                     .multilineTextAlignment(.center)
             }
             .foregroundStyle(.white)

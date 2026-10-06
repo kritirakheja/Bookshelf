@@ -35,6 +35,7 @@ targets:
         CFBundleDisplayName: Bookshelf
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIAppFonts: [Inter-Regular.ttf, Inter-Medium.ttf, Inter-SemiBold.ttf, Inter-Bold.ttf, Inter-Italic.ttf]
         # Backup & sync (from Config/Local.xcconfig; blank = sync hidden).
         SupabaseHost: $(SUPABASE_HOST)
         SupabaseKey: $(SUPABASE_KEY)

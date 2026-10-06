@@ -19,12 +19,12 @@ struct BackCoverView: View {
             }
             VStack(spacing: 2) {
                 Text(book.title)
-                    .font(Theme.serif(.title3, .bold))
+                    .font(Font.inter(.title3, .bold))
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                 if !book.authors.isEmpty {
                     Text("by \(book.authorLine)")
-                        .font(Theme.serif(.subheadline).italic())
+                        .font(Font.inter(.subheadline).italic())
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -35,14 +35,14 @@ struct BackCoverView: View {
                     dismiss()
                 } label: {
                     Label("Start reading", systemImage: "book.fill")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.inter(.subheadline, .semibold))
                         .frame(minWidth: 130)
                 }
                 .buttonStyle(.borderedProminent)
 
                 NavigationLink(value: book) {
                     Text("Full details")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.inter(.subheadline, .semibold))
                         .frame(minWidth: 100)
                 }
                 .buttonStyle(.bordered)
@@ -131,7 +131,7 @@ private struct BackCoverFace: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             HStack(alignment: .bottom) {
                 Text(facts)
-                    .font(.caption2)
+                    .font(.inter(.caption2))
                     .foregroundStyle(ink.opacity(0.75))
                 Spacer()
                 if let isbn = book.isbn {
@@ -150,7 +150,7 @@ private struct BackCoverFace: View {
 
     private func blurbText(_ summary: String, _ style: Font.TextStyle) -> some View {
         Text(summary)
-            .font(Theme.serif(style))
+            .font(Font.inter(style))
             .lineSpacing(2)
             .foregroundStyle(ink)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -174,7 +174,7 @@ private struct BackCoverFace: View {
         } else {
             VStack(alignment: .leading, spacing: 10) {
                 Text(searching ? "Looking for a description…" : "No description yet")
-                    .font(Theme.serif(.callout).italic())
+                    .font(Font.inter(.callout).italic())
                     .foregroundStyle(ink.opacity(0.85))
                 if searching {
                     ProgressView().tint(ink)
@@ -186,12 +186,12 @@ private struct BackCoverFace: View {
                             searching = false
                         }
                     }
-                    .font(.footnote.weight(.semibold))
+                    .font(.inter(.footnote, .semibold))
                     .buttonStyle(.bordered)
                     .tint(ink)
                     if notFound {
                         Text("None found online. You can add one from Full details.")
-                            .font(.caption)
+                            .font(.inter(.caption))
                             .foregroundStyle(ink.opacity(0.75))
                     }
                 }

@@ -27,7 +27,7 @@ struct LibraryCard: View {
                     ShelfHeading(text: "Lending")
                     Spacer()
                     Text("Added \(book.dateAdded.formatted(.dateTime.day().month(.abbreviated).year()))")
-                        .font(.caption2)
+                        .font(.inter(.caption2))
                         .foregroundStyle(.secondary)
                 }
                 if let isbn = book.isbn {
@@ -93,7 +93,7 @@ struct LibraryCard: View {
                     detail: Self.since(loan.lentAt, verb: "Lent"))
         } else if book.pastLoans.isEmpty {
             Text("On your shelf. Never lent out.")
-                .font(.footnote)
+                .font(.inter(.footnote))
                 .foregroundStyle(.secondary)
         }
     }
@@ -131,10 +131,10 @@ struct LibraryCard: View {
     private func stamped(_ text: String, color: Color, detail: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(text)
-                .font(.subheadline.weight(.semibold))
+                .font(.inter(.subheadline, .semibold))
                 .foregroundStyle(color)
             Text(detail)
-                .font(.caption)
+                .font(.inter(.caption))
                 .foregroundStyle(.secondary)
         }
     }
@@ -145,10 +145,10 @@ struct LibraryCard: View {
             Text(label)
             Spacer()
             Text(value)
-                .font(monospaced ? .footnote.monospaced() : .footnote)
+                .font(monospaced ? .footnote.monospaced() : .inter(.footnote))
                 .foregroundStyle(.secondary)
         }
-        .font(.subheadline)
+        .font(.inter(.subheadline))
         .padding(.vertical, 7)
         .overlay(alignment: .bottom) {
             Rectangle().fill(Theme.rule.opacity(0.6)).frame(height: 0.5)

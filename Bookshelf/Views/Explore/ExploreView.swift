@@ -120,11 +120,11 @@ private struct CategoryCard<Route: Hashable, Menu: View>: View {
             NavigationLink(value: route) {
                 HStack {
                     Text(category.title)
-                        .font(Theme.serif(.headline, .semibold))
+                        .font(Font.inter(.headline, .semibold))
                         .foregroundStyle(Color.primary)
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.footnote.weight(.semibold))
+                        .font(.inter(.footnote, .semibold))
                         .foregroundStyle(.tertiary)
                 }
                 .contentShape(Rectangle())
@@ -191,10 +191,10 @@ private struct BookTile: View {
         VStack(alignment: .leading, spacing: 6) {
             CoverView(book: book, width: width)
             Text(book.title)
-                .font(.caption.weight(.semibold))
+                .font(.inter(.caption, .semibold))
                 .lineLimit(2)
             Text(book.authorLine)
-                .font(.caption2)
+                .font(.inter(.caption2))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         }

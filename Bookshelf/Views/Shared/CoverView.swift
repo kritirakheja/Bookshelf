@@ -34,7 +34,7 @@ struct CoverView: View {
     private func badge(_ title: String, icon: String, tint: Color) -> some View {
         if width >= 80 {
             Label(title, systemImage: icon)
-                .font(.caption2.weight(.bold))
+                .font(.inter(.caption2, .bold))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 7)
                 .padding(.vertical, 3)
@@ -55,7 +55,7 @@ struct CoverView: View {
             Rectangle().fill(placeholderColor.gradient)
             if width >= 80 {
                 Text(book.title)
-                    .font(.system(size: width / 8, weight: .semibold, design: .serif))
+                    .font(.custom("Inter-SemiBold", size: width / 8))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.white)
                     .padding(6)
