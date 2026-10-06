@@ -35,11 +35,17 @@ struct ExploreView: View {
                 if isSearching {
                     ScrollView { BookGrid(books: searchResults, menu: bookMenu) }
                 } else {
-                    List(categories) { category in
-                        NavigationLink(value: ShelfRoute(id: category.id)) {
-                            CategoryRow(category: category)
+                    // One card per category.
+                    List {
+                        ForEach(categories) { category in
+                            Section {
+                                NavigationLink(value: ShelfRoute(id: category.id)) {
+                                    CategoryRow(category: category)
+                                }
+                            }
                         }
                     }
+                    .listSectionSpacing(14)
                 }
             }
             .confirmDeletingBook($bookToDelete)
