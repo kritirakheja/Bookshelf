@@ -44,6 +44,8 @@ final class BookSceneView: SCNView {
     /// Rest poses, in radians about the vertical axis: turned a little so the spine shows.
     private static let frontPose: Float = 0.30
     private static let backPose: Float = .pi - 0.10
+    /// How small the book gets at the middle of a turn (1 = no change).
+    private static let turningScale: CGFloat = 0.84
 
     private let bookNode = SCNNode()
     private let cameraNode = SCNNode()
@@ -115,6 +117,8 @@ final class BookSceneView: SCNView {
             yaw = held * .pi / 180
             hasTurnedOver = true
             shadowNode.isHidden = abs(sin(yaw)) > 0.35
+            let scale = Float(1 - (1 - Self.turningScale) * CGFloat(abs(sin(yaw))))
+            bookNode.scale = SCNVector3(scale, scale, scale)
         }
         #endif
         applyPose()
@@ -169,6 +173,12 @@ final class BookSceneView: SCNView {
         // The shadow is drawn for a book at rest, so it steps aside during the turn.
         if !UIAccessibility.isReduceMotionEnabled {
             shadowNode.runAction(.sequence([.fadeOut(duration: 0.12), .wait(duration: 0.5), .fadeIn(duration: 0.3)]))
+            // Draw back a little mid-turn, when the near edge looms largest, then return.
+            let away = SCNAction.scale(to: Self.turningScale, duration: 0.375)
+            let back = SCNAction.scale(to: 1, duration: 0.375)
+            away.timingMode = .easeInEaseOut
+            back.timingMode = .easeInEaseOut
+            bookNode.runAction(.sequence([away, back]))
         }
         SCNTransaction.begin()
         SCNTransaction.animationDuration = UIAccessibility.isReduceMotionEnabled ? 0 : 0.75
