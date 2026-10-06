@@ -50,7 +50,9 @@ struct ExploreView: View {
             }
             .confirmDeletingBook($bookToDelete)
             .paperScreen()
-            .navigationTitle("Find your next read")
+            // No heading: the search box, always showing, says what the page is for.
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
             .navigationDestination(for: ShelfRoute.self) { route in
                 if let category = categories.first(where: { $0.id == route.id }) {
@@ -59,7 +61,7 @@ struct ExploreView: View {
                         .navigationTitle(category.title)
                 }
             }
-            .searchable(text: $searchText, prompt: "Search unread books")
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Find your next read")
             .toolbar {
                 Button("Add book", systemImage: "plus") { showingAdd = true }
             }
