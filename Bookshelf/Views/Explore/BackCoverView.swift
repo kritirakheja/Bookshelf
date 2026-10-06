@@ -10,50 +10,48 @@ struct BackCoverView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private let width: CGFloat = 270
-
     var body: some View {
-        ScrollView {
-            VStack(spacing: 22) {
-                bookInHand
-                VStack(spacing: 4) {
-                    Text(book.title)
-                        .font(Theme.serif(.title2, .bold))
-                        .multilineTextAlignment(.center)
-                    if !book.authors.isEmpty {
-                        Text("by \(book.authorLine)")
-                            .font(Theme.serif(.subheadline).italic())
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.horizontal, 24)
-                HStack(spacing: 12) {
-                    Button {
-                        withAnimation { book.setStatus(.reading) }
-                        dismiss()
-                    } label: {
-                        Label("Start reading", systemImage: "book.fill")
-                            .font(.subheadline.weight(.semibold))
-                            .frame(minWidth: 130)
-                    }
-                    .buttonStyle(.borderedProminent)
-
-                    NavigationLink(value: book) {
-                        Text("Full details")
-                            .font(.subheadline.weight(.semibold))
-                            .frame(minWidth: 100)
-                    }
-                    .buttonStyle(.bordered)
-                }
-                .controlSize(.large)
-                .buttonBorderShape(.capsule)
-                Text(showingBack ? "Tap the book to see the front" : "Tap the book to read the back")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+        VStack(spacing: 14) {
+            // The book takes all the room the title and buttons leave it.
+            GeometryReader { proxy in
+                bookInHand(width: min(proxy.size.width, proxy.size.height / 1.5))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 20)
+            VStack(spacing: 2) {
+                Text(book.title)
+                    .font(Theme.serif(.title3, .bold))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                if !book.authors.isEmpty {
+                    Text("by \(book.authorLine)")
+                        .font(Theme.serif(.subheadline).italic())
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            HStack(spacing: 12) {
+                Button {
+                    withAnimation { book.setStatus(.reading) }
+                    dismiss()
+                } label: {
+                    Label("Start reading", systemImage: "book.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(minWidth: 130)
+                }
+                .buttonStyle(.borderedProminent)
+
+                NavigationLink(value: book) {
+                    Text("Full details")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(minWidth: 100)
+                }
+                .buttonStyle(.bordered)
+            }
+            .controlSize(.large)
+            .buttonBorderShape(.capsule)
         }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 12)
         .paperScreen()
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
@@ -65,7 +63,7 @@ struct BackCoverView: View {
         }
     }
 
-    private var bookInHand: some View {
+    private func bookInHand(width: CGFloat) -> some View {
         let angle: Double = showingBack ? 180 : 0
         return ZStack {
             CoverView(book: book, width: width)
@@ -141,24 +139,38 @@ private struct BackCoverFace: View {
                 }
             }
         }
-        .padding(18)
+        .padding(20)
         .frame(width: width, height: width * 1.5)
         .background(Color(red: color.r, green: color.g, blue: color.b))
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay(RoundedRectangle(cornerRadius: 8).stroke(.black.opacity(0.08), lineWidth: 0.5))
     }
 
+    private static let textStyles: [Font.TextStyle] = [.body, .callout, .subheadline, .footnote, .caption, .caption2]
+
+    private func blurbText(_ summary: String, _ style: Font.TextStyle) -> some View {
+        Text(summary)
+            .font(Theme.serif(style))
+            .lineSpacing(2)
+            .foregroundStyle(ink)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
     @ViewBuilder
     private var blurb: some View {
         if let summary = book.summary {
-            ScrollView {
-                Text(summary)
-                    .font(Theme.serif(.footnote))
-                    .lineSpacing(3)
-                    .foregroundStyle(ink)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            // The largest text size at which the whole description fits; only a very
+            // long one falls through to the last option and scrolls.
+            ViewThatFits(in: .vertical) {
+                ForEach(Self.textStyles, id: \.self) { style in
+                    blurbText(summary, style)
+                }
+                ScrollView {
+                    blurbText(summary, .caption2)
+                }
+                .scrollIndicators(.hidden)
             }
-            .scrollIndicators(.hidden)
         } else {
             VStack(alignment: .leading, spacing: 10) {
                 Text(searching ? "Looking for a description…" : "No description yet")
