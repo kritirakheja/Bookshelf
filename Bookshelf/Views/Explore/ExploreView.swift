@@ -1,15 +1,15 @@
 import SwiftUI
 import SwiftData
 
-/// Browse your unread books Netflix-style: featured picks up top, then shelves you
-/// swipe through sideways (continue reading, recently added, quick reads, categories…).
+/// Browse your unread books by category: a list of categories, each with its count
+/// and a few covers, opening to a grid of that category's books.
 struct ExploreView: View {
     @Query(sort: \Book.dateAdded, order: .reverse) private var books: [Book]
     @State private var searchText = ""
     @State private var showingAdd = false
     @State private var bookToDelete: Book?
 
-    /// A shelf's "See all" page.
+    /// A category's page.
     private struct ShelfRoute: Hashable {
         let id: String
     }
@@ -29,21 +29,17 @@ struct ExploreView: View {
     private var isSearching: Bool { !searchText.trimmingCharacters(in: .whitespaces).isEmpty }
 
     var body: some View {
-        let shelves = shelves
+        let categories = shelves.categories
         NavigationStack {
-            ScrollView {
+            Group {
                 if isSearching {
-                    BookGrid(books: searchResults, menu: bookMenu)
+                    ScrollView { BookGrid(books: searchResults, menu: bookMenu) }
                 } else {
-                    VStack(alignment: .leading, spacing: 28) {
-                        if !shelves.featured.isEmpty {
-                            FeaturedCarousel(books: shelves.featured)
-                        }
-                        ForEach(shelves.shelves) { shelf in
-                            ShelfRow(shelf: shelf, route: ShelfRoute(id: shelf.id), menu: bookMenu)
+                    List(categories) { category in
+                        NavigationLink(value: ShelfRoute(id: category.id)) {
+                            CategoryRow(category: category)
                         }
                     }
-                    .padding(.bottom, 24)
                 }
             }
             .confirmDeletingBook($bookToDelete)
@@ -51,10 +47,10 @@ struct ExploreView: View {
             .navigationTitle("Explore")
             .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
             .navigationDestination(for: ShelfRoute.self) { route in
-                if let shelf = shelves.shelves.first(where: { $0.id == route.id }) {
-                    ScrollView { BookGrid(books: shelf.books, menu: bookMenu) }
+                if let category = categories.first(where: { $0.id == route.id }) {
+                    ScrollView { BookGrid(books: category.books, menu: bookMenu) }
                         .paperScreen()
-                        .navigationTitle(shelf.title)
+                        .navigationTitle(category.title)
                 }
             }
             .searchable(text: $searchText, prompt: "Search unread books")
@@ -65,7 +61,7 @@ struct ExploreView: View {
                 AddBookSheet()
             }
             .overlay {
-                if shelves.shelves.isEmpty && shelves.featured.isEmpty {
+                if categories.isEmpty {
                     ContentUnavailableView(
                         "Nothing unread",
                         systemImage: "books.vertical",
@@ -96,149 +92,33 @@ struct ExploreView: View {
     }
 }
 
-// MARK: - Featured
+// MARK: - Category row
 
-/// Big, swipeable picks at the top, on a blurred wash of the cover.
-private struct FeaturedCarousel: View {
-    let books: [Book]
-    @State private var selection = 0
-
-    var body: some View {
-        TabView(selection: $selection) {
-            ForEach(Array(books.enumerated()), id: \.element.id) { index, book in
-                FeaturedCard(book: book).tag(index)
-            }
-        }
-        .tabViewStyle(.page(indexDisplayMode: books.count > 1 ? .always : .never))
-        .indexViewStyle(.page(backgroundDisplayMode: .always))
-        .frame(height: 480)
-    }
-}
-
-private struct FeaturedCard: View {
-    let book: Book
-
-    var body: some View {
-        ZStack(alignment: .bottom) {
-            backdrop
-            VStack(spacing: 14) {
-                NavigationLink(value: book) {
-                    CoverView(book: book, width: 150)
-                        .shadow(color: .black.opacity(0.4), radius: 16, y: 8)
-                }
-                .buttonStyle(.plain)
-
-                VStack(spacing: 4) {
-                    Text(book.title)
-                        .font(Theme.serif(.title2, .bold))
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                    Text(book.authorLine)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    if !book.categories.isEmpty {
-                        Text(book.sortedCategories.map(\.name).joined(separator: " · "))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    if let summary = book.summary {
-                        Text(summary)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .padding(.top, 4)
-                    }
-                }
-                .padding(.horizontal)
-
-                HStack(spacing: 12) {
-                    Button {
-                        withAnimation { book.setStatus(.reading) }
-                    } label: {
-                        Label("Start reading", systemImage: "book.fill")
-                            .font(.subheadline.weight(.semibold))
-                            .frame(minWidth: 130)
-                    }
-                    .buttonStyle(.borderedProminent)
-
-                    NavigationLink(value: book) {
-                        Label("Details", systemImage: "info.circle")
-                            .font(.subheadline.weight(.semibold))
-                            .frame(minWidth: 100)
-                    }
-                    .buttonStyle(.bordered)
-                }
-                .controlSize(.large)
-            }
-            .padding(.bottom, 40)
-        }
-    }
-
-    /// The cover, blown up and blurred, fading into the page.
-    private var backdrop: some View {
-        GeometryReader { proxy in
-            ZStack {
-                if let data = book.coverImage, let image = UIImage(data: data) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: proxy.size.width, height: proxy.size.height)
-                        .blur(radius: 40)
-                        .opacity(0.55)
-                        .clipped()
-                }
-                LinearGradient(
-                    colors: [.clear, Theme.paper.opacity(0.6), Theme.paper],
-                    startPoint: .top, endPoint: .bottom
-                )
-            }
-        }
-    }
-}
-
-// MARK: - Shelves
-
-/// A titled row of covers that scrolls sideways, with "See all".
-private struct ShelfRow<Route: Hashable, Menu: View>: View {
-    let shelf: ExploreShelves.Shelf
-    let route: Route
-    @ViewBuilder let menu: (Book) -> Menu
+/// A category's name and count, with its newest few covers underneath.
+private struct CategoryRow: View {
+    let category: ExploreShelves.Shelf
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
-                Text(shelf.title)
-                    .font(Theme.serif(.title3, .bold))
-                Text("\(shelf.books.count)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                Text(category.title)
+                    .font(Theme.serif(.headline, .semibold))
                 Spacer()
-                if shelf.books.count > 3 {
-                    NavigationLink(value: route) {
-                        Text("See all").font(.subheadline)
-                    }
-                }
+                Text("\(category.books.count)")
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.secondary)
             }
-            .padding(.horizontal)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(alignment: .top, spacing: 14) {
-                    ForEach(shelf.books) { book in
-                        NavigationLink(value: book) {
-                            BookTile(book: book, width: 110)
-                        }
-                        .buttonStyle(.plain)
-                        .contextMenu { menu(book) }
-                    }
+            HStack(spacing: 8) {
+                ForEach(category.books.prefix(5)) { book in
+                    CoverView(book: book, width: 46)
                 }
-                .padding(.horizontal)
             }
         }
+        .padding(.vertical, 6)
     }
 }
 
-/// All of a shelf's books (or search results) as a grid.
+/// All of a category's books (or search results) as a grid.
 private struct BookGrid<Menu: View>: View {
     let books: [Book]
     @ViewBuilder let menu: (Book) -> Menu

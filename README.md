@@ -5,7 +5,7 @@ A personal library app for iPhone, built with SwiftUI and SwiftData, with one wa
 ## Features
 
 **Tabs**
-- **Explore**: Netflix-style browsing of your unread books. A daily featured carousel, then rows you swipe through: Continue reading, Recently added, Quick reads, More from authors you love, and one row per category.
+- **Explore**: your unread books by category. A list of categories, each with its count and a few covers; tap one for a grid of its books. Search covers all unread books.
 - **Reading**: books in progress with start dates; swipe to mark finished.
 - **Favourites**: a ranked list of up to 10 books, three per row, each with its rank, rating and a "why I recommend it" note.
 - **Bookstores**: a map of bookstores you've saved, with *Find nearby* and *Search this area* (Apple Maps, no key needed), directions, and notes.
