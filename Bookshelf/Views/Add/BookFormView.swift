@@ -272,11 +272,8 @@ struct BookFormView: View {
 
     /// Another book (not the one being edited) that already has this ISBN.
     private func existingBook(withISBN isbn: String?) -> Book? {
-        guard let isbn else { return nil }
-        let target: String? = isbn
-        let descriptor = FetchDescriptor<Book>(predicate: #Predicate { $0.isbn == target })
-        let matches = (try? context.fetch(descriptor)) ?? []
-        return matches.first { $0 !== book }
+        let library = (try? context.fetch(FetchDescriptor<Book>())) ?? []
+        return LibraryDuplicates.book(withISBN: isbn, in: library, excluding: book)
     }
 }
 

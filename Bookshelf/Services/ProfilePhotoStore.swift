@@ -16,7 +16,7 @@ enum ProfilePhotoStore {
     @discardableResult
     static func save(_ data: Data) -> UIImage? {
         guard let image = UIImage(data: data) else { return nil }
-        let resized = resize(image, maxSide: 600)
+        let resized = image.fitted(maxSide: 600)
         guard let jpeg = resized.jpegData(compressionQuality: 0.85) else { return nil }
         try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? jpeg.write(to: url, options: .atomic)
@@ -36,15 +36,5 @@ enum ProfilePhotoStore {
 
     static func remove() {
         try? FileManager.default.removeItem(at: url)
-    }
-
-    private static func resize(_ image: UIImage, maxSide: CGFloat) -> UIImage {
-        let scale = min(1, maxSide / max(image.size.width, image.size.height))
-        let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
-            image.draw(in: CGRect(origin: .zero, size: size))
-        }
     }
 }

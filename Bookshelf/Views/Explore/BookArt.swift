@@ -118,14 +118,14 @@ private struct BackArt: View {
             }
         } else {
             Text("No description yet")
-                .font(Font.inter(.callout).italic())
+                .font(.inter(.callout).italic())
                 .foregroundStyle(ink.opacity(0.85))
         }
     }
 
     private func blurbText(_ summary: String, _ style: Font.TextStyle) -> some View {
         Text(summary)
-            .font(Font.inter(style))
+            .font(.inter(style))
             .lineSpacing(2)
             .foregroundStyle(ink)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -159,7 +159,7 @@ private struct SpineArt: View {
             LinearGradient(colors: [.black.opacity(0.18), .white.opacity(0.10), .black.opacity(0.18)],
                            startPoint: .leading, endPoint: .trailing)
             Text(title)
-                .font(.custom("Inter-SemiBold", size: min(size.width * 0.42, 15)))
+                .font(.inter(size: min(size.width * 0.42, 15), .semibold))
                 .foregroundStyle(CoverColor.prefersLightText(on: shade) ? Color.white : Color.black)
                 .lineLimit(1)
                 .frame(width: size.height - 40)

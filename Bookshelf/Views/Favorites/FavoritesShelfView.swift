@@ -50,16 +50,12 @@ struct FavoritesShelfView: View {
     private var showcase: some View {
         ScrollView {
             VStack(spacing: 30) {
-                ForEach(Array(shelves.enumerated()), id: \.offset) { _, row in
+                ForEach(Array(shelf.chunked(into: perShelf).enumerated()), id: \.offset) { _, row in
                     shelfRow(row)
                 }
             }
             .padding(.vertical, 24)
         }
-    }
-
-    private var shelves: [[Book]] {
-        stride(from: 0, to: shelf.count, by: perShelf).map { Array(shelf[$0..<min($0 + perShelf, shelf.count)]) }
     }
 
     private func shelfRow(_ row: [Book]) -> some View {
@@ -171,10 +167,7 @@ private struct FavoriteEditRow: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("#\(book.favoriteRank ?? 0)  \(book.title)")
                 .font(.inter(.headline))
-            TextField("Why do you recommend it?", text: Binding(
-                get: { book.recommendationNote ?? "" },
-                set: { book.recommendationNote = $0.isEmpty ? nil : $0 }
-            ), axis: .vertical)
+            TextField("Why do you recommend it?", text: $book.recommendationNoteText, axis: .vertical)
             .font(.inter(.subheadline))
         }
         .padding(.vertical, 4)

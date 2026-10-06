@@ -16,16 +16,16 @@ enum Theme {
     /// Inter in every navigation bar, tab label and search box (the parts SwiftUI's
     /// fonts don't reach). Call once at launch.
     static func applyBarFonts() {
-        func inter(_ face: String, _ size: CGFloat, _ style: UIFont.TextStyle) -> UIFont {
-            let font = UIFont(name: face, size: size) ?? .systemFont(ofSize: size)
+        func inter(_ face: InterFace, _ size: CGFloat, _ style: UIFont.TextStyle) -> UIFont {
+            let font = UIFont(name: face.rawValue, size: size) ?? .systemFont(ofSize: size)
             return UIFontMetrics(forTextStyle: style).scaledFont(for: font)
         }
         let bar = UINavigationBar.appearance()
-        bar.largeTitleTextAttributes = [.font: inter("Inter-Bold", 28, .title1)]
-        bar.titleTextAttributes = [.font: inter("Inter-SemiBold", 17, .headline)]
-        UIBarButtonItem.appearance().setTitleTextAttributes([.font: inter("Inter-Medium", 17, .body)], for: .normal)
-        UITabBarItem.appearance().setTitleTextAttributes([.font: inter("Inter-Medium", 10, .caption2)], for: .normal)
-        UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).font = inter("Inter-Regular", 17, .body)
+        bar.largeTitleTextAttributes = [.font: inter(.bold, 28, .title1)]
+        bar.titleTextAttributes = [.font: inter(.semibold, 17, .headline)]
+        UIBarButtonItem.appearance().setTitleTextAttributes([.font: inter(.medium, 17, .body)], for: .normal)
+        UITabBarItem.appearance().setTitleTextAttributes([.font: inter(.medium, 10, .caption2)], for: .normal)
+        UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).font = inter(.regular, 17, .body)
     }
 
     private static func adaptive(light: (Double, Double, Double), dark: (Double, Double, Double)) -> Color {
@@ -61,12 +61,29 @@ extension Font {
         case .caption2: 11
         @unknown default: 17
         }
-        let face = switch weight ?? (style == .headline ? .semibold : .regular) {
-        case .medium: "Inter-Medium"
-        case .semibold: "Inter-SemiBold"
-        case .bold, .heavy, .black: "Inter-Bold"
-        default: "Inter-Regular"
+        let face = InterFace(weight ?? (style == .headline ? .semibold : .regular))
+        return .custom(face.rawValue, size: size, relativeTo: style)
+    }
+
+    /// Inter at a fixed point size, for text drawn to fit a shape (a spine, a placeholder cover).
+    static func inter(size: CGFloat, _ weight: Weight = .regular) -> Font {
+        .custom(InterFace(weight).rawValue, size: size)
+    }
+}
+
+/// The bundled Inter font files, by their PostScript names.
+enum InterFace: String {
+    case regular = "Inter-Regular"
+    case medium = "Inter-Medium"
+    case semibold = "Inter-SemiBold"
+    case bold = "Inter-Bold"
+
+    init(_ weight: Font.Weight) {
+        switch weight {
+        case .medium: self = .medium
+        case .semibold: self = .semibold
+        case .bold, .heavy, .black: self = .bold
+        default: self = .regular
         }
-        return .custom(face, size: size, relativeTo: style)
     }
 }

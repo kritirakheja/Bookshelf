@@ -6,8 +6,7 @@ import SwiftData
 struct BackCoverView: View {
     @Bindable var book: Book
     @State private var faces = Book3DView.Faces()
-    @State private var searching = false
-    @State private var notFound = false
+    @State private var search = DescriptionSearch()
     @Environment(\.dismiss) private var dismiss
 
     /// What the covers are drawn from; they're redrawn when any of it changes.
@@ -33,13 +32,13 @@ struct BackCoverView: View {
             }
             VStack(spacing: 2) {
                 Text(book.title)
-                    .font(Font.inter(.title3, .bold))
+                    .font(.inter(.title3, .bold))
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .padding(.horizontal, 20)
                 if !book.authors.isEmpty {
                     Text("by \(book.authorLine)")
-                        .font(Font.inter(.subheadline).italic())
+                        .font(.inter(.subheadline).italic())
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -76,18 +75,14 @@ struct BackCoverView: View {
 
     @ViewBuilder
     private var findDescription: some View {
-        if searching {
+        if search.isSearching {
             ProgressView()
         } else {
-            Button(notFound ? "No description found online" : "Find description", systemImage: "text.magnifyingglass") {
-                searching = true
-                Task {
-                    notFound = !(await BookLookup().fillMissingDescription(of: book))
-                    searching = false
-                }
+            Button(search.notFound ? "No description found online" : "Find description", systemImage: "text.magnifyingglass") {
+                search.run(for: book)
             }
             .font(.inter(.footnote, .semibold))
-            .disabled(notFound)
+            .disabled(search.notFound)
         }
     }
 }

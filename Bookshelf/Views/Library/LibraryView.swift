@@ -42,10 +42,7 @@ struct LibraryView: View {
 
     private var visibleBooks: [Book] {
         let query = searchText.trimmingCharacters(in: .whitespaces)
-        let matching = query.isEmpty ? books : books.filter { book in
-            book.title.localizedStandardContains(query)
-                || book.authors.contains { $0.localizedStandardContains(query) }
-        }
+        let matching = query.isEmpty ? books : books.filter { $0.matches(search: query) }
         return matching.sorted(by: sort.areInIncreasingOrder)
     }
 

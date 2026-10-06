@@ -15,7 +15,7 @@ struct BookLookup {
             // Open Library knew the book; Google Books may add a cover and the description.
             let fromGoogle = try? await google?.lookup(isbn: isbn)
             if draft.coverImage == nil, let fromGoogle {
-                draft.coverImage = await cover(for: fromGoogle)
+                draft.coverImage = await coverData(for: fromGoogle)
             }
             draft.summary = await findDescription(title: draft.trimmedTitle, author: draft.authorList.first,
                                                   isbn: isbn, known: fromGoogle?.summary) ?? ""
@@ -66,7 +66,7 @@ struct BookLookup {
     /// A picked result as a draft, with its cover downloaded.
     func draft(for candidate: BookCandidate, isbn: String? = nil) async -> BookDraft {
         var draft = candidate.draft(isbn: isbn)
-        async let coverData = cover(for: candidate)
+        async let coverData = coverData(for: candidate)
         async let description = findDescription(title: candidate.title, author: candidate.authors.first,
                                                 isbn: draft.normalizedISBN, known: candidate.summary)
         draft.coverImage = await coverData
@@ -160,13 +160,13 @@ struct BookLookup {
             return data
         }
         guard let google else { return nil }
-        if let isbn, let candidate = try? await google.lookup(isbn: isbn), let data = await cover(for: candidate) {
+        if let isbn, let candidate = try? await google.lookup(isbn: isbn), let data = await coverData(for: candidate) {
             return data
         }
         let query = [title, author].compactMap { $0 }.joined(separator: " ")
         guard let results = try? await google.search(query, limit: 5),
               let match = BookMatcher.rankedMatch(in: results, coverText: [title, author ?? ""]) else { return nil }
-        return await cover(for: match.item)
+        return await coverData(for: match.item)
     }
 
     /// A sharper copy of the cover a book already has: its own edition first (by
@@ -231,11 +231,6 @@ struct BookLookup {
         return short.isEmpty ? title : short
     }
 
-    /// Downloads a chosen cover option.
-    func coverData(for candidate: BookCandidate) async -> Data? {
-        await cover(for: candidate)
-    }
-
     /// Fills in the cover of a saved book if it has none. Returns whether it has one now.
     @MainActor
     @discardableResult
@@ -248,7 +243,8 @@ struct BookLookup {
         return book.coverImage != nil
     }
 
-    private func cover(for candidate: BookCandidate) async -> Data? {
+    /// Downloads a candidate's cover: full size if it can, else its thumbnail.
+    func coverData(for candidate: BookCandidate) async -> Data? {
         await openLibrary.downloadCover(from: [candidate.coverURL, candidate.thumbnailURL])
     }
 }

@@ -172,13 +172,11 @@ struct AddBookSheet: View {
     // MARK: Already owned?
 
     private func ownedBook(isbn: String) -> Book? {
-        library.first { $0.isbn == isbn }
+        LibraryDuplicates.book(withISBN: isbn, in: library)
     }
 
     private func ownedBook(title: String, author: String?) -> Book? {
-        guard !title.isEmpty else { return nil }
-        let key = BookMatcher.key(title: title, author: author)
-        return library.first { BookMatcher.key(title: $0.title, author: $0.authors.first) == key }
+        LibraryDuplicates.book(title: title, author: author, in: library)
     }
 
     /// Opens the form, unless the book turns out to be in the library already.

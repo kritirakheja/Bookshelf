@@ -7,8 +7,7 @@ import SwiftData
 struct AboutBlock: View {
     @Bindable var book: Book
     @State private var expanded = false
-    @State private var searching = false
-    @State private var notFound = false
+    @State private var search = DescriptionSearch()
 
     private var isLong: Bool { (book.summary?.count ?? 0) > 260 }
 
@@ -27,20 +26,16 @@ struct AboutBlock: View {
                     }
                     .font(.inter(.subheadline, .semibold))
                 }
-            } else if searching {
+            } else if search.isSearching {
                 HStack(spacing: 8) {
                     ProgressView()
                     Text("Looking for a description…").foregroundStyle(.secondary)
                 }
             } else {
                 Button("Find description", systemImage: "text.magnifyingglass") {
-                    searching = true
-                    Task {
-                        notFound = !(await BookLookup().fillMissingDescription(of: book))
-                        searching = false
-                    }
+                    search.run(for: book)
                 }
-                if notFound {
+                if search.notFound {
                     Text("No description found online. You can add one with Edit.")
                         .font(.inter(.caption))
                         .foregroundStyle(.secondary)
@@ -170,10 +165,7 @@ struct FavouriteRows: View {
         .tint(Theme.accent)
         .frame(minHeight: 30)
         if book.favoriteRank != nil {
-            TextField("Why would you recommend it?", text: Binding(
-                get: { book.recommendationNote ?? "" },
-                set: { book.recommendationNote = $0.isEmpty ? nil : $0 }
-            ), axis: .vertical)
+            TextField("Why would you recommend it?", text: $book.recommendationNoteText, axis: .vertical)
             .font(.inter(.subheadline))
             .lineLimit(1...5)
         }

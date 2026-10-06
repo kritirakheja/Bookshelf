@@ -167,6 +167,19 @@ final class Book {
     }
 }
 
+extension Book {
+    /// Whether the title or an author contains the search text (ignoring case and accents).
+    func matches(search query: String) -> Bool {
+        title.localizedStandardContains(query) || authors.contains { $0.localizedStandardContains(query) }
+    }
+
+    /// `recommendationNote` for a text field: empty text clears the note.
+    var recommendationNoteText: String {
+        get { recommendationNote ?? "" }
+        set { recommendationNote = newValue.isEmpty ? nil : newValue }
+    }
+}
+
 enum ReadingStatus: String, CaseIterable, Identifiable {
     case unread = "Unread"
     case reading = "Reading"

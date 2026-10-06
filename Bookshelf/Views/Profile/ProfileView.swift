@@ -119,7 +119,7 @@ struct ProfileView: View {
             }
 
             TextField("Your name", text: $name)
-                .font(Font.inter(.title2, .semibold))
+                .font(.inter(.title2, .semibold))
                 .multilineTextAlignment(.center)
                 .submitLabel(.done)
         }

@@ -55,7 +55,7 @@ struct CoverView: View {
             Rectangle().fill(placeholderColor.gradient)
             if width >= 80 {
                 Text(book.title)
-                    .font(.custom("Inter-SemiBold", size: width / 8))
+                    .font(.inter(size: width / 8, .semibold))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.white)
                     .padding(6)

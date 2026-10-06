@@ -41,13 +41,6 @@ struct CameraPicker: UIViewControllerRepresentable {
 extension UIImage {
     /// A cover-sized JPEG (a camera photo is several MB; covers are shown small).
     func coverJPEG(maxSide: CGFloat = 900) -> Data? {
-        let scale = min(1, maxSide / max(size.width, size.height))
-        let target = CGSize(width: size.width * scale, height: size.height * scale)
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        let resized = UIGraphicsImageRenderer(size: target, format: format).image { _ in
-            draw(in: CGRect(origin: .zero, size: target))
-        }
-        return resized.jpegData(compressionQuality: 0.8)
+        fitted(maxSide: maxSide).jpegData(compressionQuality: 0.8)
     }
 }

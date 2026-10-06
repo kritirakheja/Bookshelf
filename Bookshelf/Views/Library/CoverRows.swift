@@ -16,7 +16,7 @@ struct CoverRows<Menu: View>: View {
                     ForEach(sections) { section in
                         SectionHeader(title: section.title, count: section.books.count)
                             .padding(.top, section.id == sections.first?.id ? 0 : 20)
-                        ForEach(Self.rows(section.books, perRow: perRow), id: \.first!.persistentModelID) { row in
+                        ForEach(section.books.chunked(into: perRow), id: \.first!.persistentModelID) { row in
                             CoverRow(books: row, perRow: perRow, coverWidth: coverWidth, spacing: spacing, menu: menu)
                         }
                     }
@@ -30,10 +30,6 @@ struct CoverRows<Menu: View>: View {
     /// As many covers as fit across the screen: 3 on an iPhone, more on wider screens.
     static func booksPerRow(width: CGFloat, coverWidth: CGFloat, spacing: CGFloat) -> Int {
         max(2, Int((width - 44 + spacing) / (coverWidth + spacing)))
-    }
-
-    static func rows(_ books: [Book], perRow: Int) -> [[Book]] {
-        stride(from: 0, to: books.count, by: perRow).map { Array(books[$0..<min($0 + perRow, books.count)]) }
     }
 }
 

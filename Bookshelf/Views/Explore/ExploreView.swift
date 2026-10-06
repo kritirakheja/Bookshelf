@@ -19,11 +19,7 @@ struct ExploreView: View {
     /// Unread books matching the search, for the results grid.
     private var searchResults: [Book] {
         let query = searchText.trimmingCharacters(in: .whitespaces)
-        return books.filter { book in
-            book.status == .unread && !book.isGivenBack
-                && (book.title.localizedStandardContains(query)
-                    || book.authors.contains { $0.localizedStandardContains(query) })
-        }
+        return books.filter { $0.status == .unread && !$0.isGivenBack && $0.matches(search: query) }
     }
 
     private var isSearching: Bool { !searchText.trimmingCharacters(in: .whitespaces).isEmpty }
@@ -120,7 +116,7 @@ private struct CategoryCard<Route: Hashable, Menu: View>: View {
             NavigationLink(value: route) {
                 HStack {
                     Text(category.title)
-                        .font(Font.inter(.headline, .semibold))
+                        .font(.inter(.headline, .semibold))
                         .foregroundStyle(Color.primary)
                     Spacer()
                     Image(systemName: "chevron.right")

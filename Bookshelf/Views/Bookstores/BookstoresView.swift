@@ -46,7 +46,7 @@ struct BookstoresView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Bookstores").font(Font.inter(.headline, .bold))
+                    Text("Bookstores").font(.inter(.headline, .bold))
                 }
             }
             // A solid bar, so the search box doesn't sit on top of the map.

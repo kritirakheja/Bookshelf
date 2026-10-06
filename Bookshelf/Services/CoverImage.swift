@@ -20,12 +20,7 @@ enum CoverImage {
         guard let width = pixelWidth(of: data), CGFloat(width) > maxWidth, let image = UIImage(data: data) else { return data }
         let scale = maxWidth / image.size.width
         let size = CGSize(width: maxWidth, height: (image.size.height * scale).rounded())
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        let smaller = UIGraphicsImageRenderer(size: size, format: format).image { _ in
-            image.draw(in: CGRect(origin: .zero, size: size))
-        }
-        return smaller.jpegData(compressionQuality: 0.85) ?? data
+        return image.resized(to: size).jpegData(compressionQuality: 0.85) ?? data
     }
 
     /// A tiny 16×24 colour thumbnail, as bytes, for telling whether two files show
