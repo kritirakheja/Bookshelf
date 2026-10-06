@@ -1,8 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// Browse your unread books by category: a list of categories, each with its count
-/// and a few covers, opening to a grid of that category's books.
+/// Browse your unread books by category: a list of categories, each with a few
+/// covers, opening to a grid of that category's books.
 struct ExploreView: View {
     @Query(sort: \Book.dateAdded, order: .reverse) private var books: [Book]
     @State private var searchText = ""
@@ -94,7 +94,7 @@ struct ExploreView: View {
 
 // MARK: - Category row
 
-/// A category's name and count, with its newest six covers underneath.
+/// A category's name, with its newest six covers underneath.
 private struct CategoryRow: View {
     let category: ExploreShelves.Shelf
 
@@ -102,14 +102,8 @@ private struct CategoryRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(category.title)
-                    .font(Theme.serif(.headline, .semibold))
-                Spacer()
-                Text("\(category.books.count)")
-                    .font(.subheadline.monospacedDigit())
-                    .foregroundStyle(.secondary)
-            }
+            Text(category.title)
+                .font(Theme.serif(.headline, .semibold))
             // Six equal slots that share the row's width, so the covers reach the edge.
             HStack(spacing: 8) {
                 ForEach(0..<Self.slots, id: \.self) { slot in
