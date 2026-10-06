@@ -2,40 +2,20 @@ import SwiftUI
 import SwiftData
 
 /// Entry point for adding a book: search by title or author, scan a barcode, type an
-/// ISBN, photograph the front cover, or enter details manually. Lookups hand a
-/// pre-filled draft to `BookFormView`, unless the book is already in the library.
+/// ISBN, photograph the front cover, or enter details manually. `AddBookModel` runs
+/// the lookups; a pre-filled draft goes to `BookFormView`, unless the book is already
+/// in the library.
 struct AddBookSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var library: [Book]
 
-    /// Once set, the sheet switches to the form for reviewing and saving.
-    private struct FormState {
-        var draft: BookDraft
-        var notice: String?
-    }
-
-    /// A book that's already in the library. `pending` is the form to continue to if
-    /// it's only a title match (possibly a different edition); nil for the same ISBN.
-    private struct Duplicate {
-        let book: Book
-        let pending: FormState?
-    }
-
-    @State private var form: FormState?
-    @State private var duplicate: Duplicate?
+    @State private var model = AddBookModel()
     @State private var isbnText = ""
     @State private var scanning = false
     @State private var photographing = false
-    /// A scanned ISBN no source knew; offers the cover scan instead.
-    @State private var unknownISBN: String?
-    /// Carried into a cover scan so the saved book keeps the edition's ISBN.
-    @State private var coverISBN = ""
-    @State private var progress: String?
-
-    private let client = BookLookup()
 
     var body: some View {
-        if let form {
+        if let form = model.form {
             BookFormView(draft: form.draft, notice: form.notice)
         } else {
             chooser
@@ -47,7 +27,9 @@ struct AddBookSheet: View {
             Form {
                 Section {
                     NavigationLink {
-                        BookSearchView(isLoading: progress != nil) { candidate in add(candidate) }
+                        BookSearchView(isLoading: model.progress != nil) { candidate in
+                            Task { await model.add(candidate, library: library) }
+                        }
                     } label: {
                         Label("Search by title or author", systemImage: "magnifyingglass")
                     }
@@ -68,7 +50,7 @@ struct AddBookSheet: View {
 
                 Section {
                     Button {
-                        coverISBN = ""
+                        model.coverISBN = ""
                         photographing = true
                     } label: {
                         Label("Scan front cover", systemImage: "camera.viewfinder")
@@ -84,13 +66,13 @@ struct AddBookSheet: View {
                             .autocorrectionDisabled()
                             .onSubmit { lookUp(isbnText) }
                         Button("Find") { lookUp(isbnText) }
-                            .disabled(normalized(isbnText) == nil)
+                            .disabled(AddBookModel.normalizedISBN(isbnText) == nil)
                     }
                 }
 
                 Section {
                     Button {
-                        form = FormState(draft: BookDraft())
+                        model.enterManually()
                     } label: {
                         Label("Enter details manually", systemImage: "square.and.pencil")
                     }
@@ -104,9 +86,9 @@ struct AddBookSheet: View {
                     Button("Cancel") { dismiss() }
                 }
             }
-            .disabled(progress != nil)
+            .disabled(model.progress != nil)
             .overlay {
-                if let progress {
+                if let progress = model.progress {
                     VStack(spacing: 10) {
                         Image(systemName: "books.vertical.fill")
                             .font(.system(size: 36))
@@ -130,21 +112,21 @@ struct AddBookSheet: View {
                 }
             }
             .fullScreenCover(isPresented: $photographing) {
-                CoverCapture { image in identify(image) }
+                CoverCapture { image in
+                    Task { await model.identify(image, library: library) }
+                }
             }
             .alert(
                 "Couldn't find this barcode",
-                isPresented: Binding(get: { unknownISBN != nil }, set: { if !$0 { unknownISBN = nil } }),
-                presenting: unknownISBN
+                isPresented: Binding(get: { model.unknownISBN != nil }, set: { if !$0 { model.unknownISBN = nil } }),
+                presenting: model.unknownISBN
             ) { isbn in
                 Button("Scan front cover") {
-                    coverISBN = isbn
+                    model.coverISBN = isbn
                     photographing = true
                 }
                 Button("Enter manually") {
-                    var draft = BookDraft()
-                    draft.isbn = isbn
-                    form = FormState(draft: draft)
+                    model.enterManually(isbn: isbn)
                 }
                 Button("Cancel", role: .cancel) {}
             } message: { _ in
@@ -152,11 +134,11 @@ struct AddBookSheet: View {
             }
             .alert(
                 "Already in your library",
-                isPresented: Binding(get: { duplicate != nil }, set: { if !$0 { duplicate = nil } }),
-                presenting: duplicate
+                isPresented: Binding(get: { model.duplicate != nil }, set: { if !$0 { model.duplicate = nil } }),
+                presenting: model.duplicate
             ) { duplicate in
                 if let pending = duplicate.pending {
-                    Button("Add anyway") { form = pending }
+                    Button("Add anyway") { model.form = pending }
                     Button("Cancel", role: .cancel) {}
                 } else {
                     Button("OK", role: .cancel) {}
@@ -169,98 +151,7 @@ struct AddBookSheet: View {
         }
     }
 
-    // MARK: Already owned?
-
-    private func ownedBook(isbn: String) -> Book? {
-        LibraryDuplicates.book(withISBN: isbn, in: library)
-    }
-
-    private func ownedBook(title: String, author: String?) -> Book? {
-        LibraryDuplicates.book(title: title, author: author, in: library)
-    }
-
-    /// Opens the form, unless the book turns out to be in the library already.
-    private func show(_ state: FormState) {
-        if let isbn = state.draft.normalizedISBN, let owned = ownedBook(isbn: isbn) {
-            duplicate = Duplicate(book: owned, pending: nil)
-        } else if let owned = ownedBook(title: state.draft.trimmedTitle, author: state.draft.authorList.first) {
-            duplicate = Duplicate(book: owned, pending: state)
-        } else {
-            form = state
-        }
-    }
-
-    // MARK: Lookups
-
-    private func normalized(_ text: String) -> String? {
-        var draft = BookDraft()
-        draft.isbn = text
-        guard let isbn = draft.normalizedISBN, isbn.count == 10 || isbn.count == 13 else { return nil }
-        return isbn
-    }
-
     private func lookUp(_ text: String) {
-        guard let isbn = normalized(text), progress == nil else { return }
-        // Same barcode as a book already here: say so straight away, no lookup needed.
-        if let owned = ownedBook(isbn: isbn) {
-            duplicate = Duplicate(book: owned, pending: nil)
-            return
-        }
-        progress = "Looking up book…"
-        Task {
-            defer { progress = nil }
-            do {
-                show(FormState(draft: try await client.lookup(isbn: isbn)))
-            } catch OpenLibraryClient.LookupError.notFound {
-                unknownISBN = isbn
-            } catch {
-                var draft = BookDraft()
-                draft.isbn = isbn
-                form = FormState(draft: draft, notice: "Couldn't look this book up right now. You can fill in the details yourself.")
-            }
-        }
-    }
-
-    /// A search result picked: fetch its cover, then review it in the form.
-    private func add(_ candidate: BookCandidate) {
-        guard progress == nil else { return }
-        progress = "Getting book details…"
-        Task {
-            defer { progress = nil }
-            show(FormState(draft: await client.draft(for: candidate)))
-        }
-    }
-
-    /// Reads the cover scan, then looks the book up from its title and author.
-    private func identify(_ photo: UIImage) {
-        let isbn = coverISBN
-        progress = "Reading the cover…"
-        Task {
-            defer { progress = nil }
-            let lines = (try? await CoverTextReader.read(photo)) ?? []
-            let prominent = CoverTextReader.prominentLines(lines)
-
-            progress = "Finding the book…"
-            let queries = CoverTextReader.searchQueries(lines)
-            if var draft = await client.identify(coverLines: prominent, queries: queries, isbn: isbn) {
-                if draft.coverImage == nil {
-                    draft.coverImage = photo.coverJPEG()
-                }
-                show(FormState(draft: draft, notice: "Recognised from the cover. Check the details before saving."))
-                return
-            }
-
-            // Not found online: keep what the cover says, and the scan as the cover.
-            var draft = BookDraft()
-            let guess = CoverTextReader.guess(from: lines)
-            draft.title = guess.title
-            draft.authors = guess.author ?? ""
-            draft.isbn = isbn
-            draft.coverImage = photo.coverJPEG()
-            let notice = prominent.isEmpty
-                ? "Couldn't read the cover. Try again in better light, or fill in the details."
-                : "Couldn't find this book online, so the details below were read from the cover. Please check them."
-            show(FormState(draft: draft, notice: notice))
-        }
+        Task { await model.lookUp(text, library: library) }
     }
 }
