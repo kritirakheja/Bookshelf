@@ -81,7 +81,7 @@ struct BookFormView: View {
                     categoriesSection
                 }
             }
-            .paperScreen()
+            .themedScreen()
             .navigationTitle(book == nil ? "New Book" : "Edit Book")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

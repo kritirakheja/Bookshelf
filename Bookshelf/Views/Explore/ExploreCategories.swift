@@ -2,8 +2,8 @@ import Foundation
 import SwiftData
 
 /// The Explore page's contents: your unread books grouped by category.
-struct ExploreShelves {
-    struct Shelf: Identifiable {
+struct ExploreCategories {
+    struct Category: Identifiable {
         let id: String
         let title: String
         let books: [Book]
@@ -13,7 +13,7 @@ struct ExploreShelves {
 
     /// One entry per category that has unread books, fullest first, then the unread
     /// books with no category at all.
-    let categories: [Shelf]
+    let categories: [Category]
 
     init(books: [Book]) {
         // Unread and still here (not already given back to a friend), newest first.
@@ -31,11 +31,11 @@ struct ExploreShelves {
             let countA = byCategory[a]!.count, countB = byCategory[b]!.count
             return countA != countB ? countA > countB : a < b
         }
-        var categories = fullestFirst.map { Shelf(id: "category-\($0)", title: $0, books: byCategory[$0]!) }
+        var categories = fullestFirst.map { Category(id: "category-\($0)", title: $0, books: byCategory[$0]!) }
 
         let unsorted = unread.filter { $0.categories.isEmpty }
         if !unsorted.isEmpty {
-            categories.append(Shelf(id: Self.unsortedID, title: "Not sorted yet", books: unsorted))
+            categories.append(Category(id: Self.unsortedID, title: "Not sorted yet", books: unsorted))
         }
         self.categories = categories
     }

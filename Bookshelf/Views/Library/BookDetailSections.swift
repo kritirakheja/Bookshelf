@@ -14,7 +14,7 @@ struct AboutBlock: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ShelfHeading(text: "About the book")
+            SectionLabel(text: "About the book")
             if let summary = book.summary {
                 Text(summary)
                     .font(.inter(.body))
@@ -92,7 +92,7 @@ struct StatusSection: View {
                 .minimumScaleFactor(0.8)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 11)
-                .foregroundStyle(selected ? Theme.paper : Color.secondary)
+                .foregroundStyle(selected ? Theme.background : Color.secondary)
                 .background(selected ? Theme.accent : Theme.rule.opacity(0.45), in: Capsule())
         }
         .buttonStyle(.plain)

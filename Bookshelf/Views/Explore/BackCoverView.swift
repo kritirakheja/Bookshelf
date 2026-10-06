@@ -69,7 +69,7 @@ struct BackCoverView: View {
             .buttonBorderShape(.capsule)
         }
         .padding(.bottom, 12)
-        .paperScreen()
+        .themedScreen()
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
     }

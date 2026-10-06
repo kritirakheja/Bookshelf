@@ -28,7 +28,7 @@ struct CoverChooserView: View {
                     .padding()
                 }
             }
-            .paperScreen()
+            .themedScreen()
             .navigationTitle("Choose a Cover")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

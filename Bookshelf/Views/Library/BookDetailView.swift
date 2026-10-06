@@ -45,7 +45,7 @@ struct BookDetailView: View {
                 coverArt = book.coverImage.flatMap { CoverImage.enlarged($0, toWidth: width * 3) }
             }
         }
-        .background(Theme.paper.ignoresSafeArea())
+        .background(Theme.background.ignoresSafeArea())
         .scrollDismissesKeyboard(.interactively)
         .confirmDeletingBook($bookToDelete) {
             // Leave this page first, so it never shows a deleted book.
@@ -123,10 +123,10 @@ struct BookDetailView: View {
                 }
                 wash
                 LinearGradient(stops: [
-                    .init(color: Theme.paper.opacity(0), location: 0.35),
-                    .init(color: Theme.paper.opacity(0.55), location: 0.7),
-                    .init(color: Theme.paper.opacity(0.9), location: 0.9),
-                    .init(color: Theme.paper, location: 1),
+                    .init(color: Theme.background.opacity(0), location: 0.35),
+                    .init(color: Theme.background.opacity(0.55), location: 0.7),
+                    .init(color: Theme.background.opacity(0.9), location: 0.9),
+                    .init(color: Theme.background, location: 1),
                 ], startPoint: .top, endPoint: .bottom)
             }
         }
@@ -199,7 +199,7 @@ struct BookDetailView: View {
 
     /// Everything else, as one plain list.
     private var more: some View {
-        PaperCard {
+        Card {
             VStack(alignment: .leading, spacing: 10) {
                 FavouriteRows(book: book, shelf: shelf, showingShelfFull: $showingShelfFull)
                 Divider()

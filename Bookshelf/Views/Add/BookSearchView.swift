@@ -47,7 +47,7 @@ struct BookSearchView: View {
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
             }
         }
-        .paperScreen()
+        .themedScreen()
         .navigationTitle("Search")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $text, placement: .navigationBarDrawer(displayMode: .always), prompt: "Title or author")

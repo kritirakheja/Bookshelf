@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// Books displayed like a bookshop: covers face-out in rows,
-/// in signed sections (Fiction, Non-fiction).
-struct BookshopShelves<Menu: View>: View {
+/// Books as rows of face-out covers, in titled sections (Fiction, Non-fiction).
+struct CoverRows<Menu: View>: View {
     let sections: [LibrarySections.Section]
     @ViewBuilder let menu: (Book) -> Menu
 
@@ -11,35 +10,35 @@ struct BookshopShelves<Menu: View>: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let perShelf = Self.booksPerShelf(width: proxy.size.width, coverWidth: coverWidth, spacing: spacing)
+            let perRow = Self.booksPerRow(width: proxy.size.width, coverWidth: coverWidth, spacing: spacing)
             ScrollView {
                 LazyVStack(spacing: 20) {
                     ForEach(sections) { section in
-                        SectionSign(title: section.title, count: section.books.count)
+                        SectionHeader(title: section.title, count: section.books.count)
                             .padding(.top, section.id == sections.first?.id ? 0 : 20)
-                        ForEach(Self.shelves(section.books, perShelf: perShelf), id: \.first!.persistentModelID) { shelf in
-                            BookshopShelf(books: shelf, perShelf: perShelf, coverWidth: coverWidth, spacing: spacing, menu: menu)
+                        ForEach(Self.rows(section.books, perRow: perRow), id: \.first!.persistentModelID) { row in
+                            CoverRow(books: row, perRow: perRow, coverWidth: coverWidth, spacing: spacing, menu: menu)
                         }
                     }
                 }
                 .padding(.vertical, 24)
             }
-            .background(BookshopWall())
+            .background(Theme.background.ignoresSafeArea())
         }
     }
 
     /// As many covers as fit across the screen: 3 on an iPhone, more on wider screens.
-    static func booksPerShelf(width: CGFloat, coverWidth: CGFloat, spacing: CGFloat) -> Int {
+    static func booksPerRow(width: CGFloat, coverWidth: CGFloat, spacing: CGFloat) -> Int {
         max(2, Int((width - 44 + spacing) / (coverWidth + spacing)))
     }
 
-    static func shelves(_ books: [Book], perShelf: Int) -> [[Book]] {
-        stride(from: 0, to: books.count, by: perShelf).map { Array(books[$0..<min($0 + perShelf, books.count)]) }
+    static func rows(_ books: [Book], perRow: Int) -> [[Book]] {
+        stride(from: 0, to: books.count, by: perRow).map { Array(books[$0..<min($0 + perRow, books.count)]) }
     }
 }
 
-/// The sign over a section, like the boards above a bookshop's aisles.
-struct SectionSign: View {
+/// A section's title and how many books it holds.
+struct SectionHeader: View {
     let title: String
     let count: Int
 
@@ -60,10 +59,10 @@ struct SectionSign: View {
     }
 }
 
-/// One shelf of face-out covers.
-struct BookshopShelf<Menu: View>: View {
+/// One row of face-out covers.
+struct CoverRow<Menu: View>: View {
     let books: [Book]
-    let perShelf: Int
+    let perRow: Int
     let coverWidth: CGFloat
     let spacing: CGFloat
     @ViewBuilder let menu: (Book) -> Menu
@@ -78,19 +77,12 @@ struct BookshopShelf<Menu: View>: View {
                     .buttonStyle(.plain)
                     .contextMenu { menu(book) }
                 }
-                // Keep a part-filled last shelf aligned to the left.
-                if books.count < perShelf {
+                // Keep a part-filled last row aligned to the left.
+                if books.count < perRow {
                     Spacer(minLength: 0)
                 }
             }
             .padding(.horizontal, 22)
         }
-    }
-}
-
-/// The background behind the covers.
-struct BookshopWall: View {
-    var body: some View {
-        Theme.paper.ignoresSafeArea()
     }
 }

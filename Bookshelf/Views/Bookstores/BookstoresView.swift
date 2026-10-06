@@ -41,7 +41,7 @@ struct BookstoresView: View {
                 map
                 list
             }
-            .paperScreen()
+            .themedScreen()
             .navigationTitle("Bookstores")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

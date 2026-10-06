@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 extension ReadingStatus {
-    /// One colour per status everywhere: list icons, swipe buttons, the book page's ribbons.
+    /// One colour per status everywhere: list icons, swipe buttons, the status buttons on the book page.
     var tint: Color {
         switch self {
         case .unread: Color(red: 0.45, green: 0.50, blue: 0.58)
@@ -49,7 +49,7 @@ struct StatusBooksList: View {
                 Button("Delete", systemImage: "trash", role: .destructive) { bookToDelete = book }
             }
         }
-        .paperScreen()
+        .themedScreen()
         .confirmDeletingBook($bookToDelete)
         .overlay {
             if visible.isEmpty {
@@ -78,7 +78,7 @@ struct CurrentlyReadingView: View {
     var body: some View {
         NavigationStack {
             StatusBooksList(status: .reading)
-                .paperScreen()
+                .themedScreen()
                 .navigationTitle("Currently Reading")
                 .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
         }

@@ -3,7 +3,7 @@ import SwiftData
 @testable import Bookshelf
 
 @MainActor
-final class ExploreShelvesTests: XCTestCase {
+final class ExploreCategoriesTests: XCTestCase {
     private var container: ModelContainer!
     private var context: ModelContext { container.mainContext }
 
@@ -25,8 +25,8 @@ final class ExploreShelvesTests: XCTestCase {
         return book
     }
 
-    private func shelf(_ id: String, in shelves: ExploreShelves) -> [String]? {
-        shelves.categories.first { $0.id == id }?.books.map(\.title)
+    private func titles(in id: String, of explore: ExploreCategories) -> [String]? {
+        explore.categories.first { $0.id == id }?.books.map(\.title)
     }
 
     func testCategories() {
@@ -37,20 +37,20 @@ final class ExploreShelvesTests: XCTestCase {
             book("Work", category: "Business", addedDaysAgo: 3),
             book("Finished", category: "Fantasy", status: .read),
         ]
-        let shelves = ExploreShelves(books: books)
+        let explore = ExploreCategories(books: books)
 
-        XCTAssertEqual(shelf("category-Fantasy", in: shelves), ["Short one", "Long one"], "Only unread books, newest first")
-        XCTAssertEqual(shelves.categories.map(\.id), ["category-Fantasy", "category-Business"], "Fullest category first")
+        XCTAssertEqual(titles(in: "category-Fantasy", of: explore), ["Short one", "Long one"], "Only unread books, newest first")
+        XCTAssertEqual(explore.categories.map(\.id), ["category-Fantasy", "category-Business"], "Fullest category first")
     }
 
     func testBooksWithoutACategoryComeLast() {
-        let shelves = ExploreShelves(books: [book("Loose"), book("Sorted", category: "Fantasy")])
-        XCTAssertEqual(shelves.categories.map(\.title), ["Fantasy", "Not sorted yet"])
-        XCTAssertEqual(shelf(ExploreShelves.unsortedID, in: shelves), ["Loose"])
+        let explore = ExploreCategories(books: [book("Loose"), book("Sorted", category: "Fantasy")])
+        XCTAssertEqual(explore.categories.map(\.title), ["Fantasy", "Not sorted yet"])
+        XCTAssertEqual(titles(in: ExploreCategories.unsortedID, of: explore), ["Loose"])
     }
 
     func testNothingUnreadMeansNoCategories() {
-        let shelves = ExploreShelves(books: [book("Done", category: "Fantasy", status: .read)])
-        XCTAssertTrue(shelves.categories.isEmpty)
+        let explore = ExploreCategories(books: [book("Done", category: "Fantasy", status: .read)])
+        XCTAssertTrue(explore.categories.isEmpty)
     }
 }

@@ -2,7 +2,9 @@ import SwiftUI
 import SwiftData
 
 enum LibraryLayout: String {
-    case shelves, list
+    /// Stored as "shelves", its name when covers stood on drawn shelves.
+    case covers = "shelves"
+    case list
 }
 
 enum LibrarySort: String, CaseIterable, Identifiable {
@@ -33,8 +35,8 @@ struct LibraryView: View {
     @State private var fillingCovers = false
     @State private var bookToDelete: Book?
     @State private var coverResult: (found: Int, total: Int)?
-    /// Bookshop shelves (default) or the plain list; remembered.
-    @AppStorage("libraryLayout") private var layout = LibraryLayout.shelves
+    /// Rows of covers (default) or the plain list; remembered.
+    @AppStorage("libraryLayout") private var layout = LibraryLayout.covers
 
     private var booksWithoutCovers: [Book] { books.filter { $0.coverImage == nil } }
 
@@ -50,8 +52,8 @@ struct LibraryView: View {
     var body: some View {
         Group {
             switch layout {
-            case .shelves:
-                BookshopShelves(sections: LibrarySections.split(visibleBooks)) { book in bookMenu(book) }
+            case .covers:
+                CoverRows(sections: LibrarySections.split(visibleBooks)) { book in bookMenu(book) }
             case .list:
                 List {
                     ForEach(visibleBooks) { book in
@@ -66,14 +68,14 @@ struct LibraryView: View {
             }
         }
         .confirmDeletingBook($bookToDelete)
-        .paperScreen()
+        .themedScreen()
         .navigationTitle("All Books")
         .searchable(text: $searchText, prompt: "Title or author")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Menu {
                     Picker("View", selection: $layout) {
-                        Label("Shelves", systemImage: "books.vertical").tag(LibraryLayout.shelves)
+                        Label("Shelves", systemImage: "books.vertical").tag(LibraryLayout.covers)
                         Label("List", systemImage: "list.bullet").tag(LibraryLayout.list)
                     }
                     Picker("Sort by", selection: $sort) {

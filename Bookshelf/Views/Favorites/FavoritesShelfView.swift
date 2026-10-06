@@ -17,7 +17,7 @@ struct FavoritesShelfView: View {
                     showcase
                 }
             }
-            .paperScreen()
+            .themedScreen()
             .navigationTitle(editing ? "Rearrange" : "Top Favourites")
             .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
             .toolbar {
@@ -127,7 +127,7 @@ struct FavoritesShelfView: View {
                 .padding(.horizontal, 9)
             if let rating = book.rating, rating > 0 {
                 Text("\(Image(systemName: "star.fill")) \(rating)")
-                    .foregroundStyle(Theme.paper)
+                    .foregroundStyle(Theme.background)
                     .padding(.horizontal, 8)
                     .frame(maxHeight: .infinity)
                     .background(Theme.accent)

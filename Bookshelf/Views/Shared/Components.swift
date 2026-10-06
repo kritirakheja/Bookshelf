@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// A small-caps heading for a card.
-struct ShelfHeading: View {
+struct SectionLabel: View {
     let text: String
 
     var body: some View {
@@ -12,8 +12,8 @@ struct ShelfHeading: View {
     }
 }
 
-/// A paper card the page's sections sit on.
-struct PaperCard<Content: View>: View {
+/// A white rounded card for a group of content.
+struct Card<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -30,7 +30,6 @@ struct PaperCard<Content: View>: View {
 /// Lays views out in rows, wrapping like words on a line (for shelf labels).
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8
-    var centered = true
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let rows = arrange(width: proposal.width ?? .infinity, subviews: subviews)
@@ -42,7 +41,7 @@ struct FlowLayout: Layout {
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         var y = bounds.minY
         for row in arrange(width: bounds.width, subviews: subviews) {
-            var x = bounds.minX + (centered ? (bounds.width - row.width) / 2 : 0)
+            var x = bounds.minX + (bounds.width - row.width) / 2   // centred rows
             for index in row.indices {
                 let size = subviews[index].sizeThatFits(.unspecified)
                 subviews[index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))

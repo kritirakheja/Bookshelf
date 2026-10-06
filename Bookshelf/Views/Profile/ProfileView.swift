@@ -47,7 +47,7 @@ struct ProfileView: View {
 
                 AccountSection()
             }
-            .paperScreen()
+            .themedScreen()
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Route.self) { route in
@@ -104,7 +104,7 @@ struct ProfileView: View {
                         .font(.inter(.title))
                         .symbolRenderingMode(.palette)
                         .foregroundStyle(.white, Theme.accent)
-                        .background(Circle().fill(Theme.paper))
+                        .background(Circle().fill(Theme.background))
                 }
             }
             .buttonStyle(.plain)

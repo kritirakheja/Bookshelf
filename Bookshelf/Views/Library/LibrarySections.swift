@@ -1,6 +1,6 @@
 import Foundation
 
-/// Splits the library into Fiction and Non-fiction, like the two sides of a bookshop.
+/// Splits the library into Fiction and Non-fiction.
 enum LibrarySections {
     struct Section: Identifiable {
         let title: String

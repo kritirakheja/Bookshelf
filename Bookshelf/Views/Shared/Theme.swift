@@ -5,7 +5,7 @@ import UIKit
 /// deep green accent, and Inter for all text. Colours adapt to dark mode.
 enum Theme {
     /// Behind every screen.
-    static let paper = adaptive(light: (0.968, 0.970, 0.960), dark: (0.055, 0.062, 0.058))
+    static let background = adaptive(light: (0.968, 0.970, 0.960), dark: (0.055, 0.062, 0.058))
     /// Cards and list rows (the system's own row colour, so custom cards and lists match).
     static let card = Color(.secondarySystemGroupedBackground)
     /// Hairlines and quiet fills.
@@ -37,10 +37,10 @@ enum Theme {
 }
 
 extension View {
-    /// Puts a screen on paper. On a List or Form it replaces the grey backdrop.
-    func paperScreen() -> some View {
+    /// Gives a screen the app's background. On a List or Form it replaces the grey backdrop.
+    func themedScreen() -> some View {
         scrollContentBackground(.hidden)
-            .background(Theme.paper.ignoresSafeArea())
+            .background(Theme.background.ignoresSafeArea())
     }
 }
 

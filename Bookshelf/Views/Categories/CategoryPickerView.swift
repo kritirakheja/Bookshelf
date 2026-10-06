@@ -38,7 +38,7 @@ struct CategoryPickerView: View {
                     }
                 }
             }
-            .paperScreen()
+            .themedScreen()
             .navigationTitle("Categories")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -10,11 +10,11 @@ struct ExploreView: View {
     @State private var bookToDelete: Book?
 
     /// A category's page.
-    private struct ShelfRoute: Hashable {
+    private struct CategoryRoute: Hashable {
         let id: String
     }
 
-    private var shelves: ExploreShelves { ExploreShelves(books: books) }
+    private var explore: ExploreCategories { ExploreCategories(books: books) }
 
     /// Unread books matching the search, for the results grid.
     private var searchResults: [Book] {
@@ -29,7 +29,7 @@ struct ExploreView: View {
     private var isSearching: Bool { !searchText.trimmingCharacters(in: .whitespaces).isEmpty }
 
     var body: some View {
-        let categories = shelves.categories
+        let categories = explore.categories
         NavigationStack {
             Group {
                 if isSearching {
@@ -39,7 +39,7 @@ struct ExploreView: View {
                     ScrollView {
                         LazyVStack(spacing: 14) {
                             ForEach(categories) { category in
-                                CategoryCard(category: category, route: ShelfRoute(id: category.id), menu: bookMenu)
+                                CategoryCard(category: category, route: CategoryRoute(id: category.id), menu: bookMenu)
                             }
                         }
                         .padding(.horizontal, 16)
@@ -48,16 +48,16 @@ struct ExploreView: View {
                 }
             }
             .confirmDeletingBook($bookToDelete)
-            .paperScreen()
+            .themedScreen()
             // No heading: the search box, always showing, says what the page is for.
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
             .navigationDestination(for: PickedUp.self) { BackCoverView(book: $0.book) }
-            .navigationDestination(for: ShelfRoute.self) { route in
+            .navigationDestination(for: CategoryRoute.self) { route in
                 if let category = categories.first(where: { $0.id == route.id }) {
                     ScrollView { BookGrid(books: category.books, menu: bookMenu) }
-                        .paperScreen()
+                        .themedScreen()
                         .navigationTitle(category.title)
                 }
             }
@@ -109,7 +109,7 @@ private struct PickedUp: Hashable {
 
 /// A category's name (tap for the full grid) over its covers, which scroll sideways.
 private struct CategoryCard<Route: Hashable, Menu: View>: View {
-    let category: ExploreShelves.Shelf
+    let category: ExploreCategories.Category
     let route: Route
     @ViewBuilder let menu: (Book) -> Menu
 
