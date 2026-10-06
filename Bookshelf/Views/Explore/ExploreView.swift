@@ -102,18 +102,18 @@ struct ExploreView: View {
 
 // MARK: - Category row
 
-/// A category's name, with its newest six covers underneath.
+/// A category's name, with its newest four covers underneath.
 private struct CategoryRow: View {
     let category: ExploreShelves.Shelf
 
-    private static let slots = 6
+    private static let slots = 4
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(category.title)
                 .font(Theme.serif(.headline, .semibold))
-            // Six equal slots that share the row's width, so the covers reach the edge.
-            HStack(spacing: 8) {
+            // Equal slots that share the row's width, so the covers reach the edge.
+            HStack(spacing: 10) {
                 ForEach(0..<Self.slots, id: \.self) { slot in
                     Color.clear
                         .aspectRatio(2 / 3, contentMode: .fit)
