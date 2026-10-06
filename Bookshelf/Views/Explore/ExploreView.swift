@@ -1,8 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// Browse your unread books by category: a list of categories, each with a few
-/// covers, opening to a grid of that category's books.
+/// Browse your unread books by category: a card per category with its covers
+/// scrolling sideways, opening to a grid of that category's books.
 struct ExploreView: View {
     @Query(sort: \Book.dateAdded, order: .reverse) private var books: [Book]
     @State private var searchText = ""
@@ -36,16 +36,15 @@ struct ExploreView: View {
                     ScrollView { BookGrid(books: searchResults, menu: bookMenu) }
                 } else {
                     // One card per category.
-                    List {
-                        ForEach(categories) { category in
-                            Section {
-                                NavigationLink(value: ShelfRoute(id: category.id)) {
-                                    CategoryRow(category: category)
-                                }
+                    ScrollView {
+                        LazyVStack(spacing: 14) {
+                            ForEach(categories) { category in
+                                CategoryCard(category: category, route: ShelfRoute(id: category.id), menu: bookMenu)
                             }
                         }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
                     }
-                    .listSectionSpacing(14)
                 }
             }
             .confirmDeletingBook($bookToDelete)
@@ -100,34 +99,60 @@ struct ExploreView: View {
     }
 }
 
-// MARK: - Category row
+// MARK: - Category card
 
-/// A category's name, with its newest four covers underneath.
-private struct CategoryRow: View {
+/// A category's name (tap for the full grid) over its covers, which scroll sideways.
+private struct CategoryCard<Route: Hashable, Menu: View>: View {
     let category: ExploreShelves.Shelf
+    let route: Route
+    @ViewBuilder let menu: (Book) -> Menu
 
-    private static let slots = 4
+    private let spacing: CGFloat = 10
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(category.title)
-                .font(Theme.serif(.headline, .semibold))
-            // Equal slots that share the row's width, so the covers reach the edge.
-            HStack(spacing: 10) {
-                ForEach(0..<Self.slots, id: \.self) { slot in
-                    Color.clear
-                        .aspectRatio(2 / 3, contentMode: .fit)
-                        .overlay {
-                            if slot < category.books.count {
-                                GeometryReader { proxy in
-                                    CoverView(book: category.books[slot], width: proxy.size.width)
-                                }
-                            }
-                        }
+        VStack(alignment: .leading, spacing: 12) {
+            NavigationLink(value: route) {
+                HStack {
+                    Text(category.title)
+                        .font(Theme.serif(.headline, .semibold))
+                        .foregroundStyle(Color.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.tertiary)
                 }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 16)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: spacing) {
+                    ForEach(category.books) { book in
+                        NavigationLink(value: book) {
+                            // Four covers and a sliver of the fifth, to show there's more.
+                            Color.clear
+                                .aspectRatio(2 / 3, contentMode: .fit)
+                                .containerRelativeFrame(.horizontal) { width, _ in
+                                    (width - spacing * 4) / 4.3
+                                }
+                                .overlay {
+                                    GeometryReader { proxy in
+                                        CoverView(book: book, width: proxy.size.width)
+                                    }
+                                }
+                        }
+                        .buttonStyle(.plain)
+                        .contextMenu { menu(book) }
+                    }
+                }
+                .padding(.vertical, 4)   // room for the covers' shadows
+            }
+            .contentMargins(.horizontal, 16, for: .scrollContent)
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, 16)
+        .background(Theme.card)
+        .clipShape(RoundedRectangle(cornerRadius: 24))
     }
 }
 
