@@ -2,7 +2,7 @@ import SwiftUI
 import SceneKit
 
 /// A real 3D book: front cover, back cover, spine and page edges on a solid block.
-/// Drag to turn it in your hand; tap to turn it over.
+/// Tap to turn it over.
 struct Book3DView: UIViewRepresentable {
     struct Faces: Equatable {
         var front: UIImage?
@@ -45,7 +45,6 @@ final class BookSceneView: SCNView {
     private let box: SCNBox
     private var faces = Book3DView.Faces()
     private var yaw: Float = BookSceneView.frontPose
-    private var pitch: Float = 0
     private var hasTurnedOver = false
 
     /// The height of the scene the camera must take in, in book-widths (the book is
@@ -62,7 +61,7 @@ final class BookSceneView: SCNView {
         antialiasingMode = .multisampling4X
         isAccessibilityElement = true
         accessibilityTraits = .button
-        accessibilityHint = "Double tap to turn the book over. Drag to turn it in your hand."
+        accessibilityHint = "Double tap to turn the book over."
 
         let scene = SCNScene()
         self.scene = scene
@@ -108,7 +107,6 @@ final class BookSceneView: SCNView {
         #endif
         applyPose()
 
-        addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(dragged)))
         addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapped)))
     }
 
@@ -144,25 +142,16 @@ final class BookSceneView: SCNView {
 
     // MARK: Turning
 
-    @objc private func dragged(_ gesture: UIPanGestureRecognizer) {
-        let move = gesture.translation(in: self)
-        gesture.setTranslation(.zero, in: self)
-        yaw += Float(move.x) * 0.009
-        pitch = min(max(pitch + Float(move.y) * 0.004, -0.35), 0.35)
-        applyPose()
-    }
-
     @objc private func tapped() { turnOver() }
 
     private func turnOver() {
         turn(to: cos(yaw) > 0 ? Self.backPose : Self.frontPose)
     }
 
-    /// Turns to a pose by the shortest way round from wherever the book is now.
+    /// Turns to a pose by the shortest way round.
     private func turn(to pose: Float) {
         let turns = ((yaw - pose) / (2 * .pi)).rounded()
         yaw = pose + turns * 2 * .pi
-        pitch = 0
         SCNTransaction.begin()
         SCNTransaction.animationDuration = UIAccessibility.isReduceMotionEnabled ? 0 : 0.75
         SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
@@ -171,7 +160,7 @@ final class BookSceneView: SCNView {
     }
 
     private func applyPose() {
-        bookNode.eulerAngles = SCNVector3(pitch, yaw, 0)
+        bookNode.eulerAngles = SCNVector3(0, yaw, 0)
     }
 
     // MARK: Faces

@@ -2,8 +2,7 @@ import SwiftUI
 import SwiftData
 
 /// A book picked off the shelf on Explore, as a 3D object: it shows its front, then
-/// turns over so you can read the back before deciding. Drag to turn it in your
-/// hand; tap to turn it over.
+/// turns over so you can read the back before deciding. Tap to turn it over.
 struct BackCoverView: View {
     @Bindable var book: Book
     @State private var faces = Book3DView.Faces()
