@@ -15,6 +15,10 @@ struct Book3DView: UIViewRepresentable {
     let thickness: CGFloat
     let label: String
     let blurb: String?
+    /// Extra height above and below the book's slot that the view also draws into.
+    /// Mid-turn, the edge nearest you looms taller than the book at rest; without
+    /// this room its top and bottom would be cut off.
+    var overflow: CGFloat = 0
 
     /// How wide the book appears on screen, face-on, in a view of this size
     /// (so the covers can be drawn at the size they'll be seen).
@@ -29,6 +33,7 @@ struct Book3DView: UIViewRepresentable {
 
     func updateUIView(_ view: BookSceneView, context: Context) {
         view.show(faces)
+        view.overflow = overflow
         view.accessibilityLabel = label
         view.accessibilityValue = blurb
     }
@@ -42,10 +47,16 @@ final class BookSceneView: SCNView {
 
     private let bookNode = SCNNode()
     private let cameraNode = SCNNode()
+    private let shadowNode = SCNNode()
     private let box: SCNBox
     private var faces = Book3DView.Faces()
     private var yaw: Float = BookSceneView.frontPose
     private var hasTurnedOver = false
+    /// Height at the top and bottom that is spare room for the turn, not part of
+    /// the space the resting book is fitted to.
+    var overflow: CGFloat = 0 {
+        didSet { if overflow != oldValue { setNeedsLayout() } }
+    }
 
     /// The height of the scene the camera must take in, in book-widths (the book is
     /// 1 wide and 1.5 tall), leaving a margin so a turning book stays in frame.
@@ -89,7 +100,7 @@ final class BookSceneView: SCNView {
         let shadow = SCNPlane(width: 1.7, height: 2.2)
         shadow.firstMaterial = Self.material(Self.shadowImage, lit: false)
         shadow.firstMaterial?.writesToDepthBuffer = false
-        let shadowNode = SCNNode(geometry: shadow)
+        shadowNode.geometry = shadow
         shadowNode.position = SCNVector3(0, -0.05, Float(-thickness) - 0.2)
         shadowNode.renderingOrder = -1
         scene.rootNode.addChildNode(shadowNode)
@@ -103,6 +114,7 @@ final class BookSceneView: SCNView {
         if let held = UserDefaults.standard.string(forKey: "previewFlipAngle").flatMap(Float.init) {
             yaw = held * .pi / 180
             hasTurnedOver = true
+            shadowNode.isHidden = abs(sin(yaw)) > 0.35
         }
         #endif
         applyPose()
@@ -115,8 +127,10 @@ final class BookSceneView: SCNView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        guard bounds.width > 0, bounds.height > 0 else { return }
-        let visible = Self.visibleHeight(aspect: bounds.width / bounds.height)
+        let slotHeight = bounds.height - 2 * overflow
+        guard bounds.width > 0, slotHeight > 0 else { return }
+        // Fit the book to its slot, then widen the view to take in the spare room too.
+        let visible = Self.visibleHeight(aspect: bounds.width / slotHeight) * bounds.height / slotHeight
         let distance = visible / (2 * tan(Self.fieldOfView * .pi / 360))
         cameraNode.position = SCNVector3(0, 0, Float(distance + box.length / 2))
     }
@@ -152,6 +166,10 @@ final class BookSceneView: SCNView {
     private func turn(to pose: Float) {
         let turns = ((yaw - pose) / (2 * .pi)).rounded()
         yaw = pose + turns * 2 * .pi
+        // The shadow is drawn for a book at rest, so it steps aside during the turn.
+        if !UIAccessibility.isReduceMotionEnabled {
+            shadowNode.runAction(.sequence([.fadeOut(duration: 0.12), .wait(duration: 0.5), .fadeIn(duration: 0.3)]))
+        }
         SCNTransaction.begin()
         SCNTransaction.animationDuration = UIAccessibility.isReduceMotionEnabled ? 0 : 0.75
         SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
