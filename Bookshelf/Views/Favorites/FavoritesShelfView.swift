@@ -113,7 +113,7 @@ struct FavoritesShelfView: View {
                 .padding(.top, 2)
             if let note = book.recommendationNote, !note.isEmpty {
                 Text("“\(note)”")
-                    .font(Theme.handwriting(13))
+                    .font(.caption.italic())
                     .foregroundStyle(.secondary)
                     .lineLimit(3)
                     .padding(.top, 2)

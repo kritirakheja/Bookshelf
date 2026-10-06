@@ -12,15 +12,9 @@ enum Theme {
     static let rule = adaptive(light: (0.86, 0.80, 0.72), dark: (0.30, 0.27, 0.24))
     /// The accent: buttons, links, labels. Same as the AccentColor asset.
     static let brown = adaptive(light: (0.55, 0.38, 0.24), dark: (0.82, 0.64, 0.46))
-    static let stickyNote = adaptive(light: (1.0, 0.945, 0.690), dark: (0.36, 0.32, 0.17))
 
     static func serif(_ style: Font.TextStyle, _ weight: Font.Weight = .regular) -> Font {
         .system(style, design: .serif, weight: weight)
-    }
-
-    /// Handwriting, for recommendation notes and margin notes.
-    static func handwriting(_ size: CGFloat) -> Font {
-        .custom("Noteworthy-Bold", size: size, relativeTo: .body)
     }
 
     /// Serif titles in every navigation bar. Call once at launch.

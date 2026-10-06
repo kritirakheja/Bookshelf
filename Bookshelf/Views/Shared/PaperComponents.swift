@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A small-caps heading, like the labels on bookshop shelves.
+/// A small-caps heading for a card.
 struct ShelfHeading: View {
     let text: String
 
@@ -24,24 +24,6 @@ struct PaperCard<Content: View>: View {
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.rule.opacity(0.6), lineWidth: 0.5))
             .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
             .padding(.horizontal, 18)
-    }
-}
-
-/// A rubber stamp, as on a library card ("LENT TO PRIYA").
-struct RubberStamp: View {
-    let text: String
-    let color: Color
-
-    var body: some View {
-        Text(text.uppercased())
-            .font(.caption.weight(.heavy))
-            .tracking(1.2)
-            .foregroundStyle(color)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .overlay(RoundedRectangle(cornerRadius: 4).stroke(color, lineWidth: 1.6))
-            .rotationEffect(.degrees(-3))
-            .opacity(0.88)
     }
 }
 

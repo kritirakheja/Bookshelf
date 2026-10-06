@@ -1,9 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// A book's page, laid out like a book on display in a bookshop: the cover face-out
-/// on a lit shelf, shelf labels, bookmark ribbons for status, a staff-pick card,
-/// the back-cover blurb, a library card for lending, and notes in the margin.
+/// A book's page: the cover on a shelf, its categories, then plain cards for
+/// reading status, favourite, description, lending and notes.
 struct BookDetailView: View {
     @Bindable var book: Book
     @State private var editing = false
@@ -18,17 +17,14 @@ struct BookDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 26) {
+            VStack(spacing: 20) {
                 hero
                 shelfLabels
-                VStack(spacing: 12) {
-                    BookmarkRibbons(book: book)
-                    StarRating(rating: $book.rating)
-                }
-                StaffPickCard(book: book, shelf: shelf, showingShelfFull: $showingShelfFull)
+                ReadingCard(book: book)
+                FavouriteCard(book: book, shelf: shelf, showingShelfFull: $showingShelfFull)
                 BlurbCard(book: book)
                 LibraryCard(book: book)
-                MarginNotes(book: book)
+                NotesCard(book: book)
                 footer
             }
             .padding(.bottom, 30)
@@ -129,7 +125,7 @@ struct BookDetailView: View {
 
     // MARK: - Shelf labels
 
-    /// Categories as the little paper labels bookshops pin to their shelves.
+    /// Categories as chips; tap to change them.
     private var shelfLabels: some View {
         FlowLayout(spacing: 8) {
             ForEach(book.sortedCategories) { category in
@@ -138,7 +134,7 @@ struct BookDetailView: View {
                 }
             }
             Button { pickingCategories = true } label: {
-                shelfLabel(book.categories.isEmpty ? "Add a shelf" : "Edit", systemImage: book.categories.isEmpty ? "plus" : "pencil", faded: true)
+                shelfLabel(book.categories.isEmpty ? "Add categories" : "Edit", systemImage: book.categories.isEmpty ? "plus" : "pencil", faded: true)
             }
         }
         .buttonStyle(.plain)
@@ -150,14 +146,12 @@ struct BookDetailView: View {
             if let systemImage { Image(systemName: systemImage).font(.caption2) }
             Text(text)
         }
-        .font(Theme.serif(.footnote, .semibold))
+        .font(.footnote.weight(.medium))
         .foregroundStyle(faded ? AnyShapeStyle(.secondary) : AnyShapeStyle(Theme.brown))
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(faded ? Color.clear : Theme.card, in: RoundedRectangle(cornerRadius: 3))
-        .overlay(RoundedRectangle(cornerRadius: 3)
-            .stroke(Theme.brown.opacity(faded ? 0.35 : 0.55),
-                    style: StrokeStyle(lineWidth: 1, dash: faded ? [3, 3] : [])))
+        .background(faded ? Color.clear : Theme.brown.opacity(0.12), in: Capsule())
+        .overlay(Capsule().stroke(Theme.rule, lineWidth: faded ? 1 : 0))
     }
 
     // MARK: - Footer

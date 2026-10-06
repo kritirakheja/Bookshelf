@@ -1,8 +1,7 @@
 import SwiftUI
 import SwiftData
 
-/// Lending and borrowing as an old library card: the book's details at the top,
-/// a rubber stamp for whoever has it now, and earlier loans written in below.
+/// Lending and borrowing: who has the book now, earlier loans, and the ISBN.
 struct LibraryCard: View {
     private enum Action {
         case lend, borrow
@@ -25,7 +24,7 @@ struct LibraryCard: View {
         PaperCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .firstTextBaseline) {
-                    ShelfHeading(text: "Library card")
+                    ShelfHeading(text: "Lending")
                     Spacer()
                     Text("Added \(book.dateAdded.formatted(.dateTime.day().month(.abbreviated).year()))")
                         .font(.caption2)
@@ -78,7 +77,7 @@ struct LibraryCard: View {
         }
     }
 
-    /// The stamp for where the book is right now, if anywhere.
+    /// Where the book is right now.
     @ViewBuilder
     private var current: some View {
         if let borrowing = book.borrowing {
@@ -93,8 +92,8 @@ struct LibraryCard: View {
             stamped("Lent to \(loan.borrowerName)", color: .orange,
                     detail: Self.since(loan.lentAt, verb: "Lent"))
         } else if book.pastLoans.isEmpty {
-            Text("On the shelf. Never lent out.")
-                .font(Theme.serif(.footnote).italic())
+            Text("On your shelf. Never lent out.")
+                .font(.footnote)
                 .foregroundStyle(.secondary)
         }
     }
@@ -130,13 +129,14 @@ struct LibraryCard: View {
     }
 
     private func stamped(_ text: String, color: Color, detail: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            RubberStamp(text: text, color: color)
+        VStack(alignment: .leading, spacing: 4) {
+            Text(text)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(color)
             Text(detail)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .padding(.vertical, 2)
     }
 
     /// A ruled line on the card: label on the left, value on the right.
@@ -148,7 +148,7 @@ struct LibraryCard: View {
                 .font(monospaced ? .footnote.monospaced() : .footnote)
                 .foregroundStyle(.secondary)
         }
-        .font(Theme.serif(.subheadline))
+        .font(.subheadline)
         .padding(.vertical, 7)
         .overlay(alignment: .bottom) {
             Rectangle().fill(Theme.rule.opacity(0.6)).frame(height: 0.5)
