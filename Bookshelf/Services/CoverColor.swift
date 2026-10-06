@@ -21,18 +21,6 @@ enum CoverColor {
         return average(of: image, in: image.extent) ?? fallback
     }
 
-    /// Two colours for a gradient behind the cover: the average of its top third
-    /// and of its bottom third.
-    static func gradient(of data: Data?) -> (top: RGB, bottom: RGB) {
-        guard let data, let image = CIImage(data: data), !image.extent.isEmpty else { return (fallback, fallback) }
-        let extent = image.extent
-        let third = extent.height / 3
-        // Core Image measures from the bottom-left corner.
-        let top = average(of: image, in: CGRect(x: extent.minX, y: extent.maxY - third, width: extent.width, height: third))
-        let bottom = average(of: image, in: CGRect(x: extent.minX, y: extent.minY, width: extent.width, height: third))
-        return (top ?? fallback, bottom ?? fallback)
-    }
-
     private static func average(of image: CIImage, in rect: CGRect) -> RGB? {
         let filter = CIFilter.areaAverage()
         filter.inputImage = image

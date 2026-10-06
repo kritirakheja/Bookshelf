@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-/// A book's full details, in order of importance: the cover on a gradient of its own
+/// A book's full details, in order of importance: the cover on a wash of its own
 /// colours, its name and categories, what it's about, reading status, then the rest.
 struct BookDetailView: View {
     @Bindable var book: Book
@@ -12,13 +12,12 @@ struct BookDetailView: View {
     @State private var coverNotFound = false
     @State private var bookToDelete: Book?
     @State private var choosingCover = false
-    @State private var gradient = (top: CoverColor.fallback, bottom: CoverColor.fallback)
     @State private var coverArt: UIImage?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @Query(filter: #Predicate<Book> { $0.favoriteRank != nil }) private var shelf: [Book]
 
-    /// The share of the screen the cover and its gradient take.
+    /// The share of the screen the cover and its backdrop take.
     private static let heroShare = 0.6
 
     var body: some View {
@@ -39,8 +38,8 @@ struct BookDetailView: View {
                 .padding(.bottom, 30)
             }
             .ignoresSafeArea(edges: .top)
+            .modifier(NoTopEdgeHaze())
             .task(id: book.coverImage) {
-                gradient = CoverColor.gradient(of: book.coverImage)
                 // Drawn at up to 3× the size it's shown, sharpened if the file is small.
                 let width = heroHeight * Self.coverShare / 1.5
                 coverArt = book.coverImage.flatMap { CoverImage.enlarged($0, toWidth: width * 3) }
@@ -80,14 +79,12 @@ struct BookDetailView: View {
     /// The cover's height as a share of the hero's.
     private static let coverShare = 0.64
 
-    /// The cover, large, on a gradient made from its own top and bottom colours.
+    /// The cover, large, on a soft wash of its own colours.
     private func hero(height: CGFloat, topInset: CGFloat) -> some View {
         let coverHeight = height * Self.coverShare
         let coverWidth = coverHeight / 1.5
         return ZStack {
-            LinearGradient(colors: [color(gradient.top), color(gradient.bottom)], startPoint: .top, endPoint: .bottom)
-            // Melt into the page rather than ending in a line.
-            LinearGradient(colors: [.clear, Theme.paper], startPoint: UnitPoint(x: 0.5, y: 0.8), endPoint: .bottom)
+            backdrop
             Group {
                 if let coverArt {
                     Image(uiImage: coverArt)
@@ -99,19 +96,40 @@ struct BookDetailView: View {
                     CoverView(book: book, width: coverWidth)
                 }
             }
-            .shadow(color: .black.opacity(0.35), radius: 22, x: 0, y: 14)
+            .shadow(color: .black.opacity(0.28), radius: 24, x: 0, y: 14)
             // Centred in the space below the navigation bar.
             .padding(.top, topInset * 0.6)
         }
         .frame(height: height)
         .frame(maxWidth: .infinity)
-        .animation(.easeInOut(duration: 0.3), value: gradient.top)
     }
 
-    /// Dimmed in dark mode, so a pale cover doesn't glare or hide the status bar.
-    private func color(_ rgb: CoverColor.RGB) -> Color {
-        let dim = colorScheme == .dark ? 0.55 : 1
-        return Color(red: rgb.r * dim, green: rgb.g * dim, blue: rgb.b * dim)
+    /// The cover itself, blown up and blurred until only its colours are left, washed
+    /// out a little and melting gradually into the page.
+    private var backdrop: some View {
+        let wash = colorScheme == .dark ? Color.black.opacity(0.45) : Color.white.opacity(0.35)
+        return GeometryReader { proxy in
+            ZStack {
+                if let data = book.coverImage, let image = UIImage(data: data) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .scaleEffect(1.5)
+                        .blur(radius: 70, opaque: true)
+                        .clipped()
+                } else {
+                    Theme.accent.opacity(0.18)
+                }
+                wash
+                LinearGradient(stops: [
+                    .init(color: Theme.paper.opacity(0), location: 0.35),
+                    .init(color: Theme.paper.opacity(0.55), location: 0.7),
+                    .init(color: Theme.paper.opacity(0.9), location: 0.9),
+                    .init(color: Theme.paper, location: 1),
+                ], startPoint: .top, endPoint: .bottom)
+            }
+        }
     }
 
     // MARK: - Name
@@ -240,6 +258,18 @@ struct BookDetailView: View {
             let found = await BookLookup().fillMissingCover(of: book)
             coverNotFound = !found
             searchingCover = false
+        }
+    }
+}
+
+/// iOS 26 hazes whatever scrolls under the navigation bar; over the cover's backdrop
+/// that shows as a pale band, so it's turned off here.
+private struct NoTopEdgeHaze: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.scrollEdgeEffectHidden(true, for: .top)
+        } else {
+            content
         }
     }
 }
