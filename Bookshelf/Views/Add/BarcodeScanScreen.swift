@@ -35,7 +35,7 @@ struct BarcodeScanScreen: View {
             LinearGradient(colors: [Color(white: 0.25), Color(white: 0.1)], startPoint: .top, endPoint: .bottom)
                 #if DEBUG
                 .task {
-                    if UserDefaults.standard.bool(forKey: "previewScanFound") {
+                    if PreviewArgs.scanFound {
                         try? await Task.sleep(for: .seconds(1.5))
                         caught("9780141439518")
                     }

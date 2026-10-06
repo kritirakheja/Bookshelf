@@ -8,9 +8,8 @@ struct RootTabView: View {
     /// Reopens on the tab you were last on.
     @AppStorage("selectedTab") private var selectedTab = "explore"
     #if DEBUG
-    /// For simulator screenshots: launch with `-previewBook "<title>"` to open that book's page.
+    /// Screens opened by launch argument for simulator screenshots (see `PreviewArgs`).
     @State private var previewBook: Book?
-    /// Likewise `-previewBackCover "<title>"` for the back-cover screen Explore opens.
     @State private var previewBackCover: Book?
     #endif
 
@@ -36,10 +35,10 @@ struct RootTabView: View {
             SampleData.seedSimulatorIfEmpty(context)
             LibraryFixes.runPending(in: context)
             #if DEBUG
-            if let title = UserDefaults.standard.string(forKey: "previewBook") {
+            if let title = PreviewArgs.book {
                 previewBook = try? context.fetch(FetchDescriptor<Book>(predicate: #Predicate { $0.title == title })).first
             }
-            if let title = UserDefaults.standard.string(forKey: "previewBackCover") {
+            if let title = PreviewArgs.backCover {
                 previewBackCover = try? context.fetch(FetchDescriptor<Book>(predicate: #Predicate { $0.title == title })).first
             }
             #endif
@@ -53,7 +52,7 @@ struct RootTabView: View {
         .fullScreenCover(item: $previewBackCover) { book in
             NavigationStack { BackCoverView(book: book) }
         }
-        .fullScreenCover(isPresented: .constant(UserDefaults.standard.bool(forKey: "previewScanner"))) {
+        .fullScreenCover(isPresented: .constant(PreviewArgs.scanner)) {
             BarcodeScanScreen { _ in } onCancel: {}
         }
         #endif

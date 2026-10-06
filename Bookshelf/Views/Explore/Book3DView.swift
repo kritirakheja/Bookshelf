@@ -63,8 +63,12 @@ final class BookSceneView: SCNView {
     /// The height of the scene the camera must take in, in book-widths (the book is
     /// 1 wide and 1.5 tall), leaving a margin so a turning book stays in frame.
     static func visibleHeight(aspect: CGFloat) -> CGFloat {
-        max(1.5 / 0.95, 1 / (0.90 * aspect))
+        max(1.5 / heightFill, 1 / (widthFill * aspect))
     }
+
+    /// How much of its slot's height and width the resting book may fill.
+    private static let heightFill: CGFloat = 0.95
+    private static let widthFill: CGFloat = 0.90
 
     init(thickness: CGFloat) {
         box = SCNBox(width: 1, height: 1.5, length: thickness, chamferRadius: 0.006)
@@ -112,8 +116,7 @@ final class BookSceneView: SCNView {
         applyMaterials()
 
         #if DEBUG
-        // For simulator screenshots: `-previewFlipAngle 60` holds the book at an angle.
-        if let held = UserDefaults.standard.string(forKey: "previewFlipAngle").flatMap(Float.init) {
+        if let held = PreviewArgs.flipAngle {
             yaw = held * .pi / 180
             hasTurnedOver = true
             shadowNode.isHidden = abs(sin(yaw)) > 0.35

@@ -110,6 +110,8 @@ private struct CategoryCard<Route: Hashable, Menu: View>: View {
     @ViewBuilder let menu: (Book) -> Menu
 
     private let spacing: CGFloat = 10
+    /// Four covers and a sliver of the fifth, to show there's more to scroll to.
+    private static var coversInView: CGFloat { 4.3 }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -132,11 +134,10 @@ private struct CategoryCard<Route: Hashable, Menu: View>: View {
                 LazyHStack(spacing: spacing) {
                     ForEach(category.books) { book in
                         NavigationLink(value: PickedUp(book: book)) {
-                            // Four covers and a sliver of the fifth, to show there's more.
                             Color.clear
                                 .aspectRatio(2 / 3, contentMode: .fit)
                                 .containerRelativeFrame(.horizontal) { width, _ in
-                                    (width - spacing * 4) / 4.3
+                                    (width - spacing * 4) / Self.coversInView
                                 }
                                 .overlay {
                                     GeometryReader { proxy in
