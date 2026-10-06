@@ -26,7 +26,7 @@ enum Theme {
             return UIFont(descriptor: descriptor, size: 0)
         }
         let bar = UINavigationBar.appearance()
-        bar.largeTitleTextAttributes = [.font: serif(.largeTitle, bold: true)]
+        bar.largeTitleTextAttributes = [.font: serif(.title1, bold: true)]
         bar.titleTextAttributes = [.font: serif(.headline, bold: true)]
     }
 
