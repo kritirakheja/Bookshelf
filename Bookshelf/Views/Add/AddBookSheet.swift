@@ -96,6 +96,7 @@ struct AddBookSheet: View {
                     }
                 }
             }
+            .paperScreen()
             .navigationTitle("Add a Book")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

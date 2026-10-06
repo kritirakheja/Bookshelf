@@ -70,6 +70,7 @@ struct AuthView: View {
                     }
                 }
             }
+            .paperScreen()
             .navigationTitle(mode == .signUp ? "Create account" : "Welcome back")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

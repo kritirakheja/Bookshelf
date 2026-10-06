@@ -41,8 +41,14 @@ struct BookstoresView: View {
                 map
                 list
             }
+            .paperScreen()
             .navigationTitle("Bookstores")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Bookstores").font(Theme.serif(.headline, .bold))
+                }
+            }
             // A solid bar, so the search box doesn't sit on top of the map.
             .toolbarBackground(.visible, for: .navigationBar)
             .searchable(text: $searchText, prompt: "Search bookstores by name")

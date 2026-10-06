@@ -66,6 +66,7 @@ struct LibraryView: View {
             }
         }
         .confirmDeletingBook($bookToDelete)
+        .paperScreen()
         .navigationTitle("All Books")
         .searchable(text: $searchText, prompt: "Title or author")
         .toolbar {

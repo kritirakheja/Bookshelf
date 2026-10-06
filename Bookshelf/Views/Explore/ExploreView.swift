@@ -47,11 +47,13 @@ struct ExploreView: View {
                 }
             }
             .confirmDeletingBook($bookToDelete)
+            .paperScreen()
             .navigationTitle("Explore")
             .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
             .navigationDestination(for: ShelfRoute.self) { route in
                 if let shelf = shelves.shelves.first(where: { $0.id == route.id }) {
                     ScrollView { BookGrid(books: shelf.books, menu: bookMenu) }
+                        .paperScreen()
                         .navigationTitle(shelf.title)
                 }
             }
@@ -128,7 +130,7 @@ private struct FeaturedCard: View {
 
                 VStack(spacing: 4) {
                     Text(book.title)
-                        .font(.title2.weight(.bold))
+                        .font(Theme.serif(.title2, .bold))
                         .multilineTextAlignment(.center)
                         .lineLimit(2)
                     Text(book.authorLine)
@@ -187,7 +189,7 @@ private struct FeaturedCard: View {
                         .clipped()
                 }
                 LinearGradient(
-                    colors: [.clear, Color(.systemBackground).opacity(0.6), Color(.systemBackground)],
+                    colors: [.clear, Theme.paper.opacity(0.6), Theme.paper],
                     startPoint: .top, endPoint: .bottom
                 )
             }
@@ -207,7 +209,7 @@ private struct ShelfRow<Route: Hashable, Menu: View>: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text(shelf.title)
-                    .font(.title3.weight(.bold))
+                    .font(Theme.serif(.title3, .bold))
                 Text("\(shelf.books.count)")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)

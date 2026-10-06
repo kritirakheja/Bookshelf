@@ -33,7 +33,7 @@ struct BookDetailView: View {
             }
             .padding(.bottom, 30)
         }
-        .background(BookPageStyle.paper.ignoresSafeArea())
+        .background(Theme.paper.ignoresSafeArea())
         .scrollDismissesKeyboard(.interactively)
         .confirmDeletingBook($bookToDelete) {
             // Leave this page first, so it never shows a deleted book.
@@ -81,11 +81,11 @@ struct BookDetailView: View {
             }
             VStack(spacing: 6) {
                 Text(book.title)
-                    .font(BookPageStyle.serif(.title, .bold))
+                    .font(Theme.serif(.title, .bold))
                     .multilineTextAlignment(.center)
                 if !book.authors.isEmpty {
                     Text("by \(book.authorLine)")
-                        .font(BookPageStyle.serif(.title3).italic())
+                        .font(Theme.serif(.title3).italic())
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
@@ -112,7 +112,7 @@ struct BookDetailView: View {
             // Spotlight from above.
             RadialGradient(colors: [.white.opacity(0.55), .clear], center: .top, startRadius: 10, endRadius: 260)
                 .blendMode(.softLight)
-            LinearGradient(colors: [.clear, BookPageStyle.paper], startPoint: .center, endPoint: .bottom)
+            LinearGradient(colors: [.clear, Theme.paper], startPoint: .center, endPoint: .bottom)
         }
         .frame(height: 290)
         .frame(maxWidth: .infinity)
@@ -150,13 +150,13 @@ struct BookDetailView: View {
             if let systemImage { Image(systemName: systemImage).font(.caption2) }
             Text(text)
         }
-        .font(BookPageStyle.serif(.footnote, .semibold))
-        .foregroundStyle(faded ? AnyShapeStyle(.secondary) : AnyShapeStyle(BookPageStyle.brown))
+        .font(Theme.serif(.footnote, .semibold))
+        .foregroundStyle(faded ? AnyShapeStyle(.secondary) : AnyShapeStyle(Theme.brown))
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(faded ? Color.clear : BookPageStyle.card, in: RoundedRectangle(cornerRadius: 3))
+        .background(faded ? Color.clear : Theme.card, in: RoundedRectangle(cornerRadius: 3))
         .overlay(RoundedRectangle(cornerRadius: 3)
-            .stroke(BookPageStyle.brown.opacity(faded ? 0.35 : 0.55),
+            .stroke(Theme.brown.opacity(faded ? 0.35 : 0.55),
                     style: StrokeStyle(lineWidth: 1, dash: faded ? [3, 3] : [])))
     }
 
@@ -176,7 +176,7 @@ struct BookDetailView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
-            .tint(BookPageStyle.brown)
+            .tint(Theme.brown)
             if coverNotFound {
                 Text("No cover found online.")
                     .font(.caption)

@@ -9,6 +9,7 @@ struct BookshelfApp: App {
     init() {
         let container = try! ModelContainer(for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, Bookstore.self, DeletedBookstore.self)
         self.container = container
+        Theme.applyNavigationFonts()
         _account = State(initialValue: AccountStore(container: container))
     }
 
@@ -16,6 +17,7 @@ struct BookshelfApp: App {
         WindowGroup {
             RootTabView()
                 .environment(account)
+                .tint(Theme.brown)
         }
         .modelContainer(container)
     }

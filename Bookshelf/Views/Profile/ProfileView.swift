@@ -47,6 +47,7 @@ struct ProfileView: View {
 
                 AccountSection()
             }
+            .paperScreen()
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Route.self) { route in
@@ -101,8 +102,9 @@ struct ProfileView: View {
 
                     Image(systemName: "camera.circle.fill")
                         .font(.title)
-                        .symbolRenderingMode(.multicolor)
-                        .background(Circle().fill(.background))
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, Theme.brown)
+                        .background(Circle().fill(Theme.paper))
                 }
             }
             .buttonStyle(.plain)
@@ -117,7 +119,7 @@ struct ProfileView: View {
             }
 
             TextField("Your name", text: $name)
-                .font(.title2.weight(.semibold))
+                .font(Theme.serif(.title2, .semibold))
                 .multilineTextAlignment(.center)
                 .submitLabel(.done)
         }

@@ -27,6 +27,7 @@ struct CategoriesView: View {
                 }
             }
         }
+        .paperScreen()
         .navigationTitle("Categories")
         .toolbar {
             Button("New category", systemImage: "plus") { showingNew = true }
@@ -82,6 +83,7 @@ struct CategoryBooksView: View {
                 BookRow(book: book)
             }
         }
+        .paperScreen()
         .navigationTitle(category.name)
         .overlay {
             if books.isEmpty {

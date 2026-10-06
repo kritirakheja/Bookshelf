@@ -27,6 +27,7 @@ targets:
       base:
         TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         PRODUCT_BUNDLE_IDENTIFIER: $(BOOKSHELF_BUNDLE_ID)
     info:
       path: Bookshelf/Info.plist

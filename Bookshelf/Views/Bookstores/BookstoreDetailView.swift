@@ -65,6 +65,7 @@ struct BookstoreDetailView: View {
                     Text("Saved \(store.dateSaved.formatted(date: .abbreviated, time: .omitted))")
                 }
             }
+            .paperScreen()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

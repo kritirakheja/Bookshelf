@@ -54,8 +54,8 @@ struct SectionSign: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 8)
-        .background(.background.opacity(0.85), in: Capsule())
-        .overlay(Capsule().stroke(Color.brown.opacity(0.35), lineWidth: 1))
+        .background(Theme.card, in: Capsule())
+        .overlay(Capsule().stroke(Theme.rule, lineWidth: 1))
         .shadow(color: .black.opacity(0.08), radius: 3, y: 2)
     }
 }
@@ -106,14 +106,9 @@ struct Plank: View {
     }
 }
 
-/// The bookshop's back wall: a warm tint over the normal background (works in dark mode).
+/// The wall behind the shelves: the app's paper.
 struct BookshopWall: View {
     var body: some View {
-        ZStack {
-            Color(.systemGroupedBackground)
-            LinearGradient(colors: [Color.brown.opacity(0.10), Color.brown.opacity(0.18)],
-                           startPoint: .top, endPoint: .bottom)
-        }
-        .ignoresSafeArea()
+        Theme.paper.ignoresSafeArea()
     }
 }

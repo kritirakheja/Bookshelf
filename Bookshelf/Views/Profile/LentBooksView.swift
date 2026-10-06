@@ -72,6 +72,7 @@ struct LentBooksView: View {
                 }
             }
         }
+        .paperScreen()
         .navigationTitle(direction == .lent ? "Lent Out" : "Borrowed")
         .overlay {
             if groups.isEmpty {

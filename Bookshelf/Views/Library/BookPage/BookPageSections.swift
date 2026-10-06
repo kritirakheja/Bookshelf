@@ -26,7 +26,7 @@ struct BookmarkRibbons: View {
                         .frame(width: 78, height: selected ? 84 : 62, alignment: .center)
                         .padding(.bottom, 10)
                         .background(
-                            RibbonShape().fill(selected ? AnyShapeStyle(status.ribbonColor.gradient) : AnyShapeStyle(BookPageStyle.rule.opacity(0.45)))
+                            RibbonShape().fill(selected ? AnyShapeStyle(status.tint.gradient) : AnyShapeStyle(Theme.rule.opacity(0.45)))
                         )
                         .shadow(color: .black.opacity(selected ? 0.18 : 0), radius: 4, y: 3)
                     }
@@ -106,7 +106,7 @@ struct StaffPickCard: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     Text("\(picker) · #\(rank)")
-                        .font(BookPageStyle.handwriting(20))
+                        .font(Theme.handwriting(20))
                     Spacer()
                     Image(systemName: "star.fill").foregroundStyle(.orange)
                 }
@@ -114,7 +114,7 @@ struct StaffPickCard: View {
                     get: { book.recommendationNote ?? "" },
                     set: { book.recommendationNote = $0.isEmpty ? nil : $0 }
                 ), axis: .vertical)
-                .font(BookPageStyle.handwriting(17))
+                .font(Theme.handwriting(17))
                 .lineLimit(2...6)
                 Button("Take off my favourites shelf") {
                     withAnimation { FavoritesShelf.remove(book, library: shelf) }
@@ -125,7 +125,7 @@ struct StaffPickCard: View {
             .foregroundStyle(Color.primary)
             .padding(18)
             .padding(.top, 6)
-            .background(BookPageStyle.stickyNote, in: RoundedRectangle(cornerRadius: 4))
+            .background(Theme.stickyNote, in: RoundedRectangle(cornerRadius: 4))
             .shadow(color: .black.opacity(0.15), radius: 5, x: 2, y: 4)
             .overlay(alignment: .top) {
                 // The pin holding the card up.
@@ -144,14 +144,14 @@ struct StaffPickCard: View {
                 }
             } label: {
                 Label("Recommend it: add to my Favourites", systemImage: "star")
-                    .font(BookPageStyle.handwriting(17))
+                    .font(Theme.handwriting(17))
                     .frame(maxWidth: .infinity)
                     .padding(16)
                     .overlay(RoundedRectangle(cornerRadius: 6).stroke(style: StrokeStyle(lineWidth: 1.2, dash: [6, 4]))
-                        .foregroundStyle(BookPageStyle.brown.opacity(0.6)))
+                        .foregroundStyle(Theme.brown.opacity(0.6)))
             }
             .buttonStyle(.plain)
-            .foregroundStyle(BookPageStyle.brown)
+            .foregroundStyle(Theme.brown)
             .padding(.horizontal, 30)
         }
     }
@@ -182,7 +182,7 @@ struct BlurbCard: View {
                             withAnimation { expanded.toggle() }
                         }
                         .font(.footnote.weight(.semibold))
-                        .tint(BookPageStyle.brown)
+                        .tint(Theme.brown)
                     }
                 } else if searching {
                     HStack {
@@ -213,10 +213,10 @@ extension BlurbCard {
     /// The text with a large first letter, unless it opens with a quote mark or digit.
     private func blurb(_ summary: String) -> Text {
         guard let first = summary.first, first.isLetter else {
-            return Text(summary).font(BookPageStyle.serif(.callout))
+            return Text(summary).font(Theme.serif(.callout))
         }
-        return Text(String(first)).font(.system(size: 34, weight: .bold, design: .serif)).foregroundColor(BookPageStyle.brown)
-            + Text(summary.dropFirst()).font(BookPageStyle.serif(.callout))
+        return Text(String(first)).font(.system(size: 34, weight: .bold, design: .serif)).foregroundColor(Theme.brown)
+            + Text(summary.dropFirst()).font(Theme.serif(.callout))
     }
 }
 
@@ -231,7 +231,7 @@ struct MarginNotes: View {
             VStack(alignment: .leading, spacing: 8) {
                 ShelfHeading(text: "Margin notes")
                 TextField("Your thoughts on this book…", text: $book.notes, axis: .vertical)
-                    .font(BookPageStyle.handwriting(17))
+                    .font(Theme.handwriting(17))
                     .lineLimit(3...12)
                     .lineSpacing(9)
                     .background(alignment: .top) { LinedPaper() }
@@ -251,18 +251,7 @@ private struct LinedPaper: View {
                     y += 31
                 }
             }
-            .stroke(BookPageStyle.rule.opacity(0.5), lineWidth: 0.6)
-        }
-    }
-}
-
-extension ReadingStatus {
-    /// Ribbon colour.
-    var ribbonColor: Color {
-        switch self {
-        case .unread: Color(red: 0.45, green: 0.50, blue: 0.58)
-        case .reading: Color(red: 0.20, green: 0.45, blue: 0.70)
-        case .read: Color(red: 0.62, green: 0.20, blue: 0.22)
+            .stroke(Theme.rule.opacity(0.5), lineWidth: 0.6)
         }
     }
 }

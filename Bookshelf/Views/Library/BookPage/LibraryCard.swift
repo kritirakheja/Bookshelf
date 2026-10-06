@@ -94,7 +94,7 @@ struct LibraryCard: View {
                     detail: Self.since(loan.lentAt, verb: "Lent"))
         } else if book.pastLoans.isEmpty {
             Text("On the shelf. Never lent out.")
-                .font(BookPageStyle.serif(.footnote).italic())
+                .font(Theme.serif(.footnote).italic())
                 .foregroundStyle(.secondary)
         }
     }
@@ -126,7 +126,7 @@ struct LibraryCard: View {
             }
         }
         .controlSize(.small)
-        .tint(BookPageStyle.brown)
+        .tint(Theme.brown)
     }
 
     private func stamped(_ text: String, color: Color, detail: String) -> some View {
@@ -148,10 +148,10 @@ struct LibraryCard: View {
                 .font(monospaced ? .footnote.monospaced() : .footnote)
                 .foregroundStyle(.secondary)
         }
-        .font(BookPageStyle.serif(.subheadline))
+        .font(Theme.serif(.subheadline))
         .padding(.vertical, 7)
         .overlay(alignment: .bottom) {
-            Rectangle().fill(BookPageStyle.rule.opacity(0.6)).frame(height: 0.5)
+            Rectangle().fill(Theme.rule.opacity(0.6)).frame(height: 0.5)
         }
     }
 
