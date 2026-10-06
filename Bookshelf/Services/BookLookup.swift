@@ -5,6 +5,7 @@ import Foundation
 struct BookLookup {
     var openLibrary = OpenLibraryClient()
     var google: GoogleBooksClient? = .fromBundle()
+    var appleBooks = AppleBooksClient()
 
     // MARK: ISBN
 
@@ -169,8 +170,8 @@ struct BookLookup {
     }
 
     /// A sharper copy of the cover a book already has: its own edition first (by
-    /// ISBN), then other editions that happen to share the artwork. Nil if nothing
-    /// online is both the same cover and clearly larger.
+    /// ISBN), then Apple Books, then other editions that happen to share the artwork.
+    /// Nil if nothing online is both the same cover and clearly larger.
     func sharperCover(than current: Data, title: String, author: String?, isbn: String?) async -> Data? {
         func firstSharper(_ urls: [URL?]) async -> Data? {
             for url in urls.compactMap({ $0 }) {
@@ -182,6 +183,11 @@ struct BookLookup {
         }
         if let isbn, !isbn.isEmpty {
             if let found = await firstSharper([OpenLibraryClient.isbnCoverURL(isbn)]) { return found }
+        }
+        if let found = await firstSharper(await appleBooks.coverURLs(title: Self.shortTitle(title), author: author)) {
+            return found
+        }
+        if let isbn, !isbn.isEmpty {
             if let candidate = try? await google?.lookup(isbn: isbn), let found = await firstSharper([candidate.coverURL]) {
                 return found
             }

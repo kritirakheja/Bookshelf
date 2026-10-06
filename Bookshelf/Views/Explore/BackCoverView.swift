@@ -123,7 +123,7 @@ private struct FrontArt: View {
 
     var body: some View {
         Group {
-            if let data = book.coverImage, let image = UIImage(data: data) {
+            if let data = book.coverImage, let image = CoverImage.enlarged(data, toWidth: size.width * 3) {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()

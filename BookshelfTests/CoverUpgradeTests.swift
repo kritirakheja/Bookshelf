@@ -39,4 +39,16 @@ final class CoverUpgradeTests: XCTestCase {
     func testTheSameCoverBarelyLargerIsNotWorthSwapping() {
         XCTAssertFalse(CoverImage.isSharperCopy(cover(width: 330), of: cover(width: 300)))
     }
+
+    func testSmallCoversAreEnlargedForShowingBig() {
+        XCTAssertEqual(CoverImage.enlarged(cover(width: 300), toWidth: 900)?.cgImage?.width, 900)
+        XCTAssertEqual(CoverImage.enlarged(cover(width: 800), toWidth: 900)?.cgImage?.width, 800, "Near enough: left alone")
+    }
+
+    func testAppleBooksCoversAreRequestedLarge() {
+        let json = #"{"results":[{"artworkUrl100":"https://is1-ssl.mzstatic.com/image/thumb/a/b/cover.jpg/100x100bb.jpg"},{"trackName":"No art"}]}"#
+        XCTAssertEqual(AppleBooksClient.parse(Data(json.utf8)).map(\.absoluteString),
+                       ["https://is1-ssl.mzstatic.com/image/thumb/a/b/cover.jpg/1200x1200bb.jpg"])
+        XCTAssertTrue(AppleBooksClient.parse(Data("oops".utf8)).isEmpty)
+    }
 }
