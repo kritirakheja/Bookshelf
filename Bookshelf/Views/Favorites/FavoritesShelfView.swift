@@ -46,8 +46,7 @@ struct FavoritesShelfView: View {
 
     // MARK: Showcase
 
-    /// The favourites face-out in rows of three, each row on its own shelf with the
-    /// titles written underneath.
+    /// The favourites in rows of three, with the titles written underneath.
     private var showcase: some View {
         ScrollView {
             VStack(spacing: 30) {
@@ -80,7 +79,6 @@ struct FavoritesShelfView: View {
                     }
                 }
                 .padding(.horizontal, 22)
-                Plank()
             }
             HStack(alignment: .top, spacing: 16) {
                 ForEach(0..<perShelf, id: \.self) { column in
@@ -125,20 +123,20 @@ struct FavoritesShelfView: View {
     private func tag(_ book: Book) -> some View {
         HStack(spacing: 0) {
             Text("#\(book.favoriteRank ?? 0)")
-                .foregroundStyle(Theme.brown)
+                .foregroundStyle(Theme.accent)
                 .padding(.horizontal, 9)
             if let rating = book.rating, rating > 0 {
                 Text("\(Image(systemName: "star.fill")) \(rating)")
                     .foregroundStyle(Theme.paper)
                     .padding(.horizontal, 8)
                     .frame(maxHeight: .infinity)
-                    .background(Theme.brown)
+                    .background(Theme.accent)
             }
         }
         .font(.caption.weight(.semibold).monospacedDigit())
         .frame(height: 22)
         .clipShape(Capsule())
-        .overlay(Capsule().stroke(Theme.brown, lineWidth: 1))
+        .overlay(Capsule().stroke(Theme.accent, lineWidth: 1))
     }
 
     // MARK: Editing

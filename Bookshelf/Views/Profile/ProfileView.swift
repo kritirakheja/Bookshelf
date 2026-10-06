@@ -103,7 +103,7 @@ struct ProfileView: View {
                     Image(systemName: "camera.circle.fill")
                         .font(.title)
                         .symbolRenderingMode(.palette)
-                        .foregroundStyle(.white, Theme.brown)
+                        .foregroundStyle(.white, Theme.accent)
                         .background(Circle().fill(Theme.paper))
                 }
             }

@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Books displayed like a bookshop: covers face-out, a row per wooden shelf,
-/// against a warm backdrop, in signed sections (Fiction, Non-fiction).
+/// Books displayed like a bookshop: covers face-out in rows,
+/// in signed sections (Fiction, Non-fiction).
 struct BookshopShelves<Menu: View>: View {
     let sections: [LibrarySections.Section]
     @ViewBuilder let menu: (Book) -> Menu
@@ -13,7 +13,7 @@ struct BookshopShelves<Menu: View>: View {
         GeometryReader { proxy in
             let perShelf = Self.booksPerShelf(width: proxy.size.width, coverWidth: coverWidth, spacing: spacing)
             ScrollView {
-                LazyVStack(spacing: 30) {
+                LazyVStack(spacing: 20) {
                     ForEach(sections) { section in
                         SectionSign(title: section.title, count: section.books.count)
                             .padding(.top, section.id == sections.first?.id ? 0 : 20)
@@ -84,29 +84,11 @@ struct BookshopShelf<Menu: View>: View {
                 }
             }
             .padding(.horizontal, 22)
-            Plank()
         }
     }
 }
 
-/// A wooden shelf (also under the cover on a book's page): a lighter top surface over a darker front edge, casting a shadow.
-struct Plank: View {
-    var body: some View {
-        VStack(spacing: 0) {
-            LinearGradient(colors: [Color(red: 0.72, green: 0.52, blue: 0.34), Color(red: 0.62, green: 0.43, blue: 0.27)],
-                           startPoint: .top, endPoint: .bottom)
-                .frame(height: 8)
-            LinearGradient(colors: [Color(red: 0.50, green: 0.33, blue: 0.20), Color(red: 0.40, green: 0.26, blue: 0.15)],
-                           startPoint: .top, endPoint: .bottom)
-                .frame(height: 10)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 3))
-        .shadow(color: .black.opacity(0.3), radius: 6, y: 5)
-        .padding(.horizontal, 10)
-    }
-}
-
-/// The wall behind the shelves: the app's paper.
+/// The background behind the covers.
 struct BookshopWall: View {
     var body: some View {
         Theme.paper.ignoresSafeArea()

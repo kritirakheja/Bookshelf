@@ -1,15 +1,15 @@
 # Bookshelf
 
-A personal library app for iPhone, built with SwiftUI and SwiftData, with one warm look throughout (paper background, brown accent, serif titles, wooden shelves; see `Views/Shared/Theme.swift`). Catalogue the books you own, track what you're reading, keep a shelf of favourite recommendations, remember who has your books, and save the bookstores you love.
+A personal library app for iPhone, built with SwiftUI and SwiftData, with one warm look throughout (soft off-white background, deep green accent, serif titles; see `Views/Shared/Theme.swift`). Catalogue the books you own, track what you're reading, keep a shelf of favourite recommendations, remember who has your books, and save the bookstores you love.
 
 ## Features
 
 **Tabs**
 - **Explore**: Netflix-style browsing of your unread books. A daily featured carousel, then rows you swipe through: Continue reading, Recently added, Quick reads, More from authors you love, and one row per category.
 - **Reading**: books in progress with start dates; swipe to mark finished.
-- **Favourites**: a ranked shelf of up to 10 books, three per wooden shelf, each with its rank, rating and a "why I recommend it" note.
+- **Favourites**: a ranked list of up to 10 books, three per row, each with its rank, rating and a "why I recommend it" note.
 - **Bookstores**: a map of bookstores you've saved, with *Find nearby* and *Search this area* (Apple Maps, no key needed), directions, and notes.
-- **Profile**: photo, name and counts, plus All books, Read, Lent out, Borrowed and Categories. **All books** is displayed like a bookshop: covers face-out on wooden shelves, split into Fiction and Non-fiction.
+- **Profile**: photo, name and counts, plus All books, Read, Lent out, Borrowed and Categories. **All books** shows covers face-out in rows, split into Fiction and Non-fiction.
 
 **Adding books**
 - Scan the barcode, search by title or author, type an ISBN, photograph the front cover, or enter details by hand.
@@ -17,7 +17,7 @@ A personal library app for iPhone, built with SwiftUI and SwiftData, with one wa
 - Cover scans use the document scanner (cropped and straightened); the text is read on-device with Vision and matched by title and author.
 - Adding a book you already own (same ISBN, or same title and author) is caught before the form opens.
 
-**Each book** has its own page: the cover on a shelf, then simple cards for reading status and rating, favourite, description, lending and notes.
+**Each book** has its own page: the cover, then simple cards for reading status and rating, favourite, description, lending and notes.
 - Status (unread / reading / read) with dates, including "finished in <year>" when only the year is known.
 - Star rating, notes, categories, and an **About this book** description (filled in automatically in the background).
 - Change the cover (scan it, pick a photo, or choose another edition's cover online).

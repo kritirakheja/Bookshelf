@@ -34,7 +34,7 @@ struct ReadingCard: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 9)
                 .foregroundStyle(selected ? Theme.paper : Color.secondary)
-                .background(selected ? Theme.brown : Theme.rule.opacity(0.35), in: Capsule())
+                .background(selected ? Theme.accent : Theme.rule.opacity(0.35), in: Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])

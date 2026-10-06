@@ -125,7 +125,7 @@ struct LibraryCard: View {
             }
         }
         .controlSize(.small)
-        .tint(Theme.brown)
+        .tint(Theme.accent)
     }
 
     private func stamped(_ text: String, color: Color, detail: String) -> some View {

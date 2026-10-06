@@ -1,17 +1,17 @@
 import SwiftUI
 import UIKit
 
-/// The app's one look: warm paper behind every screen, white cards, a single brown
-/// accent, serif titles. Colours adapt to dark mode.
+/// The app's one look: soft off-white behind every screen, white cards, a single
+/// deep green accent, serif titles. Colours adapt to dark mode.
 enum Theme {
     /// Behind every screen.
-    static let paper = adaptive(light: (0.980, 0.961, 0.922), dark: (0.065, 0.058, 0.052))
+    static let paper = adaptive(light: (0.968, 0.970, 0.960), dark: (0.055, 0.062, 0.058))
     /// Cards and list rows (the system's own row colour, so custom cards and lists match).
     static let card = Color(.secondarySystemGroupedBackground)
     /// Hairlines and quiet fills.
-    static let rule = adaptive(light: (0.86, 0.80, 0.72), dark: (0.30, 0.27, 0.24))
+    static let rule = adaptive(light: (0.85, 0.87, 0.85), dark: (0.25, 0.27, 0.26))
     /// The accent: buttons, links, labels. Same as the AccentColor asset.
-    static let brown = adaptive(light: (0.55, 0.38, 0.24), dark: (0.82, 0.64, 0.46))
+    static let accent = adaptive(light: (0.10, 0.35, 0.26), dark: (0.46, 0.78, 0.62))
 
     static func serif(_ style: Font.TextStyle, _ weight: Font.Weight = .regular) -> Font {
         .system(style, design: .serif, weight: weight)

@@ -17,7 +17,7 @@ struct BookshelfApp: App {
         WindowGroup {
             RootTabView()
                 .environment(account)
-                .tint(Theme.brown)
+                .tint(Theme.accent)
         }
         .modelContainer(container)
     }

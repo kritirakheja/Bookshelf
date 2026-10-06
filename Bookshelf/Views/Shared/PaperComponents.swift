@@ -8,7 +8,7 @@ struct ShelfHeading: View {
         Text(text.uppercased())
             .font(.caption.weight(.semibold))
             .tracking(2)
-            .foregroundStyle(Theme.brown)
+            .foregroundStyle(Theme.accent)
     }
 }
 

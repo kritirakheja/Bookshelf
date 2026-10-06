@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-/// A book's page: the cover on a shelf, its categories, then plain cards for
+/// A book's page: the cover, its categories, then plain cards for
 /// reading status, favourite, description, lending and notes.
 struct BookDetailView: View {
     @Bindable var book: Book
@@ -58,22 +58,17 @@ struct BookDetailView: View {
         }
     }
 
-    // MARK: - Display shelf
+    // MARK: - Cover and title
 
-    /// The cover standing face-out on a shelf under a spotlight, its own colours
-    /// blurred into the wall behind it.
+    /// The cover with its own colours blurred softly behind it.
     private var hero: some View {
         VStack(spacing: 18) {
             ZStack(alignment: .bottom) {
                 backdrop
-                VStack(spacing: 0) {
-                    CoverView(book: book, width: 150)
-                        .shadow(color: .black.opacity(0.35), radius: 12, x: 0, y: 10)
-                        .padding(.bottom, -2)
-                    Plank()
-                        .padding(.horizontal, 50)
-                }
-                .padding(.top, 36)
+                CoverView(book: book, width: 150)
+                    .shadow(color: .black.opacity(0.3), radius: 14, x: 0, y: 10)
+                    .padding(.top, 36)
+                    .padding(.bottom, 14)
             }
             VStack(spacing: 6) {
                 Text(book.title)
@@ -147,10 +142,10 @@ struct BookDetailView: View {
             Text(text)
         }
         .font(.footnote.weight(.medium))
-        .foregroundStyle(faded ? AnyShapeStyle(.secondary) : AnyShapeStyle(Theme.brown))
+        .foregroundStyle(faded ? AnyShapeStyle(.secondary) : AnyShapeStyle(Theme.accent))
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(faded ? Color.clear : Theme.brown.opacity(0.12), in: Capsule())
+        .background(faded ? Color.clear : Theme.accent.opacity(0.12), in: Capsule())
         .overlay(Capsule().stroke(Theme.rule, lineWidth: faded ? 1 : 0))
     }
 
@@ -170,7 +165,7 @@ struct BookDetailView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
-            .tint(Theme.brown)
+            .tint(Theme.accent)
             if coverNotFound {
                 Text("No cover found online.")
                     .font(.caption)
