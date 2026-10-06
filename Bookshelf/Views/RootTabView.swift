@@ -10,6 +10,8 @@ struct RootTabView: View {
     #if DEBUG
     /// For simulator screenshots: launch with `-previewBook "<title>"` to open that book's page.
     @State private var previewBook: Book?
+    /// Likewise `-previewBackCover "<title>"` for the back-cover screen Explore opens.
+    @State private var previewBackCover: Book?
     #endif
 
     var body: some View {
@@ -37,12 +39,18 @@ struct RootTabView: View {
             if let title = UserDefaults.standard.string(forKey: "previewBook") {
                 previewBook = try? context.fetch(FetchDescriptor<Book>(predicate: #Predicate { $0.title == title })).first
             }
+            if let title = UserDefaults.standard.string(forKey: "previewBackCover") {
+                previewBackCover = try? context.fetch(FetchDescriptor<Book>(predicate: #Predicate { $0.title == title })).first
+            }
             #endif
             await DescriptionBackfill.run(in: context)
         }
         #if DEBUG
         .fullScreenCover(item: $previewBook) { book in
             NavigationStack { BookDetailView(book: book) }
+        }
+        .fullScreenCover(item: $previewBackCover) { book in
+            NavigationStack { BackCoverView(book: book) }
         }
         .fullScreenCover(isPresented: .constant(UserDefaults.standard.bool(forKey: "previewScanner"))) {
             BarcodeScanScreen { _ in } onCancel: {}

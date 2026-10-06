@@ -53,6 +53,7 @@ struct ExploreView: View {
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
+            .navigationDestination(for: PickedUp.self) { BackCoverView(book: $0.book) }
             .navigationDestination(for: ShelfRoute.self) { route in
                 if let category = categories.first(where: { $0.id == route.id }) {
                     ScrollView { BookGrid(books: category.books, menu: bookMenu) }
@@ -99,6 +100,11 @@ struct ExploreView: View {
     }
 }
 
+/// A book taken off the shelf here: opens to its back cover rather than its full page.
+private struct PickedUp: Hashable {
+    let book: Book
+}
+
 // MARK: - Category card
 
 /// A category's name (tap for the full grid) over its covers, which scroll sideways.
@@ -129,7 +135,7 @@ private struct CategoryCard<Route: Hashable, Menu: View>: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: spacing) {
                     ForEach(category.books) { book in
-                        NavigationLink(value: book) {
+                        NavigationLink(value: PickedUp(book: book)) {
                             // Four covers and a sliver of the fifth, to show there's more.
                             Color.clear
                                 .aspectRatio(2 / 3, contentMode: .fit)
@@ -166,7 +172,7 @@ private struct BookGrid<Menu: View>: View {
     var body: some View {
         LazyVGrid(columns: columns, spacing: 20) {
             ForEach(books) { book in
-                NavigationLink(value: book) {
+                NavigationLink(value: PickedUp(book: book)) {
                     BookTile(book: book, width: 100)
                 }
                 .buttonStyle(.plain)
