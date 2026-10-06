@@ -50,7 +50,7 @@ struct ExploreView: View {
             }
             .confirmDeletingBook($bookToDelete)
             .paperScreen()
-            .navigationTitle("Explore")
+            .navigationTitle("Find your next read")
             .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
             .navigationDestination(for: ShelfRoute.self) { route in
                 if let category = categories.first(where: { $0.id == route.id }) {
