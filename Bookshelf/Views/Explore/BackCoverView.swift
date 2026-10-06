@@ -22,7 +22,7 @@ struct BackCoverView: View {
             // The book takes all the room the title and buttons leave it.
             GeometryReader { proxy in
                 let width = Book3DView.bookWidth(in: proxy.size).rounded()
-                let overflow = (proxy.size.height * 0.12).rounded()
+                let overflow = (proxy.size.height * 0.04).rounded()
                 Book3DView(faces: faces, thickness: Self.thickness(pages: book.pageCount),
                            label: book.title, blurb: book.summary, overflow: overflow)
                     .padding(.vertical, -overflow)
