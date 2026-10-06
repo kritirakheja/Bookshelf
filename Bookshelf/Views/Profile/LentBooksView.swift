@@ -108,7 +108,7 @@ private struct LentBookRow: View {
                         .font(.inter(.caption))
                         .foregroundStyle(.orange)
                 } else if direction == .borrowed, let borrowing = book.borrowing {
-                    Text(LibraryCard.since(borrowing.lentAt, verb: "Borrowed"))
+                    Text(LendingRows.since(borrowing.lentAt, verb: "Borrowed"))
                         .font(.inter(.caption))
                         .foregroundStyle(.indigo)
                 }

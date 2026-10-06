@@ -2,7 +2,7 @@ import UIKit
 import CoreImage
 import CoreImage.CIFilterBuiltins
 
-/// Colours taken from a book's cover, for drawing its back.
+/// Colours taken from a book's cover, for drawing its back and the page behind it.
 enum CoverColor {
     struct RGB: Equatable {
         var r: Double
@@ -18,10 +18,26 @@ enum CoverColor {
     /// The cover's average colour.
     static func average(of data: Data?) -> RGB {
         guard let data, let image = CIImage(data: data), !image.extent.isEmpty else { return fallback }
+        return average(of: image, in: image.extent) ?? fallback
+    }
+
+    /// Two colours for a gradient behind the cover: the average of its top third
+    /// and of its bottom third.
+    static func gradient(of data: Data?) -> (top: RGB, bottom: RGB) {
+        guard let data, let image = CIImage(data: data), !image.extent.isEmpty else { return (fallback, fallback) }
+        let extent = image.extent
+        let third = extent.height / 3
+        // Core Image measures from the bottom-left corner.
+        let top = average(of: image, in: CGRect(x: extent.minX, y: extent.maxY - third, width: extent.width, height: third))
+        let bottom = average(of: image, in: CGRect(x: extent.minX, y: extent.minY, width: extent.width, height: third))
+        return (top ?? fallback, bottom ?? fallback)
+    }
+
+    private static func average(of image: CIImage, in rect: CGRect) -> RGB? {
         let filter = CIFilter.areaAverage()
         filter.inputImage = image
-        filter.extent = image.extent
-        guard let output = filter.outputImage else { return fallback }
+        filter.extent = rect
+        guard let output = filter.outputImage else { return nil }
         var pixel = [UInt8](repeating: 0, count: 4)
         context.render(output, toBitmap: &pixel, rowBytes: 4, bounds: CGRect(x: 0, y: 0, width: 1, height: 1),
                        format: .RGBA8, colorSpace: nil)

@@ -1,8 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// A book's page: the cover, its categories, then plain cards for
-/// reading status, favourite, description, lending and notes.
+/// A book's full details, in order of importance: the cover on a gradient of its own
+/// colours, its name, what it's about, its categories, reading status, then the rest.
 struct BookDetailView: View {
     @Bindable var book: Book
     @State private var editing = false
@@ -12,22 +12,40 @@ struct BookDetailView: View {
     @State private var coverNotFound = false
     @State private var bookToDelete: Book?
     @State private var choosingCover = false
+    @State private var gradient = (top: CoverColor.fallback, bottom: CoverColor.fallback)
+    @State private var coverArt: UIImage?
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     @Query(filter: #Predicate<Book> { $0.favoriteRank != nil }) private var shelf: [Book]
 
+    /// The share of the screen the cover and its gradient take.
+    private static let heroShare = 0.6
+
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                hero
-                shelfLabels
-                ReadingCard(book: book)
-                FavouriteCard(book: book, shelf: shelf, showingShelfFull: $showingShelfFull)
-                BlurbCard(book: book)
-                LibraryCard(book: book)
-                NotesCard(book: book)
-                footer
+        GeometryReader { proxy in
+            let screenHeight = proxy.size.height + proxy.safeAreaInsets.top + proxy.safeAreaInsets.bottom
+            let heroHeight = (screenHeight * Self.heroShare).rounded()
+            ScrollView {
+                VStack(spacing: 24) {
+                    hero(height: heroHeight, topInset: proxy.safeAreaInsets.top)
+                    Group {
+                        name
+                        AboutBlock(book: book)
+                        categories
+                        StatusSection(book: book)
+                    }
+                    .padding(.horizontal, 20)
+                    more
+                }
+                .padding(.bottom, 30)
             }
-            .padding(.bottom, 30)
+            .ignoresSafeArea(edges: .top)
+            .task(id: book.coverImage) {
+                gradient = CoverColor.gradient(of: book.coverImage)
+                // Drawn at up to 3× the size it's shown, sharpened if the file is small.
+                let width = heroHeight * Self.coverShare / 1.5
+                coverArt = book.coverImage.flatMap { CoverImage.enlarged($0, toWidth: width * 3) }
+            }
         }
         .background(Theme.paper.ignoresSafeArea())
         .scrollDismissesKeyboard(.interactively)
@@ -58,57 +76,66 @@ struct BookDetailView: View {
         }
     }
 
-    // MARK: - Cover and title
+    // MARK: - Cover
 
-    /// The cover with its own colours blurred softly behind it.
-    private var hero: some View {
-        VStack(spacing: 18) {
-            ZStack(alignment: .bottom) {
-                backdrop
-                CoverView(book: book, width: 150)
-                    .shadow(color: .black.opacity(0.3), radius: 14, x: 0, y: 10)
-                    .padding(.top, 36)
-                    .padding(.bottom, 14)
-            }
-            VStack(spacing: 6) {
-                Text(book.title)
-                    .font(Font.inter(.title, .bold))
-                    .multilineTextAlignment(.center)
-                if !book.authors.isEmpty {
-                    Text("by \(book.authorLine)")
-                        .font(Font.inter(.title3).italic())
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                if !facts.isEmpty {
-                    Text(facts.joined(separator: "  ·  "))
-                        .font(.inter(.caption))
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 2)
+    /// The cover's height as a share of the hero's.
+    private static let coverShare = 0.64
+
+    /// The cover, large, on a gradient made from its own top and bottom colours.
+    private func hero(height: CGFloat, topInset: CGFloat) -> some View {
+        let coverHeight = height * Self.coverShare
+        let coverWidth = coverHeight / 1.5
+        return ZStack {
+            LinearGradient(colors: [color(gradient.top), color(gradient.bottom)], startPoint: .top, endPoint: .bottom)
+            // Melt into the page rather than ending in a line.
+            LinearGradient(colors: [.clear, Theme.paper], startPoint: UnitPoint(x: 0.5, y: 0.8), endPoint: .bottom)
+            Group {
+                if let coverArt {
+                    Image(uiImage: coverArt)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: coverWidth, height: coverHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                } else {
+                    CoverView(book: book, width: coverWidth)
                 }
             }
-            .padding(.horizontal, 24)
+            .shadow(color: .black.opacity(0.35), radius: 22, x: 0, y: 14)
+            // Centred in the space below the navigation bar.
+            .padding(.top, topInset * 0.6)
         }
+        .frame(height: height)
+        .frame(maxWidth: .infinity)
+        .animation(.easeInOut(duration: 0.3), value: gradient.top)
     }
 
-    private var backdrop: some View {
-        ZStack {
-            if let data = book.coverImage, let image = UIImage(data: data) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .blur(radius: 40)
-                    .opacity(0.45)
+    /// Dimmed in dark mode, so a pale cover doesn't glare or hide the status bar.
+    private func color(_ rgb: CoverColor.RGB) -> Color {
+        let dim = colorScheme == .dark ? 0.55 : 1
+        return Color(red: rgb.r * dim, green: rgb.g * dim, blue: rgb.b * dim)
+    }
+
+    // MARK: - Name
+
+    private var name: some View {
+        VStack(spacing: 6) {
+            Text(book.title)
+                .font(.inter(.title, .bold))
+                .multilineTextAlignment(.center)
+            if !book.authors.isEmpty {
+                Text(book.authorLine)
+                    .font(.inter(.title3))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
             }
-            // Spotlight from above.
-            RadialGradient(colors: [.white.opacity(0.55), .clear], center: .top, startRadius: 10, endRadius: 260)
-                .blendMode(.softLight)
-            LinearGradient(colors: [.clear, Theme.paper], startPoint: .center, endPoint: .bottom)
+            if !facts.isEmpty {
+                Text(facts.joined(separator: "  ·  "))
+                    .font(.inter(.footnote))
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 2)
+            }
         }
-        .frame(height: 290)
         .frame(maxWidth: .infinity)
-        .clipped()
-        .mask(LinearGradient(colors: [.clear, .black, .black], startPoint: .top, endPoint: .bottom))
     }
 
     private var facts: [String] {
@@ -118,64 +145,93 @@ struct BookDetailView: View {
         return facts
     }
 
-    // MARK: - Shelf labels
+    // MARK: - Categories
 
     /// Categories as chips; tap to change them.
-    private var shelfLabels: some View {
-        FlowLayout(spacing: 8) {
+    private var categories: some View {
+        FlowLayout(spacing: 8, centered: false) {
             ForEach(book.sortedCategories) { category in
                 Button { pickingCategories = true } label: {
-                    shelfLabel(category.name)
+                    chip(category.name)
                 }
             }
             Button { pickingCategories = true } label: {
-                shelfLabel(book.categories.isEmpty ? "Add categories" : "Edit", systemImage: book.categories.isEmpty ? "plus" : "pencil", faded: true)
+                chip(book.categories.isEmpty ? "Add categories" : "Edit",
+                     systemImage: book.categories.isEmpty ? "plus" : "pencil", quiet: true)
             }
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, 24)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func shelfLabel(_ text: String, systemImage: String? = nil, faded: Bool = false) -> some View {
+    private func chip(_ text: String, systemImage: String? = nil, quiet: Bool = false) -> some View {
         HStack(spacing: 4) {
             if let systemImage { Image(systemName: systemImage).font(.inter(.caption2)) }
             Text(text)
         }
         .font(.inter(.footnote, .medium))
-        .foregroundStyle(faded ? AnyShapeStyle(.secondary) : AnyShapeStyle(Theme.accent))
+        .foregroundStyle(quiet ? AnyShapeStyle(.secondary) : AnyShapeStyle(Theme.accent))
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(faded ? Color.clear : Theme.accent.opacity(0.12), in: Capsule())
-        .overlay(Capsule().stroke(Theme.rule, lineWidth: faded ? 1 : 0))
+        .background(quiet ? Color.clear : Theme.accent.opacity(0.12), in: Capsule())
+        .overlay(Capsule().stroke(Theme.rule, lineWidth: quiet ? 1 : 0))
     }
 
-    // MARK: - Footer
+    // MARK: - More
 
-    private var footer: some View {
-        VStack(spacing: 14) {
-            HStack(spacing: 12) {
-                if book.coverImage != nil {
-                    Button("Change cover", systemImage: "photo.on.rectangle") { choosingCover = true }
-                } else if searchingCover {
-                    ProgressView()
-                } else {
-                    Button("Find cover online", systemImage: "magnifyingglass") { findCover() }
+    /// Everything else, as one plain list.
+    private var more: some View {
+        PaperCard {
+            VStack(alignment: .leading, spacing: 10) {
+                FavouriteRows(book: book, shelf: shelf, showingShelfFull: $showingShelfFull)
+                Divider()
+                LendingRows(book: book)
+                Divider()
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Notes")
+                        .font(.inter(.subheadline))
+                    TextField("Your thoughts on this book…", text: $book.notes, axis: .vertical)
+                        .font(.inter(.subheadline))
+                        .lineLimit(1...10)
                 }
-                Button("Edit details", systemImage: "pencil") { editing = true }
+                Divider()
+                if let isbn = book.isbn {
+                    MoreRow(label: "ISBN") { Text(isbn).font(.footnote.monospaced()) }
+                }
+                MoreRow(label: "Added") {
+                    Text(book.dateAdded.formatted(.dateTime.day().month(.abbreviated).year()))
+                }
+                Divider()
+                coverButton
+                Divider()
+                Button("Remove book", systemImage: "trash", role: .destructive) {
+                    bookToDelete = book
+                }
+                .font(.inter(.subheadline))
+                .frame(minHeight: 30)
             }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            .tint(Theme.accent)
-            if coverNotFound {
-                Text("No cover found online.")
-                    .font(.inter(.caption))
-                    .foregroundStyle(.secondary)
-            }
-            Button("Delete book", systemImage: "trash", role: .destructive) {
-                bookToDelete = book
-            }
-            .font(.inter(.footnote))
         }
+    }
+
+    @ViewBuilder
+    private var coverButton: some View {
+        Group {
+            if book.coverImage != nil {
+                Button("Change cover", systemImage: "photo.on.rectangle") { choosingCover = true }
+            } else if searchingCover {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Looking for a cover…").foregroundStyle(.secondary)
+                }
+            } else {
+                Button(coverNotFound ? "No cover found online" : "Find cover online", systemImage: "magnifyingglass") {
+                    findCover()
+                }
+                .disabled(coverNotFound)
+            }
+        }
+        .font(.inter(.subheadline))
+        .frame(minHeight: 30)
     }
 
     private func findCover() {

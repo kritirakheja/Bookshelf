@@ -34,4 +34,26 @@ final class CoverColorTests: XCTestCase {
     func testBarcodeIsDrawnForAnISBN() {
         XCTAssertNotNil(CoverColor.barcode(for: "9780141439518"))
     }
+
+    func testGradientTakesTheTopAndBottomOfTheCover() {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let cover = UIGraphicsImageRenderer(size: CGSize(width: 20, height: 30), format: format).image { context in
+            UIColor.red.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 20, height: 15))
+            UIColor.blue.setFill()
+            context.fill(CGRect(x: 0, y: 15, width: 20, height: 15))
+        }.pngData()!
+        let gradient = CoverColor.gradient(of: cover)
+        XCTAssertGreaterThan(gradient.top.r, 0.9)
+        XCTAssertLessThan(gradient.top.b, 0.1)
+        XCTAssertGreaterThan(gradient.bottom.b, 0.9)
+        XCTAssertLessThan(gradient.bottom.r, 0.1)
+    }
+
+    func testGradientWithoutACoverUsesTheFallback() {
+        let gradient = CoverColor.gradient(of: nil)
+        XCTAssertEqual(gradient.top, CoverColor.fallback)
+        XCTAssertEqual(gradient.bottom, CoverColor.fallback)
+    }
 }
