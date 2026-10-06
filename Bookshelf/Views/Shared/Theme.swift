@@ -5,7 +5,10 @@ import UIKit
 /// deep green accent, and Inter for all text. Colours adapt to dark mode.
 enum Theme {
     /// Behind every screen.
-    static let background = adaptive(light: (0.968, 0.970, 0.960), dark: (0.055, 0.062, 0.058))
+    static let background = adaptive(light: backgroundLight, dark: backgroundDark)
+    /// The background's two shades as numbers, for working out what reads well on it.
+    static let backgroundLight = (0.968, 0.970, 0.960)
+    static let backgroundDark = (0.055, 0.062, 0.058)
     /// Cards and list rows (the system's own row colour, so custom cards and lists match).
     static let card = Color(.secondarySystemGroupedBackground)
     /// Hairlines and quiet fills.

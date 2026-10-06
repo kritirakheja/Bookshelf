@@ -68,7 +68,7 @@ struct StatusSection: View {
                 HStack {
                     finished
                     Spacer()
-                    StarRating(rating: $book.rating)
+                    StarRating(rating: $book.rating, usesTint: true)
                 }
                 .font(.inter(.footnote))
                 .foregroundStyle(.secondary)
@@ -88,7 +88,7 @@ struct StatusSection: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 11)
                 .foregroundStyle(selected ? Theme.background : Color.secondary)
-                .background(selected ? Theme.accent : Theme.rule.opacity(0.45), in: Capsule())
+                .background(selected ? AnyShapeStyle(.tint) : AnyShapeStyle(Theme.rule.opacity(0.45)), in: Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
@@ -162,7 +162,6 @@ struct FavouriteRows: View {
             }
             .font(.inter(.subheadline))
         }
-        .tint(Theme.accent)
         .frame(minHeight: 30)
         if book.favoriteRank != nil {
             TextField("Why would you recommend it?", text: $book.recommendationNoteText, axis: .vertical)

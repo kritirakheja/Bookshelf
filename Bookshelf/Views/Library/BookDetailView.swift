@@ -20,6 +20,15 @@ struct BookDetailView: View {
     /// The share of the screen the cover and its backdrop take.
     private static let heroShare = 0.6
 
+    /// The cover's most vivid colour, adjusted to read well on the page; the app's
+    /// green for a cover with no real colour, or no cover.
+    private var accent: Color {
+        guard let found = CoverColor.accent(of: book.coverImage) else { return Theme.accent }
+        let page = colorScheme == .dark ? Theme.backgroundDark : Theme.backgroundLight
+        let readable = CoverColor.legible(found, on: .init(r: page.0, g: page.1, b: page.2))
+        return Color(red: readable.r, green: readable.g, blue: readable.b)
+    }
+
     var body: some View {
         GeometryReader { proxy in
             let screenHeight = proxy.size.height + proxy.safeAreaInsets.top + proxy.safeAreaInsets.bottom
@@ -56,17 +65,23 @@ struct BookDetailView: View {
         .toolbar {
             Button("Edit") { editing = true }
         }
+        // The screens that open from here are their own places: back to the app's green.
         .sheet(isPresented: $editing) {
             BookFormView(book: book)
+                .tint(Theme.accent)
         }
         .sheet(isPresented: $choosingCover) {
             CoverChooserView(title: book.title, author: book.authors.first, isbn: book.isbn) { data in
                 book.coverImage = data
             }
+            .tint(Theme.accent)
         }
         .sheet(isPresented: $pickingCategories) {
             CategoryPickerView(book: book)
+                .tint(Theme.accent)
         }
+        // Everything tinted on this page takes the book's own colour.
+        .tint(accent)
         .alert("Your shelf is full", isPresented: $showingShelfFull) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -188,10 +203,10 @@ struct BookDetailView: View {
             Text(text)
         }
         .font(.inter(.footnote, .medium))
-        .foregroundStyle(quiet ? AnyShapeStyle(.secondary) : AnyShapeStyle(Theme.accent))
+        .foregroundStyle(quiet ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tint))
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(quiet ? Color.clear : Theme.accent.opacity(0.12), in: Capsule())
+        .background(quiet ? AnyShapeStyle(.clear) : AnyShapeStyle(.tint.opacity(0.12)), in: Capsule())
         .overlay(Capsule().stroke(Theme.rule, lineWidth: quiet ? 1 : 0))
     }
 

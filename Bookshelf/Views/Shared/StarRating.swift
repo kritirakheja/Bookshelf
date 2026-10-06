@@ -3,6 +3,10 @@ import SwiftUI
 /// Five tappable stars. Tapping the current rating again clears it.
 struct StarRating: View {
     @Binding var rating: Int?
+    /// Filled stars in the surrounding tint instead of yellow.
+    var usesTint = false
+
+    private var fill: AnyShapeStyle { usesTint ? AnyShapeStyle(.tint) : AnyShapeStyle(.yellow) }
 
     var body: some View {
         HStack(spacing: 4) {
@@ -11,7 +15,7 @@ struct StarRating: View {
                     rating = rating == star ? nil : star
                 } label: {
                     Image(systemName: star <= (rating ?? 0) ? "star.fill" : "star")
-                        .foregroundStyle(star <= (rating ?? 0) ? .yellow : .secondary)
+                        .foregroundStyle(star <= (rating ?? 0) ? fill : AnyShapeStyle(.secondary))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("\(star) star\(star == 1 ? "" : "s")")

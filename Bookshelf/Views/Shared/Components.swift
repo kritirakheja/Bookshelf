@@ -8,7 +8,8 @@ struct SectionLabel: View {
         Text(text.uppercased())
             .font(.inter(.caption, .semibold))
             .tracking(2)
-            .foregroundStyle(Theme.accent)
+            // The app's green, or on a book's page that book's own colour.
+            .foregroundStyle(.tint)
     }
 }
 
