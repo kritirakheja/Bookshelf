@@ -1,5 +1,5 @@
 import Foundation
-import UIKit
+import Foundation
 
 /// Looks up books and covers using the free Open Library APIs (no key needed).
 ///
@@ -27,6 +27,8 @@ struct OpenLibraryClient {
 
     var session: URLSession = .shared
 
+    private var covers: CoverDownloader { CoverDownloader(session: session) }
+
     private static let searchFields = "key,title,author_name,cover_i,first_publish_year,number_of_pages_median,subject,language"
 
     // MARK: Lookup by ISBN
@@ -38,7 +40,7 @@ struct OpenLibraryClient {
             throw LookupError.notFound
         }
         var draft = result.draft
-        draft.coverImage = await downloadCover(from: [result.coverURL, Self.isbnCoverURL(isbn)])
+        draft.coverImage = await covers.download(from: [result.coverURL, Self.isbnCoverURL(isbn)])
         return draft
     }
 
@@ -75,7 +77,7 @@ struct OpenLibraryClient {
     func draft(for doc: SearchDoc) async -> BookDraft {
         guard let result = Self.draft(from: doc, isbn: "") else { return BookDraft() }
         var draft = result.draft
-        draft.coverImage = await downloadCover(from: [result.coverURL])
+        draft.coverImage = await covers.download(from: [result.coverURL])
         return draft
     }
 
@@ -93,7 +95,7 @@ struct OpenLibraryClient {
         guard let doc = Self.bestMatch(in: docs, coverText: prominent),
               let result = Self.draft(from: doc, isbn: isbn) else { return nil }
         var draft = result.draft
-        draft.coverImage = await downloadCover(from: [result.coverURL])
+        draft.coverImage = await covers.download(from: [result.coverURL])
         return draft
     }
 
@@ -123,15 +125,8 @@ struct OpenLibraryClient {
     }
 
     static func bestMatch(in docs: [SearchDoc], coverText: [String]) -> SearchDoc? {
-        rankedMatch(in: docs, coverText: coverText)?.doc
+        BookMatcher.rankedMatch(in: docs, coverText: coverText, title: { $0.title ?? "" }, authors: { $0.authorName ?? [] })?.item
     }
-
-    static func rankedMatch(in docs: [SearchDoc], coverText: [String]) -> (doc: SearchDoc, authorMatched: Bool)? {
-        BookMatcher.rankedMatch(in: docs, coverText: coverText, title: { $0.title ?? "" }, authors: { $0.authorName ?? [] })
-            .map { ($0.item, $0.authorMatched) }
-    }
-
-    static func words(_ text: String) -> Set<String> { BookMatcher.words(text) }
 
     // MARK: Descriptions
 
@@ -159,7 +154,7 @@ struct OpenLibraryClient {
     /// Finds a cover for a book that doesn't have one: first by ISBN, then by
     /// searching for the title and author. Returns nil if nothing turns up.
     func findCover(title: String, author: String?, isbn: String?) async -> Data? {
-        if let isbn, let data = await downloadCover(from: [Self.isbnCoverURL(isbn)]) {
+        if let isbn, let data = await covers.download(from: [Self.isbnCoverURL(isbn)]) {
             return data
         }
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -174,18 +169,7 @@ struct OpenLibraryClient {
             return nil
         }
         let candidates = response.docs.compactMap(\.coverID).prefix(3).map(Self.coverURL(id:))
-        return await downloadCover(from: Array(candidates))
-    }
-
-    /// Downloads each URL in turn and returns the first real image.
-    func downloadCover(from urls: [URL?]) async -> Data? {
-        for url in urls.compactMap({ $0 }) {
-            guard let data = try? await get(url),
-                  let image = UIImage(data: data),
-                  image.size.width > 10 else { continue }  // skip 1×1 "no cover" placeholders
-            return CoverImage.capped(data)
-        }
-        return nil
+        return await covers.download(from: Array(candidates))
     }
 
     /// The original scan: Open Library's "-L" size is only about 300 pixels wide.

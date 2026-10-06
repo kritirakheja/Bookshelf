@@ -88,7 +88,7 @@ final class CoverRecognitionTests: XCTestCase {
     }
 
     func testWordsDropPossessivesAndStopWords() {
-        XCTAssertEqual(OpenLibraryClient.words("The Housemaid’s Secret"), ["housemaid", "secret"])
+        XCTAssertEqual(BookMatcher.words("The Housemaid’s Secret"), ["housemaid", "secret"])
     }
 
     /// Real covers from Open Library, read with the same on-device text recognition the
@@ -109,7 +109,7 @@ final class CoverRecognitionTests: XCTestCase {
             let prominent = CoverTextReader.prominentLines(lines)
             let draft = await lookup.identify(coverLines: prominent, queries: CoverTextReader.searchQueries(lines), isbn: "")
             results.append("\(expected): read \(prominent) → \(draft.map { "\($0.title) / \($0.authors)" } ?? "no match")")
-            XCTAssertEqual(draft.map { OpenLibraryClient.words($0.title) }, OpenLibraryClient.words(expected), results.last!)
+            XCTAssertEqual(draft.map { BookMatcher.words($0.title) }, BookMatcher.words(expected), results.last!)
         }
         print("COVER_RESULTS\n" + results.joined(separator: "\n"))
     }

@@ -6,6 +6,7 @@ struct BookLookup {
     var openLibrary = OpenLibraryClient()
     var google: GoogleBooksClient? = .fromBundle()
     var appleBooks = AppleBooksClient()
+    var covers = CoverDownloader()
 
     // MARK: ISBN
 
@@ -175,7 +176,7 @@ struct BookLookup {
     func sharperCover(than current: Data, title: String, author: String?, isbn: String?) async -> Data? {
         func firstSharper(_ urls: [URL?]) async -> Data? {
             for url in urls.compactMap({ $0 }) {
-                if let data = await openLibrary.downloadCover(from: [url]), CoverImage.isSharperCopy(data, of: current) {
+                if let data = await covers.download(from: [url]), CoverImage.isSharperCopy(data, of: current) {
                     return data
                 }
             }
@@ -245,7 +246,7 @@ struct BookLookup {
 
     /// Downloads a candidate's cover: full size if it can, else its thumbnail.
     func coverData(for candidate: BookCandidate) async -> Data? {
-        await openLibrary.downloadCover(from: [candidate.coverURL, candidate.thumbnailURL])
+        await covers.download(from: [candidate.coverURL, candidate.thumbnailURL])
     }
 }
 
