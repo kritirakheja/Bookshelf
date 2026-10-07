@@ -67,4 +67,6 @@ Barcode and cover scanning need a real iPhone (the simulator has no camera). In 
 xcodebuild test -scheme Bookshelf -destination 'platform=iOS Simulator,name=iPhone 17'
 ```
 
+A second scheme, `BookshelfWalkthrough`, uses the app like a person would (XCUITest): it taps through every flow on a throwaway sample library and saves a screenshot of each step to the folder in `TEST_RUNNER_SNAP_DIR` (set `TEST_RUNNER_WALK_DARK=1` for dark mode).
+
 Tests that call live services (Open Library, Google Books, Apple Maps, and your Supabase project if configured) are skipped by default. Run them with `TEST_RUNNER_LIVE_TESTS=1`. The Supabase test creates throwaway `@example.com` accounts and deletes their data afterwards.

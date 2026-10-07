@@ -125,7 +125,7 @@ final class LoanTests: XCTestCase {
         XCTAssertFalse(book.isBorrowed)
     }
 
-    func testStatsCountOwnedBooksAndBorrowedSeparately() {
+    func testStatsCountBorrowedBooks() {
         let mine = newBook(), borrowed = newBook(), givenBack = newBook()
         mine.setStatus(.read)
         borrowed.borrow(from: "Meera")
@@ -133,7 +133,7 @@ final class LoanTests: XCTestCase {
         givenBack.borrow(from: "Arjun"); givenBack.giveBack()
 
         let stats = LibraryStats(books: [mine, borrowed, givenBack])
-        XCTAssertEqual(stats.total, 1, "Books = books I own")
+        XCTAssertEqual(stats.total, 3, "Books = everything listed under All books")
         XCTAssertEqual(stats.borrowedCount, 1, "Given-back books aren't with me any more")
         XCTAssertEqual(stats.readCount, 2, "Borrowed books still count as read")
         XCTAssertEqual(stats.unreadCount, 0, "A given-back book isn't waiting to be read")

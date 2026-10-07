@@ -56,4 +56,18 @@ final class SharedHelpersTests: XCTestCase {
         XCTAssertEqual(InterFace(.light), .regular)
         XCTAssertNotNil(UIFont(name: InterFace.medium.rawValue, size: 12), "The font file is bundled and registered")
     }
+
+    func testCategoryNamesMustBeNewAndNotEmpty() {
+        let existing = ["Classics", "Romance"]
+        XCTAssertNotNil(CategoriesView.problem(with: "   ", existing: existing))
+        XCTAssertNotNil(CategoriesView.problem(with: "romance", existing: existing), "Same name in other capitals")
+        XCTAssertNil(CategoriesView.problem(with: "Poetry", existing: existing))
+        XCTAssertNil(CategoriesView.problem(with: "CLASSICS", existing: existing, current: "Classics"), "Recapitalising its own name is fine")
+        XCTAssertNotNil(CategoriesView.problem(with: "Romance", existing: existing, current: "Classics"))
+    }
+
+    func testDeletingACategorySaysHowManyBooksItTouches() {
+        XCTAssertTrue(CategoriesView.deleteWarning(bookCount: 1).hasPrefix("1 book "))
+        XCTAssertTrue(CategoriesView.deleteWarning(bookCount: 4).hasPrefix("4 books "))
+    }
 }

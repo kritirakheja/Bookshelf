@@ -5,6 +5,8 @@ import SwiftData
 /// turns over so you can read the back before deciding. Tap to turn it over.
 struct BackCoverView: View {
     @Bindable var book: Book
+    /// Called when "Start reading" is tapped, just before the screen closes.
+    var onStartReading: () -> Void = {}
     @State private var faces = Book3DView.Faces()
     @State private var search = DescriptionSearch()
     @Environment(\.dismiss) private var dismiss
@@ -50,6 +52,7 @@ struct BackCoverView: View {
             HStack(spacing: 12) {
                 Button {
                     withAnimation { book.setStatus(.reading) }
+                    onStartReading()
                     dismiss()
                 } label: {
                     Label("Start reading", systemImage: "book.fill")

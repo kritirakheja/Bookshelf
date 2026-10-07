@@ -33,6 +33,13 @@ final class LibraryStatsTests: XCTestCase {
         XCTAssertEqual(stats.unreadCount, 1)
     }
 
+    func testTotalCountsEveryBookListedIncludingBorrowedOnes() {
+        let mine = book("Mine")
+        let friends = book("A friend's")
+        friends.borrow(from: "Meera")
+        XCTAssertEqual(LibraryStats(books: [mine, friends]).total, 2)
+    }
+
     func testEmptyLibrary() {
         let stats = LibraryStats(books: [])
         XCTAssertEqual(stats.total, 0)

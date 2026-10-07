@@ -2,7 +2,8 @@ import Foundation
 
 /// Numbers for the Profile tab, computed from the whole library.
 struct LibraryStats {
-    /// Books I own (borrowed ones still count towards reading stats below).
+    /// Every book in the library, as listed under All books (including friends'
+    /// books I've borrowed).
     let total: Int
     /// Borrowed from friends and still with me.
     let borrowedCount: Int
@@ -13,7 +14,7 @@ struct LibraryStats {
 
     init(books: [Book]) {
         let read = books.filter { $0.status == .read }
-        total = books.filter(\.isOwned).count
+        total = books.count
         borrowedCount = books.filter(\.isBorrowed).count
         readCount = read.count
         readingCount = books.filter { $0.status == .reading }.count

@@ -13,7 +13,7 @@ struct BookDraft {
     /// The cover was photographed or picked by hand (see `Book.coverIsCustom`).
     var coverIsCustom = false
     var summary = ""
-    /// Categories to attach when a new book is saved (edit them on the book's page afterwards).
+    /// The book's categories, by name.
     var categoryNames: [String] = []
 
     init() {}
@@ -26,6 +26,7 @@ struct BookDraft {
         pageCount = book.pageCount.map(String.init) ?? ""
         coverImage = book.coverImage
         coverIsCustom = book.coverIsCustom
+        categoryNames = book.sortedCategories.map(\.name)
         summary = book.summary ?? ""
     }
 

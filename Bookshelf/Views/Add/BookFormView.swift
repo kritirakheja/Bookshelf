@@ -17,6 +17,9 @@ struct BookFormView: View {
     @State private var scanningCover = false
     @State private var choosingOnline = false
     @State private var duplicate: Book?
+    /// A book already here with this title and author; saving again needs a yes.
+    @State private var sameTitle: Book?
+    @State private var confirmedSameTitle = false
     @State private var newCategory = ""
     @State private var coverSearch: CoverSearch = .idle
 
@@ -76,10 +79,7 @@ struct BookFormView: View {
                         .lineLimit(3...12)
                 }
 
-                // Only when adding: an existing book's categories are edited from its page.
-                if book == nil {
-                    categoriesSection
-                }
+                categoriesSection
             }
             .themedScreen()
             .navigationTitle(book == nil ? "New Book" : "Edit Book")
@@ -125,6 +125,20 @@ struct BookFormView: View {
             } message: { existing in
                 Text("You already have “\(existing.title)” with this ISBN.")
             }
+            .alert(
+                "Already in your library",
+                isPresented: Binding(get: { sameTitle != nil }, set: { if !$0 { sameTitle = nil } }),
+                presenting: sameTitle
+            ) { _ in
+                Button("Add anyway") {
+                    confirmedSameTitle = true
+                    save()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: { existing in
+                Text("You already have “\(existing.title)” by \(existing.authorLine). Add this one as well? (For example, a different edition.)")
+            }
+            .keyboardDoneButton()
         }
     }
 
@@ -228,7 +242,7 @@ struct BookFormView: View {
         } header: {
             Text("Categories")
         } footer: {
-            if !draft.categoryNames.isEmpty {
+            if book == nil, !draft.categoryNames.isEmpty {
                 Text("Ticked categories were suggested from the book's subjects. Untick any you don't want.")
             }
         }
@@ -263,7 +277,15 @@ struct BookFormView: View {
         }
         if let book {
             draft.apply(to: book)
+            book.categories = draft.categoryNames.compactMap { BookCategory.named($0, in: context) }
         } else {
+            // Typed in a book that's already here under the same title and author?
+            let library = (try? context.fetch(FetchDescriptor<Book>())) ?? []
+            if !confirmedSameTitle,
+               let same = LibraryDuplicates.book(title: draft.trimmedTitle, author: draft.authorList.first, in: library) {
+                sameTitle = same
+                return
+            }
             let newBook = draft.makeBook()
             context.insert(newBook)
             newBook.categories = draft.categoryNames.compactMap { BookCategory.named($0, in: context) }

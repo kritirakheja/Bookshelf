@@ -51,6 +51,7 @@ struct AboutBlock: View {
 /// Unread · Reading · Read. Once read, the finish date and rating sit underneath.
 struct StatusSection: View {
     @Bindable var book: Book
+    @State private var pickingDay = false
 
     var body: some View {
         VStack(spacing: 14) {
@@ -94,24 +95,74 @@ struct StatusSection: View {
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
-    @ViewBuilder
+    /// When it was finished: a day, just a year, or not known. Tapping "Finished"
+    /// switches between those; nothing changes unless you choose.
     private var finished: some View {
-        if book.dateReadYearOnly, let year = book.finishDateText {
-            Button("Finished in \(year) · set date") {
-                book.dateReadYearOnly = false
+        HStack(spacing: 6) {
+            Menu {
+                Button("Pick the day", systemImage: "calendar") { pickingDay = true }
+                Menu("Only the year") {
+                    ForEach(Self.recentYears, id: \.self) { year in
+                        Button(String(year)) { book.setFinishYear(year) }
+                    }
+                }
+                Button("I don't remember", systemImage: "questionmark") {
+                    book.dateRead = nil
+                    book.dateReadYearOnly = false
+                }
+            } label: {
+                Label(finishedText, systemImage: "chevron.down")
+                    .labelStyle(.titleAndIcon)
             }
-        } else if let date = book.dateRead {
-            HStack(spacing: 6) {
-                Text("Finished")
-                DatePicker("Finished", selection: Binding(get: { date }, set: { book.dateRead = $0 }),
-                           in: ...Date.now, displayedComponents: .date)
-                    .labelsHidden()
-                    .datePickerStyle(.compact)
-            }
-        } else {
-            Button("Add finish date") {
-                book.dateRead = Calendar.current.startOfDay(for: .now)
-            }
+        }
+        .sheet(isPresented: $pickingDay) {
+            FinishDayPicker(book: book)
+                .presentationDetents([.medium])
+        }
+    }
+
+    private var finishedText: String {
+        guard let text = book.finishDateText else { return "Add finish date" }
+        return book.dateReadYearOnly ? "Finished in \(text)" : "Finished \(text)"
+    }
+
+    private static var recentYears: [Int] {
+        let year = Calendar.current.component(.year, from: .now)
+        return Array((year - 9...year).reversed())
+    }
+}
+
+/// Choose the day a book was finished. Starts on the date it has (or, for a book
+/// with only a year, inside that year); nothing is saved until Save.
+private struct FinishDayPicker: View {
+    @Bindable var book: Book
+    @State private var day: Date
+    @Environment(\.dismiss) private var dismiss
+
+    init(book: Book) {
+        self.book = book
+        _day = State(initialValue: book.dateRead ?? Calendar.current.startOfDay(for: .now))
+    }
+
+    var body: some View {
+        NavigationStack {
+            DatePicker("Finished", selection: $day, in: ...Date.now, displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .padding(.horizontal)
+                .navigationTitle("Finished on")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { dismiss() }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save") {
+                            book.dateRead = day
+                            book.dateReadYearOnly = false
+                            dismiss()
+                        }
+                    }
+                }
         }
     }
 }

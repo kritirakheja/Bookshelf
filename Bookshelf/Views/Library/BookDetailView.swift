@@ -13,6 +13,7 @@ struct BookDetailView: View {
     @State private var bookToDelete: Book?
     @State private var choosingCover = false
     @State private var coverArt: UIImage?
+    @State private var scrolledPastCover = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @Query(filter: #Predicate<Book> { $0.favoriteRank != nil }) private var shelf: [Book]
@@ -29,6 +30,10 @@ struct BookDetailView: View {
                     hero(height: heroHeight, topInset: proxy.safeAreaInsets.top)
                     Group {
                         name
+                            // Where the title is on screen, to know when it meets the bar.
+                            .background(GeometryReader { title in
+                                Color.clear.preference(key: TitleTop.self, value: title.frame(in: .global).minY)
+                            })
                         AboutBlock(book: book)
                         StatusSection(book: book)
                     }
@@ -39,6 +44,22 @@ struct BookDetailView: View {
             }
             .ignoresSafeArea(edges: .top)
             .modifier(NoTopEdgeHaze())
+            .onPreferenceChange(TitleTop.self) { top in
+                let past = top < proxy.safeAreaInsets.top + 6
+                if past != scrolledPastCover {
+                    withAnimation(.easeInOut(duration: 0.2)) { scrolledPastCover = past }
+                }
+            }
+            // Once the cover has scrolled away, a plain bar with the title, so the
+            // text below doesn't run under the clock and the buttons.
+            .overlay(alignment: .top) {
+                Theme.background
+                    .frame(height: proxy.safeAreaInsets.top)
+                    .overlay(alignment: .bottom) { Divider() }
+                    .ignoresSafeArea(edges: .top)
+                    .opacity(scrolledPastCover ? 1 : 0)
+                    .allowsHitTesting(false)
+            }
             .task(id: book.coverImage) {
                 // Drawn at up to 3× the size it's shown, sharpened if the file is small.
                 let width = heroHeight * Self.coverShare / 1.5
@@ -54,8 +75,17 @@ struct BookDetailView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            Button("Edit") { editing = true }
+            ToolbarItem(placement: .principal) {
+                Text(book.title)
+                    .font(.inter(.headline))
+                    .lineLimit(1)
+                    .opacity(scrolledPastCover ? 1 : 0)
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button("Edit") { editing = true }
+            }
         }
+        .keyboardDoneButton()
         // The screens that open from here are their own places: back to the app's green.
         .sheet(isPresented: $editing) {
             BookFormView(book: book)
@@ -270,6 +300,11 @@ struct BookDetailView: View {
             searchingCover = false
         }
     }
+}
+
+private struct TitleTop: PreferenceKey {
+    static let defaultValue: CGFloat = .greatestFiniteMagnitude
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = min(value, nextValue()) }
 }
 
 /// iOS 26 hazes whatever scrolls under the navigation bar; over the cover's backdrop

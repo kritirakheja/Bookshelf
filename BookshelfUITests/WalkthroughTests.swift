@@ -48,7 +48,7 @@ final class WalkthroughTests: XCTestCase {
 
     private func snap(_ what: String) {
         step += 1
-        Thread.sleep(forTimeInterval: 0.9)
+        Thread.sleep(forTimeInterval: 0.6)
         let file = String(format: "%@-%02d-%@.png", flow, step, what.replacingOccurrences(of: " ", with: "_"))
         try? XCUIScreen.main.screenshot().pngRepresentation.write(to: folder.appendingPathComponent(file))
     }
@@ -132,6 +132,7 @@ final class WalkthroughTests: XCTestCase {
             snap("details from 3D")
             back()
             tap("Start reading")
+            if !app.staticTexts["Moved to Reading"].waitForExistence(timeout: 2) { note("NO CONFIRMATION after Start reading") }
             snap("after start reading")
         } else {
             note("MISSING: search field on Explore")
@@ -145,11 +146,11 @@ final class WalkthroughTests: XCTestCase {
         snap("reading")
         let row = find("The Left Hand of Darkness")
         if row.exists {
-            row.swipeRight()
-            snap("row swiped right")
-            app.tap()
             row.swipeLeft()
             snap("row swiped left")
+            app.swipeDown()
+            tap("Finished")
+            snap("finished button tapped")
         } else {
             note("MISSING: reading row")
         }
@@ -158,8 +159,13 @@ final class WalkthroughTests: XCTestCase {
         snap("details of reading book")
         tap("Read")
         snap("marked read")
+        tap("Finished")
+        snap("finish date menu")
+        tap("Pick the day")
+        snap("day picker")
+        tap("Cancel")
         app.swipeUp()
-        snap("details lower")
+        snap("details scrolled under bar")
     }
 
     func test3Details() {
@@ -213,10 +219,11 @@ final class WalkthroughTests: XCTestCase {
         snap("details bottom")
         app.swipeDown()
         app.swipeDown()
-        tap("Edit")
-        snap("edit sheet or category picker")
+        app.navigationBars.buttons["Edit"].firstMatch.tap()
+        snap("edit sheet")
+        app.swipeUp()
+        snap("edit sheet categories")
         tap("Cancel")
-        tap("Done")
         app.swipeUp()
         app.swipeUp()
         tap("Remove book")
@@ -239,6 +246,7 @@ final class WalkthroughTests: XCTestCase {
         snap("after saving a duplicate title")
         tap("Cancel")
         snap("after cancel")
+        tap("Cancel")
         launch(tab: "explore")
         tap("Add book")
         tap("Search by title or author")
@@ -275,6 +283,9 @@ final class WalkthroughTests: XCTestCase {
             if stepper.exists { stepper.buttons.element(boundBy: 1).tap() } else { note("MISSING: goal stepper") }
             tap("Save")
             snap("goal set")
+            tap("Change goal")
+            snap("change goal")
+            tap("Cancel")
         }
         for label in ["Rearrange", "Edit"] where app.buttons[label].exists {
             app.buttons[label].tap()
@@ -314,6 +325,8 @@ final class WalkthroughTests: XCTestCase {
         back()
         tap("Lent out")
         snap("lent out")
+        tap("Returned")
+        snap("after returned")
         back()
         tap("Borrowed")
         snap("borrowed")

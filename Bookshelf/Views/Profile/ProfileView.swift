@@ -30,7 +30,7 @@ struct ProfileView: View {
 
                 Section {
                     NavigationLink(value: Route.allBooks) {
-                        LabeledContent { Text("\(books.count)") } label: { Label("All books", systemImage: "books.vertical") }
+                        LabeledContent { Text("\(stats.total)") } label: { Label("All books", systemImage: "books.vertical") }
                     }
                     NavigationLink(value: Route.read) {
                         LabeledContent { Text("\(stats.readCount)") } label: { Label("Read", systemImage: "checkmark.circle") }

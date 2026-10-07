@@ -43,12 +43,17 @@ struct YearCard: View {
                         .tint(Theme.accent)
                         .accessibilityLabel("\(books.count) of \(goal) books")
                 }
-                Button {
-                    editingGoal = true
-                } label: {
-                    Label(goalText, systemImage: goalMet ? "checkmark.seal.fill" : "target")
-                        .font(.inter(.footnote, .medium))
+                HStack {
+                    if goal != nil {
+                        Label(goalText, systemImage: goalMet ? "checkmark.seal.fill" : "target")
+                            .foregroundStyle(goalMet ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+                    }
+                    Spacer(minLength: 0)
+                    Button(goal == nil ? "Set a goal" : "Change goal") {
+                        editingGoal = true
+                    }
                 }
+                .font(.inter(.footnote, .medium))
             }
             .padding(.horizontal, 16)
 
@@ -73,10 +78,8 @@ struct YearCard: View {
     }
 
     private var goalText: String {
-        guard let goal else { return "Set a goal" }
-        if goalMet { return "Goal of \(goal) reached" }
-        let left = goal - books.count
-        return "\(left) to go · change goal"
+        guard let goal else { return "" }
+        return goalMet ? "Goal of \(goal) reached" : "\(goal - books.count) to go"
     }
 }
 

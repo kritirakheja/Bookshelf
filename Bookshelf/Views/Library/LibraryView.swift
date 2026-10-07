@@ -59,6 +59,7 @@ struct LibraryView: View {
                         }
                         .swipeActions(edge: .trailing) {
                             Button("Delete", systemImage: "trash", role: .destructive) { bookToDelete = book }
+                .tint(.red)
                         }
                     }
                 }
@@ -72,7 +73,7 @@ struct LibraryView: View {
             ToolbarItem(placement: .topBarLeading) {
                 Menu {
                     Picker("View", selection: $layout) {
-                        Label("Shelves", systemImage: "books.vertical").tag(LibraryLayout.covers)
+                        Label("Covers", systemImage: "square.grid.2x2").tag(LibraryLayout.covers)
                         Label("List", systemImage: "list.bullet").tag(LibraryLayout.list)
                     }
                     Picker("Sort by", selection: $sort) {

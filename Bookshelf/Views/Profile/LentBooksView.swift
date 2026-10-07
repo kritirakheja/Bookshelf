@@ -113,6 +113,14 @@ private struct LentBookRow: View {
                         .foregroundStyle(.indigo)
                 }
             }
+            Spacer(minLength: 4)
+            Button(direction == .lent ? "Returned" : "Given back") {
+                withAnimation { direction == .lent ? book.markReturned() : book.giveBack() }
+            }
+            .font(.inter(.footnote, .semibold))
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
+            .controlSize(.small)
         }
         .padding(.vertical, 2)
     }

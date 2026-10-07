@@ -67,3 +67,51 @@ struct FlowLayout: Layout {
         return rows
     }
 }
+
+extension View {
+    /// A Done button above the keyboard, for text fields that grow over several
+    /// lines (Return adds a line there, so nothing else puts the keyboard away).
+    func keyboardDoneButton() -> some View {
+        toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+                .fontWeight(.semibold)
+            }
+        }
+    }
+}
+
+/// A short message that slides up from the bottom and goes away by itself.
+struct Toast: ViewModifier {
+    @Binding var message: String?
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .bottom) {
+                if let message {
+                    Label(message, systemImage: "checkmark.circle.fill")
+                        .font(.inter(.subheadline, .semibold))
+                        .foregroundStyle(Theme.background)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 11)
+                        .background(Theme.accent, in: Capsule())
+                        .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+                        .padding(.bottom, 12)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .task(id: message) {
+                            try? await Task.sleep(for: .seconds(2.5))
+                            withAnimation { self.message = nil }
+                        }
+                        .accessibilityAddTraits(.isStaticText)
+                }
+            }
+            .animation(.snappy, value: message)
+    }
+}
+
+extension View {
+    func toast(_ message: Binding<String?>) -> some View { modifier(Toast(message: message)) }
+}

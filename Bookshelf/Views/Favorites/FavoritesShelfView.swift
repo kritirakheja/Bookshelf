@@ -8,6 +8,7 @@ struct FavoritesShelfView: View {
     private var shelf: [Book]
     @Query private var books: [Book]
     @State private var editing = false
+    @State private var showingAdd = false
 
     var body: some View {
         let reading = ReadingYears(books: books)
@@ -20,7 +21,7 @@ struct FavoritesShelfView: View {
                 }
             }
             .themedScreen()
-            .navigationTitle(editing ? "Rearrange" : "Favourites")
+            .navigationTitle(editing ? "Edit favourites" : "Favourites")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
             .navigationDestination(for: YearRoute.self) { route in
@@ -35,11 +36,17 @@ struct FavoritesShelfView: View {
                         withAnimation { editing = false }
                     }
                     .fontWeight(.semibold)
-                } else if !shelf.isEmpty {
-                    Button("Rearrange", systemImage: "arrow.up.arrow.down") {
-                        withAnimation { editing = true }
+                } else {
+                    if !shelf.isEmpty {
+                        Button("Edit") {
+                            withAnimation { editing = true }
+                        }
                     }
+                    Button("Add book", systemImage: "plus") { showingAdd = true }
                 }
+            }
+            .sheet(isPresented: $showingAdd) {
+                AddBookSheet()
             }
         }
     }

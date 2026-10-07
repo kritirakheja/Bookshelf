@@ -23,7 +23,8 @@ struct StatusBooksList: View {
     var body: some View {
         List(visible) { book in
             NavigationLink(value: book) {
-                BookRow(book: book, showsFinishDate: status == .read, showsStartDate: status == .reading)
+                BookRow(book: book, showsFinishDate: status == .read, showsStartDate: status == .reading,
+                        onFinish: status == .reading ? { withAnimation { book.setStatus(.read) } } : nil)
             }
             .swipeActions(edge: .leading) {
                 // One button for each status the book isn't in yet.
@@ -36,6 +37,7 @@ struct StatusBooksList: View {
             }
             .swipeActions(edge: .trailing) {
                 Button("Delete", systemImage: "trash", role: .destructive) { bookToDelete = book }
+                .tint(.red)
             }
         }
         .themedScreen()
@@ -58,18 +60,26 @@ struct StatusBooksList: View {
     private var emptyMessage: String {
         switch status {
         case .reading: "Pick something from Explore and tap “Start reading”."
-        default: "Swipe right on a book to change its status."
+        default: "Books show up here when you mark them as read."
         }
     }
 }
 
 struct CurrentlyReadingView: View {
+    @State private var showingAdd = false
+
     var body: some View {
         NavigationStack {
             StatusBooksList(status: .reading)
                 .themedScreen()
                 .navigationTitle("Currently Reading")
                 .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
+                .toolbar {
+                    Button("Add book", systemImage: "plus") { showingAdd = true }
+                }
+                .sheet(isPresented: $showingAdd) {
+                    AddBookSheet()
+                }
         }
     }
 }

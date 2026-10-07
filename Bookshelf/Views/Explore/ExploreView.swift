@@ -8,6 +8,8 @@ struct ExploreView: View {
     @State private var searchText = ""
     @State private var showingAdd = false
     @State private var bookToDelete: Book?
+    /// A short confirmation after a book leaves this page.
+    @State private var message: String?
 
     /// A category's page.
     private struct CategoryRoute: Hashable {
@@ -49,7 +51,9 @@ struct ExploreView: View {
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
-            .navigationDestination(for: PickedUp.self) { BackCoverView(book: $0.book) }
+            .navigationDestination(for: PickedUp.self) { picked in
+                BackCoverView(book: picked.book) { message = "Moved to Reading" }
+            }
             .navigationDestination(for: CategoryRoute.self) { route in
                 if let category = categories.first(where: { $0.id == route.id }) {
                     ScrollView { BookGrid(books: category.books, value: { PickedUp(book: $0) }, menu: bookMenu) }
@@ -76,6 +80,8 @@ struct ExploreView: View {
                 }
             }
         }
+        // Outside the stack, so it shows over whichever page is on top.
+        .toast($message)
     }
 
     /// Long-press actions on any cover.
@@ -84,10 +90,12 @@ struct ExploreView: View {
         if book.status != .reading {
             Button("Start reading", systemImage: ReadingStatus.reading.systemImage) {
                 withAnimation { book.setStatus(.reading) }
+                message = "Moved to Reading"
             }
         }
         Button("Mark as read", systemImage: ReadingStatus.read.systemImage) {
             withAnimation { book.setStatus(.read) }
+            message = "Marked as read"
         }
         Divider()
         Button("Delete", systemImage: "trash", role: .destructive) {
