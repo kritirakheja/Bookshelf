@@ -190,6 +190,18 @@ struct BookLookup {
         return CoverImage.closestSharp(to: current, among: candidates)
     }
 
+    /// The cover of the best-matching English edition in Apple Books, whatever the
+    /// book's current cover looks like. For replacing a cover known to be wrong.
+    func editionCover(title: String, author: String) async -> Data? {
+        for edition in await appleBooks.editions(title: title, author: author).prefix(Self.editionsCompared) {
+            if let data = await covers.download(from: [edition.coverURL]),
+               (CoverImage.pixelWidth(of: data) ?? 0) >= CoverUpgrade.sharpEnough {
+                return data
+            }
+        }
+        return nil
+    }
+
     /// How many matching editions' covers are downloaded to pick the closest from.
     private static let editionsCompared = 4
 
