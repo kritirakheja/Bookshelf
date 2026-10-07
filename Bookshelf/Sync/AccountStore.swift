@@ -27,9 +27,11 @@ final class AccountStore {
     var isConfigured: Bool { client != nil }
     var isSignedIn: Bool { userID != nil }
 
-    init(container: ModelContainer) {
+    /// - Parameter connected: false leaves the store without an online account,
+    ///   whatever the build's settings (the UI walkthrough's sample library).
+    init(container: ModelContainer, connected: Bool = true) {
         self.container = container
-        client = Self.makeClient()
+        client = connected ? Self.makeClient() : nil
         if let user = client?.auth.currentUser {
             setUser(user)
         }

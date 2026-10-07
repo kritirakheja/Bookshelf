@@ -42,6 +42,9 @@ struct RootTabView: View {
                 previewBackCover = try? context.fetch(FetchDescriptor<Book>(predicate: #Predicate { $0.title == title })).first
             }
             #endif
+            #if DEBUG
+            if PreviewArgs.uiTesting { return }
+            #endif
             await DescriptionBackfill.run(in: context)
             // Not while tests run the app: it would go online for the whole library each time.
             if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {

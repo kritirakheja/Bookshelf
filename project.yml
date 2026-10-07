@@ -53,7 +53,27 @@ targets:
       base:
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_BUNDLE_IDENTIFIER: $(BOOKSHELF_BUNDLE_ID).tests
+  # Drives the app like a user through every flow, on a sample library. Run with
+  # the BookshelfWalkthrough scheme; kept out of the normal test run so that stays fast.
+  BookshelfUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [BookshelfUITests]
+    dependencies:
+      - target: Bookshelf
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: $(BOOKSHELF_BUNDLE_ID).uitests
+        TEST_TARGET_NAME: Bookshelf
 schemes:
+  BookshelfWalkthrough:
+    build:
+      targets:
+        Bookshelf: all
+        BookshelfUITests: [test]
+    test:
+      targets: [BookshelfUITests]
   Bookshelf:
     build:
       targets:

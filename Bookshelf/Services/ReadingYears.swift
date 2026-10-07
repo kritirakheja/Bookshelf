@@ -37,7 +37,16 @@ struct ReadingYears {
 @MainActor
 @Observable
 final class ReadingGoals {
-    static let shared = ReadingGoals()
+    static let shared: ReadingGoals = {
+        #if DEBUG
+        // The UI walkthrough keeps its goals apart from real ones.
+        if PreviewArgs.uiTesting, let scratch = UserDefaults(suiteName: "uiTesting") {
+            scratch.removePersistentDomain(forName: "uiTesting")
+            return ReadingGoals(defaults: scratch)
+        }
+        #endif
+        return ReadingGoals()
+    }()
     static let range = 1...200
 
     private static let key = "readingGoals"

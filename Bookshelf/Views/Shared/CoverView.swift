@@ -26,6 +26,9 @@ struct CoverView: View {
             }
         }
         .shadow(color: .black.opacity(0.15), radius: width > 60 ? 4 : 1, y: 1)
+        // One element named after the book, not an unnamed image.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(book.isLent ? "\(book.title), lent out" : book.isBorrowed ? "\(book.title), borrowed" : book.title)
     }
 
     /// Marks a book that's changed hands (lent out, or borrowed): a label on big

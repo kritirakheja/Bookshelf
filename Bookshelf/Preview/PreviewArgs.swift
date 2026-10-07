@@ -12,6 +12,9 @@ enum PreviewArgs {
     static var flipAngle: Float? { UserDefaults.standard.string(forKey: "previewFlipAngle").flatMap(Float.init) }
     /// `-previewScanner YES`: open the barcode scanner (with a stand-in for the camera).
     static var scanner: Bool { UserDefaults.standard.bool(forKey: "previewScanner") }
+    /// `-uiTesting YES`: run on a throwaway sample library held in memory, with no
+    /// account, sync or background lookups. Used by the UI walkthrough.
+    static var uiTesting: Bool { UserDefaults.standard.bool(forKey: "uiTesting") }
     /// `-previewScanFound YES`: have the scanner "catch" a barcode after a moment.
     static var scanFound: Bool { UserDefaults.standard.bool(forKey: "previewScanFound") }
 }

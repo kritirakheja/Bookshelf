@@ -1,4 +1,4 @@
-import Foundation
+import UIKit
 import SwiftData
 
 enum SampleData {
@@ -66,6 +66,57 @@ enum SampleData {
         // And one that's a friend's copy.
         let sapiens = books.first { $0.0.title == "Sapiens" }!.0
         sapiens.borrow(from: "Meera", on: Date.now.addingTimeInterval(-86_400 * 20))
+    }
+
+    /// A throwaway library for the UI walkthrough: the sample books plus drawn covers,
+    /// descriptions, ratings and finish dates across three years, all in memory.
+    @MainActor
+    static func walkthroughContainer() -> ModelContainer {
+        let container = try! ModelContainer(
+            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, Bookstore.self, DeletedBookstore.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+        insert(into: context)
+        let books = (try? context.fetch(FetchDescriptor<Book>())) ?? []
+        let calendar = Calendar.current
+        let thisYear = calendar.component(.year, from: .now)
+        let colours: [String: UIColor] = [
+            "Pride and Prejudice": .systemPink, "The Hobbit": .systemGreen, "Dune": .systemOrange,
+            "Sapiens": .white, "Circe": .systemYellow, "Persuasion": .systemBlue,
+        ]
+        for book in books {
+            if let colour = colours[book.title] { book.coverImage = drawnCover(book.title, colour) }
+            if book.title != "Persuasion" {
+                book.summary = "\(book.title) is one of those books people press into your hands. "
+                    + String(repeating: "It follows its characters through choices that seem small and turn out not to be. ", count: book.title == "Dune" ? 14 : 3)
+            }
+        }
+        func finish(_ title: String, year: Int, rating: Int?) {
+            guard let book = books.first(where: { $0.title == title }) else { return }
+            book.dateRead = calendar.date(from: DateComponents(year: year, month: 3, day: 9))
+            book.rating = rating
+        }
+        finish("Pride and Prejudice", year: thisYear, rating: 5)
+        finish("The Hobbit", year: thisYear - 1, rating: 4)
+        finish("Circe", year: thisYear - 2, rating: nil)
+        books.first { $0.title == "Dune" }?.dateRead = nil
+        return container
+    }
+
+    private static func drawnCover(_ title: String, _ colour: UIColor) -> Data? {
+        let size = CGSize(width: 400, height: 600)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: size, format: format).image { context in
+            colour.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+            UIColor.black.withAlphaComponent(0.75).setFill()
+            context.fill(CGRect(x: 0, y: 380, width: 400, height: 90))
+            (title as NSString).draw(in: CGRect(x: 30, y: 400, width: 340, height: 60), withAttributes: [
+                .font: UIFont.boldSystemFont(ofSize: 30), .foregroundColor: UIColor.white,
+            ])
+        }.jpegData(compressionQuality: 0.9)
     }
 
     /// Seeds sample data on first launch in the simulator only. Never runs on a real phone.
