@@ -1,5 +1,6 @@
 import XCTest
 import UIKit
+import SwiftUI
 @testable import Bookshelf
 
 final class CoverColorTests: XCTestCase {
@@ -82,6 +83,14 @@ final class CoverColorTests: XCTestCase {
         let black = CoverColor.RGB(r: 0, g: 0, b: 0), white = CoverColor.RGB(r: 1, g: 1, b: 1)
         XCTAssertEqual(CoverColor.contrast(black, white), 21, accuracy: 0.01)
         XCTAssertEqual(CoverColor.contrast(white, white), 1, accuracy: 0.01)
+    }
+
+    @MainActor
+    func testABookWithoutAColourfulCoverUsesTheAppGreen() {
+        XCTAssertEqual(Book(title: "No cover").accentColor(for: .light), Theme.accent)
+        XCTAssertEqual(Book(title: "Grey", coverImage: solidImage(.darkGray)).accentColor(for: .light), Theme.accent)
+        let red = Book(title: "Red", coverImage: solidImage(UIColor(red: 0.8, green: 0.1, blue: 0.1, alpha: 1)))
+        XCTAssertNotEqual(red.accentColor(for: .light), Theme.accent)
     }
 
     func testBarcodeIsDrawnForAnISBN() {

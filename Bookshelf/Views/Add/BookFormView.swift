@@ -97,10 +97,14 @@ struct BookFormView: View {
             .sheet(isPresented: $choosingOnline) {
                 CoverChooserView(title: draft.trimmedTitle, author: draft.authorList.first, isbn: draft.normalizedISBN) { data in
                     draft.coverImage = data
+                    draft.coverIsCustom = true
                 }
             }
             .fullScreenCover(isPresented: $scanningCover) {
-                CoverCapture { image in draft.coverImage = image.coverJPEG() }
+                CoverCapture { image in
+                    draft.coverImage = image.coverJPEG()
+                    draft.coverIsCustom = true
+                }
             }
             .onChange(of: photoItem) {
                 Task {
@@ -108,6 +112,7 @@ struct BookFormView: View {
                     if let data = try? await photoItem?.loadTransferable(type: Data.self),
                        let image = UIImage(data: data) {
                         draft.coverImage = image.coverJPEG()
+                        draft.coverIsCustom = true
                     }
                 }
             }
@@ -180,6 +185,7 @@ struct BookFormView: View {
             let data = await BookLookup().findCover(title: title, author: author, isbn: isbn)
             if let data {
                 draft.coverImage = data
+                draft.coverIsCustom = false
                 coverSearch = .idle
             } else {
                 coverSearch = .notFound

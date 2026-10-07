@@ -8,6 +8,7 @@ struct BackCoverView: View {
     @State private var faces = Book3DView.Faces()
     @State private var search = DescriptionSearch()
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
 
     /// What the covers are drawn from; they're redrawn when any of it changes.
     private struct ArtKey: Equatable {
@@ -71,6 +72,8 @@ struct BackCoverView: View {
         .themedScreen()
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        // The buttons take the book's own colour, as its full details page does.
+        .tint(book.accentColor(for: colorScheme))
     }
 
     @ViewBuilder

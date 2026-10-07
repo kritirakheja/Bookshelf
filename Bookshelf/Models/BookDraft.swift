@@ -10,6 +10,8 @@ struct BookDraft {
     var publishedYear = ""
     var pageCount = ""
     var coverImage: Data?
+    /// The cover was photographed or picked by hand (see `Book.coverIsCustom`).
+    var coverIsCustom = false
     var summary = ""
     /// Categories to attach when a new book is saved (edit them on the book's page afterwards).
     var categoryNames: [String] = []
@@ -23,6 +25,7 @@ struct BookDraft {
         publishedYear = book.publishedYear.map(String.init) ?? ""
         pageCount = book.pageCount.map(String.init) ?? ""
         coverImage = book.coverImage
+        coverIsCustom = book.coverIsCustom
         summary = book.summary ?? ""
     }
 
@@ -49,6 +52,7 @@ struct BookDraft {
         book.publishedYear = Int(publishedYear)
         book.pageCount = Int(pageCount)
         book.coverImage = coverImage
+        book.coverIsCustom = coverIsCustom && coverImage != nil
         let trimmedSummary = summary.trimmingCharacters(in: .whitespacesAndNewlines)
         book.summary = trimmedSummary.isEmpty ? nil : trimmedSummary
     }

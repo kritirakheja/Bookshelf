@@ -39,6 +39,18 @@ enum Theme {
     }
 }
 
+extension Book {
+    /// The colour for this book's own screens (its page, the 3D book): the cover's
+    /// most vivid colour, adjusted to read well on the app's background. The app's
+    /// green for a cover with no real colour, or no cover.
+    func accentColor(for scheme: ColorScheme) -> Color {
+        guard let found = CoverColor.accent(of: coverImage) else { return Theme.accent }
+        let page = scheme == .dark ? Theme.backgroundDark : Theme.backgroundLight
+        let readable = CoverColor.legible(found, on: .init(r: page.0, g: page.1, b: page.2))
+        return Color(red: readable.r, green: readable.g, blue: readable.b)
+    }
+}
+
 extension View {
     /// Gives a screen the app's background. On a List or Form it replaces the grey backdrop.
     func themedScreen() -> some View {

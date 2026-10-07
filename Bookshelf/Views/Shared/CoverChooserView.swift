@@ -5,6 +5,8 @@ struct CoverChooserView: View {
     let title: String
     let author: String?
     let isbn: String?
+    /// The cover an automatic swap replaced, offered first so it can be put back.
+    var previous: Data? = nil
     let onPick: (Data) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -18,9 +20,28 @@ struct CoverChooserView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                if let options, !options.isEmpty {
+                if previous != nil || options?.isEmpty == false {
                     LazyVGrid(columns: columns, spacing: 18) {
-                        ForEach(options) { option in
+                        if let previous, let image = UIImage(data: previous) {
+                            Button {
+                                onPick(previous)
+                                dismiss()
+                            } label: {
+                                VStack(spacing: 6) {
+                                    Image(uiImage: image)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 96, height: 144)
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                                    Text("Your previous cover")
+                                        .font(.inter(.caption2, .semibold))
+                                        .foregroundStyle(.tint)
+                                        .lineLimit(1)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        ForEach(options ?? []) { option in
                             Button { choose(option) } label: { tile(option) }
                                 .buttonStyle(.plain)
                         }
@@ -39,7 +60,7 @@ struct CoverChooserView: View {
             .overlay {
                 if options == nil {
                     ProgressView("Finding covers…")
-                } else if options?.isEmpty == true {
+                } else if options?.isEmpty == true, previous == nil {
                     ContentUnavailableView(
                         "No other covers found",
                         systemImage: "photo.on.rectangle",

@@ -170,32 +170,28 @@ struct BookLookup {
         return await coverData(for: match.item)
     }
 
-    /// A sharper copy of the cover a book already has: its own edition first (by
-    /// ISBN), then Apple Books, then other editions that happen to share the artwork.
-    /// Nil if nothing online is both the same cover and clearly larger.
+    /// A sharper cover for a book whose cover is small: its own edition's original
+    /// scan if that's bigger, else the Apple Books edition (same title and author)
+    /// whose artwork looks most like the current cover. That may be the very same
+    /// artwork or a different edition's. Nil when nothing sharp enough turns up.
     func sharperCover(than current: Data, title: String, author: String?, isbn: String?) async -> Data? {
-        func firstSharper(_ urls: [URL?]) async -> Data? {
-            for url in urls.compactMap({ $0 }) {
-                if let data = await covers.download(from: [url]), CoverImage.isSharperCopy(data, of: current) {
-                    return data
-                }
-            }
-            return nil
+        if let isbn, !isbn.isEmpty,
+           let data = await covers.download(from: [OpenLibraryClient.isbnCoverURL(isbn)]),
+           CoverImage.isSharperCopy(data, of: current) {
+            return data
         }
-        if let isbn, !isbn.isEmpty {
-            if let found = await firstSharper([OpenLibraryClient.isbnCoverURL(isbn)]) { return found }
+        // Without an author there's no telling same-titled books apart.
+        guard let author, !author.isEmpty else { return nil }
+        let editions = await appleBooks.editions(title: title, author: author)
+        var candidates: [Data] = []
+        for edition in editions.prefix(Self.editionsCompared) {
+            if let data = await covers.download(from: [edition.coverURL]) { candidates.append(data) }
         }
-        if let found = await firstSharper(await appleBooks.coverURLs(title: Self.shortTitle(title), author: author)) {
-            return found
-        }
-        if let isbn, !isbn.isEmpty {
-            if let candidate = try? await google?.lookup(isbn: isbn), let found = await firstSharper([candidate.coverURL]) {
-                return found
-            }
-        }
-        let editions = await coverOptions(title: title, author: author, isbn: isbn)
-        return await firstSharper(editions.prefix(6).map(\.coverURL))
+        return CoverImage.closestSharp(to: current, among: candidates)
     }
+
+    /// How many matching editions' covers are downloaded to pick the closest from.
+    private static let editionsCompared = 4
 
     /// Covers of other editions of the same book, English ones first, for choosing a
     /// different cover. Only results whose title and author match the book count.

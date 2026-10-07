@@ -68,6 +68,18 @@ enum CoverImage {
     /// so the limit sits at the top of the "same artwork" range.
     static let sameArtworkLimit = 0.075
 
+    /// Of several covers of the same book, the sharp one that looks most like
+    /// `current` (the same artwork if it's among them). Nil if none is sharp.
+    static func closestSharp(to current: Data, among candidates: [Data], minimumWidth: Int = CoverUpgrade.sharpEnough) -> Data? {
+        let currentSignature = signature(of: current)
+        let sharp = candidates.filter { (pixelWidth(of: $0) ?? 0) >= minimumWidth }
+        func distance(_ candidate: Data) -> Double {
+            guard let currentSignature, let other = signature(of: candidate) else { return 1 }
+            return difference(currentSignature, other)
+        }
+        return sharp.min { distance($0) < distance($1) }
+    }
+
     /// Whether `candidate` is the same cover as `current`, only clearly sharper.
     static func isSharperCopy(_ candidate: Data, of current: Data) -> Bool {
         guard let currentWidth = pixelWidth(of: current), let newWidth = pixelWidth(of: candidate),

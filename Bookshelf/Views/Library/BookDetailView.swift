@@ -20,15 +20,6 @@ struct BookDetailView: View {
     /// The share of the screen the cover and its backdrop take.
     private static let heroShare = 0.6
 
-    /// The cover's most vivid colour, adjusted to read well on the page; the app's
-    /// green for a cover with no real colour, or no cover.
-    private var accent: Color {
-        guard let found = CoverColor.accent(of: book.coverImage) else { return Theme.accent }
-        let page = colorScheme == .dark ? Theme.backgroundDark : Theme.backgroundLight
-        let readable = CoverColor.legible(found, on: .init(r: page.0, g: page.1, b: page.2))
-        return Color(red: readable.r, green: readable.g, blue: readable.b)
-    }
-
     var body: some View {
         GeometryReader { proxy in
             let screenHeight = proxy.size.height + proxy.safeAreaInsets.top + proxy.safeAreaInsets.bottom
@@ -71,8 +62,12 @@ struct BookDetailView: View {
                 .tint(Theme.accent)
         }
         .sheet(isPresented: $choosingCover) {
-            CoverChooserView(title: book.title, author: book.authors.first, isbn: book.isbn) { data in
+            CoverChooserView(title: book.title, author: book.authors.first, isbn: book.isbn,
+                             previous: book.previousCoverImage) { data in
+                // Chosen by hand: the automatic sharpening leaves it alone from now on.
+                if data != book.coverImage { book.previousCoverImage = book.coverImage }
                 book.coverImage = data
+                book.coverIsCustom = true
             }
             .tint(Theme.accent)
         }
@@ -81,7 +76,7 @@ struct BookDetailView: View {
                 .tint(Theme.accent)
         }
         // Everything tinted on this page takes the book's own colour.
-        .tint(accent)
+        .tint(book.accentColor(for: colorScheme))
         .alert("Your shelf is full", isPresented: $showingShelfFull) {
             Button("OK", role: .cancel) {}
         } message: {

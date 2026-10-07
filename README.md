@@ -14,10 +14,11 @@ A personal library app for iPhone, built with SwiftUI and SwiftData, with one wa
 **Adding books**
 - Scan the barcode, search by title or author, type an ISBN, photograph the front cover, or enter details by hand.
 - Details, cover, suggested categories and the publisher's description come from [Open Library](https://openlibrary.org/developers/api), with [Google Books](https://developers.google.com/books) as a fallback (recent and regional editions are often only there). English editions are preferred.
+- Covers are fetched at full size. Small, blurry ones are swapped in the background for a sharp cover of the same book (Open Library, then [Apple Books](https://performance-partners.apple.com/search-api)): the same artwork when it exists, otherwise another English edition by the same author. The replaced cover is kept and can be put back from *Change cover*; covers you photograph or pick yourself are never swapped.
 - Cover scans use the document scanner (cropped and straightened); the text is read on-device with Vision and matched by title and author.
 - Adding a book you already own (same ISBN, or same title and author) is caught before the form opens.
 
-**Each book** has its own page, in order of importance: the cover large on a soft blurred wash of its own colours, then the title, what the book is about, its categories and reading status, and one plain list for everything else. The page takes its accent colour (tags, buttons, switch, stars) from the cover, so each book's page has its own colour.
+**Each book** has its own page, in order of importance: the cover large on a soft blurred wash of its own colours, then the title, what the book is about, its categories and reading status, and one plain list for everything else. The page takes its accent colour (tags, buttons, switch, stars) from the cover, so each book's page has its own colour. The 3D book's buttons on Explore use the same colour.
 - Status (unread / reading / read) with dates, including "finished in <year>" when only the year is known.
 - Star rating, notes, categories, and an **About this book** description (filled in automatically in the background).
 - Change the cover (scan it, pick a photo, or choose another edition's cover online).

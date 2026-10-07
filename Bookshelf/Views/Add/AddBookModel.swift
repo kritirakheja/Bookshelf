@@ -112,6 +112,7 @@ final class AddBookModel {
         if var draft = await finder.identify(coverLines: prominent, queries: queries, isbn: isbn) {
             if draft.coverImage == nil {
                 draft.coverImage = photo.coverJPEG()
+                draft.coverIsCustom = true
             }
             show(FormState(draft: draft, notice: "Recognised from the cover. Check the details before saving."), library: library)
             return
@@ -124,6 +125,7 @@ final class AddBookModel {
         draft.authors = guess.author ?? ""
         draft.isbn = isbn
         draft.coverImage = photo.coverJPEG()
+        draft.coverIsCustom = true
         let notice = prominent.isEmpty
             ? "Couldn't read the cover. Try again in better light, or fill in the details."
             : "Couldn't find this book online, so the details below were read from the cover. Please check them."

@@ -8,6 +8,11 @@ final class Book {
     /// Digits only (hyphens stripped). Used to spot duplicates when adding.
     var isbn: String?
     @Attribute(.externalStorage) var coverImage: Data?
+    /// You photographed or picked this cover yourself, so it's never swapped for a
+    /// sharper one automatically. (Kept on this phone only.)
+    var coverIsCustom: Bool = false
+    /// The cover an automatic swap replaced, so it can be put back. (This phone only.)
+    @Attribute(.externalStorage) var previousCoverImage: Data?
     var pageCount: Int?
     var publishedYear: Int?
     // Status is stored as two flags (rather than one enum) so that libraries saved

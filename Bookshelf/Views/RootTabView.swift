@@ -43,7 +43,10 @@ struct RootTabView: View {
             }
             #endif
             await DescriptionBackfill.run(in: context)
-            await CoverUpgrade.run(in: context)
+            // Not while tests run the app: it would go online for the whole library each time.
+            if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+                await CoverUpgrade.shared.run(in: context)
+            }
         }
         #if DEBUG
         .fullScreenCover(item: $previewBook) { book in
