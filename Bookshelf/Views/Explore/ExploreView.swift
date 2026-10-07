@@ -29,7 +29,7 @@ struct ExploreView: View {
         NavigationStack {
             Group {
                 if isSearching {
-                    ScrollView { BookGrid(books: searchResults, menu: bookMenu) }
+                    ScrollView { BookGrid(books: searchResults, value: { PickedUp(book: $0) }, menu: bookMenu) }
                 } else {
                     // One card per category.
                     ScrollView {
@@ -52,7 +52,7 @@ struct ExploreView: View {
             .navigationDestination(for: PickedUp.self) { BackCoverView(book: $0.book) }
             .navigationDestination(for: CategoryRoute.self) { route in
                 if let category = categories.first(where: { $0.id == route.id }) {
-                    ScrollView { BookGrid(books: category.books, menu: bookMenu) }
+                    ScrollView { BookGrid(books: category.books, value: { PickedUp(book: $0) }, menu: bookMenu) }
                         .themedScreen()
                         .navigationTitle(category.title)
                 }
@@ -109,10 +109,6 @@ private struct CategoryCard<Route: Hashable, Menu: View>: View {
     let route: Route
     @ViewBuilder let menu: (Book) -> Menu
 
-    private let spacing: CGFloat = 10
-    /// Four covers and a sliver of the fifth, to show there's more to scroll to.
-    private static var coversInView: CGFloat { 4.3 }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             NavigationLink(value: route) {
@@ -130,72 +126,11 @@ private struct CategoryCard<Route: Hashable, Menu: View>: View {
             .buttonStyle(.plain)
             .padding(.horizontal, 16)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: spacing) {
-                    ForEach(category.books) { book in
-                        NavigationLink(value: PickedUp(book: book)) {
-                            Color.clear
-                                .aspectRatio(2 / 3, contentMode: .fit)
-                                .containerRelativeFrame(.horizontal) { width, _ in
-                                    (width - spacing * 4) / Self.coversInView
-                                }
-                                .overlay {
-                                    GeometryReader { proxy in
-                                        CoverView(book: book, width: proxy.size.width)
-                                    }
-                                }
-                        }
-                        .buttonStyle(.plain)
-                        .contextMenu { menu(book) }
-                    }
-                }
-                .padding(.vertical, 4)   // room for the covers' shadows
-            }
-            .contentMargins(.horizontal, 16, for: .scrollContent)
+            CoverStrip(books: category.books, value: { PickedUp(book: $0) }, menu: menu)
         }
         .padding(.vertical, 16)
         .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 24))
-    }
-}
-
-/// All of a category's books (or search results) as a grid.
-private struct BookGrid<Menu: View>: View {
-    let books: [Book]
-    @ViewBuilder let menu: (Book) -> Menu
-
-    private let columns = [GridItem(.adaptive(minimum: 100, maximum: 130), spacing: 16, alignment: .top)]
-
-    var body: some View {
-        LazyVGrid(columns: columns, spacing: 20) {
-            ForEach(books) { book in
-                NavigationLink(value: PickedUp(book: book)) {
-                    BookTile(book: book, width: 100)
-                }
-                .buttonStyle(.plain)
-                .contextMenu { menu(book) }
-            }
-        }
-        .padding()
-    }
-}
-
-private struct BookTile: View {
-    let book: Book
-    let width: CGFloat
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            CoverView(book: book, width: width)
-            Text(book.title)
-                .font(.inter(.caption, .semibold))
-                .lineLimit(2)
-            Text(book.authorLine)
-                .font(.inter(.caption2))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-        }
-        .frame(width: width, alignment: .leading)
     }
 }
 

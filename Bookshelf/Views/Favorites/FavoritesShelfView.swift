@@ -1,25 +1,34 @@
 import SwiftUI
 import SwiftData
 
+/// The Favourites tab: the shelf of books you'd recommend most, then everything
+/// you've read, year by year, against each year's goal.
 struct FavoritesShelfView: View {
     @Query(filter: #Predicate<Book> { $0.favoriteRank != nil }, sort: \Book.favoriteRank)
     private var shelf: [Book]
+    @Query private var books: [Book]
     @State private var editing = false
 
-    private let perShelf = 3
-
     var body: some View {
+        let reading = ReadingYears(books: books)
         NavigationStack {
             Group {
                 if editing {
                     editList
                 } else {
-                    showcase
+                    showcase(reading)
                 }
             }
             .themedScreen()
-            .navigationTitle(editing ? "Rearrange" : "Top Favourites")
+            .navigationTitle(editing ? "Rearrange" : "Favourites")
+            .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
+            .navigationDestination(for: YearRoute.self) { route in
+                let yearBooks = route.year.map { year in reading.years.first { $0.year == year }?.books ?? [] } ?? reading.undated
+                ScrollView { BookGrid(books: yearBooks, value: { $0 }, menu: { _ in EmptyView() }) }
+                    .themedScreen()
+                    .navigationTitle(route.year.map { "Read in \(String($0))" } ?? "Year not set")
+            }
             .toolbar {
                 if editing {
                     Button("Done") {
@@ -32,66 +41,66 @@ struct FavoritesShelfView: View {
                     }
                 }
             }
-            .overlay {
-                if shelf.isEmpty {
-                    ContentUnavailableView(
-                        "Your shelf is empty",
-                        systemImage: "star",
-                        description: Text("Open any book and tap “Recommend it” to put it here.")
-                    )
-                }
-            }
         }
     }
 
     // MARK: Showcase
 
-    /// The favourites in rows of three, with the titles written underneath.
-    private var showcase: some View {
+    private func showcase(_ reading: ReadingYears) -> some View {
         ScrollView {
-            VStack(spacing: 30) {
-                ForEach(Array(shelf.chunked(into: perShelf).enumerated()), id: \.offset) { _, row in
-                    shelfRow(row)
+            VStack(alignment: .leading, spacing: 14) {
+                topFavourites
+                Text("Read by year")
+                    .font(.inter(.title3, .bold))
+                    .padding(.horizontal, 16)
+                    .padding(.top, 10)
+                ForEach(reading.years) { year in
+                    YearCard(year: year.year, books: year.books)
+                        .padding(.horizontal, 16)
+                }
+                if !reading.undated.isEmpty {
+                    UndatedCard(books: reading.undated)
+                        .padding(.horizontal, 16)
                 }
             }
-            .padding(.vertical, 24)
+            .padding(.vertical, 12)
         }
     }
 
-    private func shelfRow(_ row: [Book]) -> some View {
-        VStack(spacing: 14) {
-            VStack(spacing: 0) {
-                HStack(alignment: .bottom, spacing: 16) {
-                    ForEach(0..<perShelf, id: \.self) { column in
-                        if column < row.count {
-                            NavigationLink(value: row[column]) {
-                                CoverView(book: row[column], width: 100)
+    /// The favourites as one shelf that scrolls sideways.
+    private var topFavourites: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Top Favourites")
+                .font(.inter(.title3, .bold))
+                .padding(.horizontal, 16)
+            if shelf.isEmpty {
+                Text("Open any book and switch on Favourite to put it on this shelf.")
+                    .font(.inter(.subheadline))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 16)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(alignment: .top, spacing: 16) {
+                        ForEach(shelf) { book in
+                            NavigationLink(value: book) {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    CoverView(book: book, width: Self.favouriteWidth)
+                                    caption(book)
+                                }
+                                .frame(width: Self.favouriteWidth, alignment: .leading)
                             }
                             .buttonStyle(.plain)
-                            .frame(maxWidth: .infinity)
-                        } else {
-                            Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
                         }
                     }
+                    .padding(.vertical, 4)
                 }
-                .padding(.horizontal, 22)
+                .contentMargins(.horizontal, 16, for: .scrollContent)
             }
-            HStack(alignment: .top, spacing: 16) {
-                ForEach(0..<perShelf, id: \.self) { column in
-                    if column < row.count {
-                        NavigationLink(value: row[column]) {
-                            caption(row[column])
-                        }
-                        .buttonStyle(.plain)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    } else {
-                        Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
-                    }
-                }
-            }
-            .padding(.horizontal, 22)
         }
     }
+
+    /// Wide enough that two and a half covers show: a shelf, not a grid.
+    private static let favouriteWidth: CGFloat = 132
 
     /// Title, author, and a two-part tag: the book's place on the shelf, then its rating.
     private func caption(_ book: Book) -> some View {

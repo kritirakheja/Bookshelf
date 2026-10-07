@@ -7,7 +7,7 @@ A personal library app for iPhone, built with SwiftUI and SwiftData, with one wa
 **Tabs**
 - **Explore**: your unread books by category. A card per category with its covers scrolling sideways; tap the category name for a grid of all its books. Tapping a cover "picks the book up" as a 3D book (SceneKit) with a spine and page edges: it turns over to show its back cover with the description, like reading the back of a book in a library. Tap to turn it over; Start reading and Full details sit underneath. Search covers all unread books.
 - **Reading**: books in progress with start dates; swipe to mark finished.
-- **Favourites**: a ranked list of up to 10 books, three per row, each with its rank, rating and a "why I recommend it" note.
+- **Favourites**: a ranked shelf of up to 10 books you'd recommend most, each with its rank, rating and a "why I recommend it" note. Below it, everything you've read year by year, with an optional goal per year ("27 of 30 books").
 - **Bookstores**: a map of bookstores you've saved, with *Find nearby* and *Search this area* (Apple Maps, no key needed), directions, and notes.
 - **Profile**: photo, name and counts, plus All books, Read, Lent out, Borrowed and Categories. **All books** shows covers face-out in rows, split into Fiction and Non-fiction.
 
