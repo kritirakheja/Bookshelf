@@ -28,12 +28,15 @@ struct BookRecord: Codable, Equatable {
     /// Lending history, stored as a JSON array in the row. Optional so rows from
     /// before lending existed still decode.
     var loans: [LoanRecord]?
+    /// Daily reading progress, stored as a JSON array in the row. Optional so rows
+    /// from before progress existed still decode.
+    var progress: [ProgressRecord]?
     var deleted: Bool = false
     /// Set by the server; never sent.
     var updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id, title, authors, isbn, notes, summary, rating, categories, loans, deleted
+        case id, title, authors, isbn, notes, summary, rating, categories, loans, progress, deleted
         case pageCount = "page_count"
         case publishedYear = "published_year"
         case isRead = "is_read"
@@ -75,8 +78,16 @@ struct BookRecord: Codable, Equatable {
         try c.encode(coverPath, forKey: .coverPath)
         try c.encode(coverHash, forKey: .coverHash)
         try c.encode(loans ?? [], forKey: .loans)
+        try c.encode(progress ?? [], forKey: .progress)
         try c.encode(deleted, forKey: .deleted)
     }
+}
+
+/// One day's reading progress inside a book's row.
+struct ProgressRecord: Codable, Equatable {
+    var id: UUID
+    var date: Date
+    var page: Int
 }
 
 /// One loan inside a book's row.
@@ -136,6 +147,9 @@ extension BookRecord {
         loans = book.loans
             .sorted { ($0.lentAt, $0.id.uuidString) < ($1.lentAt, $1.id.uuidString) }
             .map(LoanRecord.init(loan:))
+        progress = book.progress
+            .sorted { ($0.date, $0.id.uuidString) < ($1.date, $1.id.uuidString) }
+            .map { ProgressRecord(id: $0.id, date: $0.date, page: $0.page) }
     }
 }
 

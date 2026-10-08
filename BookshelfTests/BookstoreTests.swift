@@ -7,7 +7,7 @@ import CoreLocation
 final class BookstoreTests: XCTestCase {
     private func container() throws -> ModelContainer {
         try ModelContainer(
-            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, Bookstore.self, DeletedBookstore.self,
+            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, ReadingEntry.self, Bookstore.self, DeletedBookstore.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
     }

@@ -38,6 +38,8 @@ final class Book {
     var recommendationNote: String?
     /// Every time this book was lent out, including the current loan (if any).
     @Relationship(deleteRule: .cascade, inverse: \Loan.book) var loans: [Loan] = []
+    /// The page reached on each day of reading (see `ReadingEntry`).
+    @Relationship(deleteRule: .cascade, inverse: \ReadingEntry.book) var progress: [ReadingEntry] = []
 
     // Backup & sync bookkeeping (see SyncEngine).
     /// The book's id in the online library; nil until first synced.
@@ -157,6 +159,7 @@ final class Book {
             dateStarted = nil
             dateRead = nil
             dateReadYearOnly = false
+            clearProgress()
         case .reading:
             isRead = false
             isReading = true

@@ -127,6 +127,7 @@ struct SyncEngine {
         book.recommendationNote = row.recommendationNote
         book.categories = row.categories.compactMap { BookCategory.named($0, in: context) }
         applyLoans(row.loans ?? [], to: book)
+        applyProgress(row.progress ?? [], to: book)
 
         if let hash = row.coverHash, let path = row.coverPath {
             if hash != SyncHash.cover(of: book) {
@@ -162,6 +163,26 @@ struct SyncEngine {
             loan.returnedAt = record.returnedAt
             loan.isBorrowed = record.isBorrowed ?? false
             return loan
+        }
+    }
+
+    /// Makes the book's reading log match the online row, the same way.
+    private func applyProgress(_ records: [ProgressRecord], to book: Book) {
+        let existing = Dictionary(book.progress.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let incomingIDs = Set(records.map(\.id))
+        for entry in book.progress where !incomingIDs.contains(entry.id) {
+            context.delete(entry)
+        }
+        book.progress = records.map { record in
+            let entry = existing[record.id] ?? {
+                let entry = ReadingEntry(date: record.date, page: record.page)
+                entry.id = record.id
+                context.insert(entry)
+                return entry
+            }()
+            entry.date = record.date
+            entry.page = record.page
+            return entry
         }
     }
 

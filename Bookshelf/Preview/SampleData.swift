@@ -73,7 +73,7 @@ enum SampleData {
     @MainActor
     static func walkthroughContainer() -> ModelContainer {
         let container = try! ModelContainer(
-            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, Bookstore.self, DeletedBookstore.self,
+            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, ReadingEntry.self, Bookstore.self, DeletedBookstore.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         let context = container.mainContext
@@ -101,6 +101,13 @@ enum SampleData {
         finish("The Hobbit", year: thisYear - 1, rating: 4)
         finish("Circe", year: thisYear - 2, rating: nil)
         books.first { $0.title == "Dune" }?.dateRead = nil
+        // A week of reading in one of the books in progress.
+        if let sapiens = books.first(where: { $0.title == "Sapiens" }) {
+            let today = calendar.startOfDay(for: .now)
+            for (back, page) in [(6, 40), (5, 95), (3, 130), (2, 190), (1, 215)] {
+                sapiens.logProgress(page: page, on: calendar.date(byAdding: .day, value: -back, to: today)!)
+            }
+        }
         return container
     }
 
@@ -131,7 +138,7 @@ enum SampleData {
     @MainActor
     static let previewContainer: ModelContainer = {
         let container = try! ModelContainer(
-            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, Bookstore.self, DeletedBookstore.self,
+            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, ReadingEntry.self, Bookstore.self, DeletedBookstore.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         insert(into: container.mainContext)

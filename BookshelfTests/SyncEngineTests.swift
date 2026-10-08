@@ -87,7 +87,7 @@ final class Device {
 
     init(remote: SyncRemote, userID: UUID) throws {
         container = try ModelContainer(
-            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, Bookstore.self, DeletedBookstore.self,
+            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, ReadingEntry.self, Bookstore.self, DeletedBookstore.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         engine = SyncEngine(context: container.mainContext, remote: remote, userID: userID)
@@ -215,6 +215,27 @@ final class SyncEngineTests: XCTestCase {
         try await ipad.sync()
         XCTAssertEqual(ipad.book("Circe")?.loans.count, 0)
         XCTAssertFalse(phone.engine.hasLocalChanges(try XCTUnwrap(ipad.book("Circe"))))
+    }
+
+    func testReadingProgressSyncsBetweenDevices() async throws {
+        let dune = phone.add("Dune")
+        dune.pageCount = 600
+        dune.setStatus(.reading)
+        dune.logProgress(page: 150)
+        try await phone.sync()
+        try await ipad.sync()
+
+        let copy = try XCTUnwrap(ipad.book("Dune"))
+        XCTAssertEqual(copy.currentPage, 150)
+        XCTAssertEqual(copy.progressPercent, 25)
+
+        // A later entry made on the other device comes back, without duplicating.
+        copy.logProgress(page: 300)
+        try await ipad.sync()
+        try await phone.sync()
+        XCTAssertEqual(dune.currentPage, 300)
+        XCTAssertEqual(dune.progress.count, 1)
+        XCTAssertFalse(phone.engine.hasLocalChanges(dune))
     }
 
     func testBorrowingSyncsBetweenDevices() async throws {

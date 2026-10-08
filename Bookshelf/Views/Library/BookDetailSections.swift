@@ -52,6 +52,7 @@ struct AboutBlock: View {
 struct StatusSection: View {
     @Bindable var book: Book
     @State private var pickingDay = false
+    @State private var updatingProgress = false
 
     var body: some View {
         VStack(spacing: 14) {
@@ -60,10 +61,8 @@ struct StatusSection: View {
                     statusButton(status)
                 }
             }
-            if book.status == .reading, let started = book.dateStarted {
-                Text("Started \(started.formatted(date: .abbreviated, time: .omitted))")
-                    .font(.inter(.footnote))
-                    .foregroundStyle(.secondary)
+            if book.status == .reading {
+                ProgressBlock(book: book) { updatingProgress = true }
             }
             if book.status == .read {
                 HStack {
@@ -74,6 +73,9 @@ struct StatusSection: View {
                 .font(.inter(.footnote))
                 .foregroundStyle(.secondary)
             }
+        }
+        .sheet(isPresented: $updatingProgress) {
+            ProgressSheet(book: book)
         }
     }
 

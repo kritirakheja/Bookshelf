@@ -13,7 +13,7 @@ struct BookshelfApp: App {
         #endif
         let container = uiTesting
             ? SampleData.walkthroughContainer()
-            : try! ModelContainer(for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, Bookstore.self, DeletedBookstore.self)
+            : try! ModelContainer(for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, ReadingEntry.self, Bookstore.self, DeletedBookstore.self)
         self.container = container
         Theme.applyBarFonts()
         _account = State(initialValue: AccountStore(container: container, connected: !uiTesting))

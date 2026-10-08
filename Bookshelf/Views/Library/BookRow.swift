@@ -6,8 +6,6 @@ struct BookRow: View {
     var showsFinishDate = false
     /// Shows when the book was started (used in Currently Reading).
     var showsStartDate = false
-    /// Shows a "Finished" button in place of the status icon (Currently Reading).
-    var onFinish: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 12) {
@@ -48,13 +46,7 @@ struct BookRow: View {
                     .foregroundStyle(.yellow)
                     .accessibilityLabel("Favourite")
             }
-            if let onFinish {
-                Button("Finished", action: onFinish)
-                    .font(.inter(.footnote, .semibold))
-                    .buttonStyle(.bordered)
-                    .buttonBorderShape(.capsule)
-                    .controlSize(.small)
-            } else if book.status != .unread {
+            if book.status != .unread {
                 Image(systemName: book.status.systemImage)
                     .foregroundStyle(book.status.tint)
                     .accessibilityLabel(book.status.rawValue)

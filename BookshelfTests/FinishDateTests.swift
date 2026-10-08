@@ -10,7 +10,7 @@ final class FinishDateTests: XCTestCase {
 
     override func setUp() async throws {
         container = try ModelContainer(
-            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, Bookstore.self, DeletedBookstore.self,
+            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, ReadingEntry.self, Bookstore.self, DeletedBookstore.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
     }

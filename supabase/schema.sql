@@ -38,6 +38,9 @@ alter table public.books add column if not exists summary text;
 -- Lending history: [{id, borrower_name, contact_id, lent_at, returned_at}, ...]
 alter table public.books add column if not exists loans jsonb not null default '[]';
 
+-- Daily reading progress: [{id, date, page}, ...]
+alter table public.books add column if not exists progress jsonb not null default '[]';
+
 -- Profile: name and photo.
 create table if not exists public.profiles (
   user_id    uuid primary key default auth.uid() references auth.users on delete cascade,

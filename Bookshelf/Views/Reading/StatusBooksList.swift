@@ -7,6 +7,8 @@ struct StatusBooksList: View {
     let status: ReadingStatus
     @Query private var books: [Book]
     @State private var bookToDelete: Book?
+    /// The book whose progress is being logged.
+    @State private var updating: Book?
 
     private var visible: [Book] {
         let matching = books.filter { $0.status == status }
@@ -23,8 +25,11 @@ struct StatusBooksList: View {
     var body: some View {
         List(visible) { book in
             NavigationLink(value: book) {
-                BookRow(book: book, showsFinishDate: status == .read, showsStartDate: status == .reading,
-                        onFinish: status == .reading ? { withAnimation { book.setStatus(.read) } } : nil)
+                if status == .reading {
+                    ReadingRow(book: book, onUpdate: { updating = book }, onFinish: { withAnimation { book.setStatus(.read) } })
+                } else {
+                    BookRow(book: book, showsFinishDate: status == .read)
+                }
             }
             .swipeActions(edge: .leading) {
                 // One button for each status the book isn't in yet.
@@ -41,6 +46,9 @@ struct StatusBooksList: View {
             }
         }
         .themedScreen()
+        .sheet(item: $updating) { book in
+            ProgressSheet(book: book)
+        }
         .confirmDeletingBook($bookToDelete)
         .overlay {
             if visible.isEmpty {

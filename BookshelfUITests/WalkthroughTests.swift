@@ -155,6 +155,34 @@ final class WalkthroughTests: XCTestCase {
             note("MISSING: reading row")
         }
         launch(tab: "reading")
+        snap("reading with progress")
+        if tap("Update progress") {
+            snap("progress sheet")
+            let field = app.textFields.firstMatch
+            if field.waitForExistence(timeout: 3) {
+                field.tap()
+                field.typeText("110")
+                snap("page typed")
+            } else {
+                note("MISSING: page field in progress sheet")
+            }
+            tap("Save")
+            snap("row after logging")
+        }
+        tap("Sapiens")
+        app.swipeUp()
+        snap("progress block with week chart")
+        if tap("Update progress") {
+            let field = app.textFields.firstMatch
+            if field.waitForExistence(timeout: 3) {
+                field.tap()
+                field.typeText("9")   // 2159: past the end
+                tap("Save")
+                snap("finished prompt")
+                tap("Not yet")
+            }
+        }
+        launch(tab: "reading")
         tap("The Left Hand of Darkness")
         snap("details of reading book")
         tap("Read")
