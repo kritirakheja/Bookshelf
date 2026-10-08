@@ -101,4 +101,21 @@ final class ReadingProgressTests: XCTestCase {
         decoder.dateDecodingStrategy = .secondsSince1970
         XCTAssertNil(try decoder.decode(BookRecord.self, from: Data(old.utf8)).progress)
     }
+
+    func testPageCountComesFromEditionsOfTheSameBook() {
+        func edition(_ title: String, _ author: String, _ pages: Int?) -> BookCandidate {
+            BookCandidate(id: UUID().uuidString, source: .openLibrary, title: title, authors: [author], pageCount: pages)
+        }
+        let editions = [
+            edition("Blue Sisters", "Coco Mellors", 352),
+            edition("Blue Sisters: A Novel", "Coco Mellors", 368),
+            edition("Blue Sisters", "Coco Mellors", 400),
+            edition("Blue Sisters", "Coco Mellors", 12),          // a sample
+            edition("Blue Sisters", "Someone Else", 900),         // another book
+            edition("Summary of Blue Sisters", "Coco Mellors", 60),
+            edition("Blue Sisters", "Coco Mellors", nil),
+        ]
+        XCTAssertEqual(BookLookup.pageCount(title: "Blue Sisters", author: "Coco Mellors", among: editions), 368, "The middle of the real editions")
+        XCTAssertNil(BookLookup.pageCount(title: "Dr. Cuterus", author: "Tanaya Narendra", among: editions))
+    }
 }

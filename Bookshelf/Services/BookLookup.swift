@@ -202,6 +202,51 @@ struct BookLookup {
         return nil
     }
 
+    // MARK: Page count
+
+    /// Shorter than this isn't a book's real length (a sample, a leaflet, bad data).
+    static let fewestPlausiblePages = 40
+
+    /// The typical page count among `candidates` that are this book: the same title
+    /// (ignoring subtitles) and, when given, an author name in common. The middle
+    /// value, so one odd edition doesn't decide it.
+    static func pageCount(title: String, author: String?, among candidates: [BookCandidate]) -> Int? {
+        let wanted = BookMatcher.words(withoutAccents(shortTitle(title)))
+        let authorWords = BookMatcher.words(withoutAccents(author ?? ""))
+        let counts = candidates.compactMap { candidate -> Int? in
+            guard let pages = candidate.pageCount, pages >= fewestPlausiblePages,
+                  !wanted.isEmpty, BookMatcher.words(withoutAccents(shortTitle(candidate.title))) == wanted else { return nil }
+            let theirs = BookMatcher.words(withoutAccents(candidate.authors.joined(separator: " ")))
+            guard authorWords.isEmpty || !theirs.isDisjoint(with: authorWords) else { return nil }
+            return pages
+        }.sorted()
+        return counts.isEmpty ? nil : counts[counts.count / 2]
+    }
+
+    /// Looks a book's length up online: its own edition by ISBN first, then the
+    /// typical length of editions with the same title and author.
+    func findPageCount(title: String, author: String?, isbn: String?) async -> Int? {
+        if let isbn, !isbn.isEmpty, let pages = try? await google?.lookup(isbn: isbn)?.pageCount,
+           pages >= Self.fewestPlausiblePages {
+            return pages
+        }
+        let query = [Self.shortTitle(title), author].compactMap { $0 }.joined(separator: " ")
+        let fromOpenLibrary = ((try? await openLibrary.search(query)) ?? []).enumerated().map { BookCandidate(openLibrary: $1, index: $0) }
+        if let pages = Self.pageCount(title: title, author: author, among: fromOpenLibrary) { return pages }
+        let fromGoogle = (try? await google?.search(title: Self.shortTitle(title), author: author)) ?? []
+        return Self.pageCount(title: title, author: author, among: fromGoogle)
+    }
+
+    /// Fills in the page count of a saved book if it has none. Returns whether it has one now.
+    @MainActor
+    @discardableResult
+    func fillMissingPageCount(of book: Book) async -> Bool {
+        guard (book.pageCount ?? 0) <= 0 else { return true }
+        let found = await findPageCount(title: book.title, author: book.authors.first, isbn: book.isbn)
+        if let found, (book.pageCount ?? 0) <= 0 { book.pageCount = found }
+        return (book.pageCount ?? 0) > 0
+    }
+
     /// How many matching editions' covers are downloaded to pick the closest from.
     private static let editionsCompared = 4
 

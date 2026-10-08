@@ -22,3 +22,26 @@ enum DescriptionBackfill {
         try? context.save()
     }
 }
+
+/// Fills in page counts for books that have none, so reading progress can show a
+/// percentage. Each book is looked up once per device; the ones nothing is found
+/// for are asked about when you first log progress.
+enum PageCountBackfill {
+    static let checkedKey = "pageCountBackfill.checked.v1"
+
+    @MainActor
+    static func run(in context: ModelContext, lookup: BookLookup = BookLookup(), defaults: UserDefaults = .standard) async {
+        var checked = Set(defaults.stringArray(forKey: checkedKey) ?? [])
+        let books = ((try? context.fetch(FetchDescriptor<Book>())) ?? [])
+            .filter { ($0.pageCount ?? 0) <= 0 && !checked.contains(CoverUpgrade.key(for: $0)) }
+            // Books being read first: those are the ones waiting for a percentage.
+            .sorted { $0.isReading && !$1.isReading }
+        for book in books {
+            guard !Task.isCancelled else { break }
+            await lookup.fillMissingPageCount(of: book)
+            checked.insert(CoverUpgrade.key(for: book))
+            defaults.set(Array(checked), forKey: checkedKey)
+        }
+        try? context.save()
+    }
+}

@@ -7,6 +7,8 @@ struct ProgressSheet: View {
     @State private var pageText: String
     @State private var totalText = ""
     @State private var askingFinished = false
+    @State private var lookingUp = false
+    @State private var foundOnline = false
     @FocusState private var focus: Field?
     @Environment(\.dismiss) private var dismiss
 
@@ -30,7 +32,16 @@ struct ProgressSheet: View {
                             .keyboardType(.numberPad)
                             .focused($focus, equals: .total)
                     } footer: {
-                        Text("Needed once, to work out the percentage.")
+                        if lookingUp {
+                            HStack(spacing: 6) {
+                                ProgressView().controlSize(.small)
+                                Text("Looking up how long the book is…")
+                            }
+                        } else if foundOnline {
+                            Text("Found online. Change it if your edition is different.")
+                        } else {
+                            Text("Couldn't find this online. It's needed once, to work out the percentage.")
+                        }
                     }
                 }
                 Section {
@@ -61,7 +72,20 @@ struct ProgressSheet: View {
                         .disabled(page == nil || (needsTotal && !totalText.isEmpty && total == nil))
                 }
             }
-            .onAppear { focus = needsTotal ? .total : .page }
+            .onAppear { focus = .page }
+            .task {
+                // The book's length isn't known: look it up rather than ask.
+                guard needsTotal else { return }
+                lookingUp = true
+                let found = await BookLookup().findPageCount(title: book.title, author: book.authors.first, isbn: book.isbn)
+                lookingUp = false
+                if let found, totalText.isEmpty {
+                    totalText = String(found)
+                    foundOnline = true
+                } else if found == nil, pageText.isEmpty {
+                    focus = .total
+                }
+            }
             .alert("Finished the book?", isPresented: $askingFinished) {
                 Button("Mark as read") {
                     book.setStatus(.read)
