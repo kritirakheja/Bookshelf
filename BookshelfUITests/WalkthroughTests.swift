@@ -171,7 +171,8 @@ final class WalkthroughTests: XCTestCase {
         }
         find("Sapiens").press(forDuration: 1.0)
         snap("long press menu")
-        app.tap()
+        // Dismiss by tapping clear of the menu (the middle of the screen is a menu item).
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.93)).tap()
         tap("Finished")
         snap("one book left")
         tap("Finished")

@@ -20,7 +20,7 @@ struct CurrentlyReadingView: View {
         let reading = Self.ordered(books)
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
+                VStack(alignment: .leading, spacing: 18) {
                     if let latest = reading.first {
                         FeaturedReadingCard(book: latest, onUpdate: { updating = latest }, onFinish: { finish(latest) })
                             .tint(latest.accentColor(for: colorScheme))

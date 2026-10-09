@@ -38,32 +38,41 @@ struct FeaturedReadingCard: View {
     let onFinish: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             NavigationLink(value: book) {
-                HStack(alignment: .top, spacing: 14) {
-                    CoverView(book: book, width: 96)
-                    VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .top, spacing: 12) {
+                    CoverView(book: book, width: 70)
+                    VStack(alignment: .leading, spacing: 3) {
                         Text(book.title)
-                            .font(.inter(.title3, .bold))
+                            .font(.inter(.headline))
                             .foregroundStyle(Color.primary)
-                            .lineLimit(3)
+                            .lineLimit(2)
                             .multilineTextAlignment(.leading)
                         Text(book.authorLine)
-                            .font(.inter(.subheadline))
+                            .font(.inter(.footnote))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
-                        Spacer(minLength: 6)
-                        if let percent = book.progressPercent {
-                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Spacer(minLength: 4)
+                        // The percentage sits on the bar's line; the detail underneath.
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            if let percent = book.progressPercent {
                                 Text("\(percent)%")
-                                    .font(.inter(size: 38, .bold))
+                                    .font(.inter(size: 24, .bold))
                                     .foregroundStyle(.tint)
                                     .contentTransition(.numericText())
-                                Text("read")
-                                    .font(.inter(.subheadline))
-                                    .foregroundStyle(.secondary)
+                            }
+                            let today = book.pagesRead(on: .now)
+                            if today > 0 {
+                                Text("+\(today) today")
+                                    .font(.inter(.caption, .semibold))
+                                    .foregroundStyle(.tint)
                             }
                         }
+                        ProgressBar(fraction: book.progressFraction ?? 0, height: 7)
+                        Text(detail)
+                            .font(.inter(.caption))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -71,24 +80,11 @@ struct FeaturedReadingCard: View {
             }
             .buttonStyle(.plain)
 
-            VStack(alignment: .leading, spacing: 6) {
-                ProgressBar(fraction: book.progressFraction ?? 0, height: 8)
-                HStack(spacing: 6) {
-                    Text(detail)
-                    let today = book.pagesRead(on: .now)
-                    if today > 0 {
-                        Text("· +\(today) today").foregroundStyle(.tint)
-                    }
-                }
-                .font(.inter(.footnote))
-                .foregroundStyle(.secondary)
-            }
-
             if !book.progress.isEmpty {
-                WeekChart(days: book.dailyPages(last: 7))
+                WeekChart(days: book.dailyPages(last: 7), barHeight: 26)
             }
 
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 Button(action: onUpdate) {
                     Text("Update progress").frame(maxWidth: .infinity)
                 }
@@ -98,13 +94,13 @@ struct FeaturedReadingCard: View {
                 }
                 .buttonStyle(.bordered)
             }
-            .font(.inter(.subheadline, .semibold))
+            .font(.inter(.footnote, .semibold))
             .buttonBorderShape(.capsule)
-            .controlSize(.large)
+            .controlSize(.regular)
         }
-        .padding(18)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 24))
-        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Theme.rule.opacity(0.6), lineWidth: 0.5))
+        .padding(14)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.rule.opacity(0.6), lineWidth: 0.5))
         .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
     }
 
@@ -218,8 +214,7 @@ struct ProgressBlock: View {
 /// Pages read on each of the last seven days, as small bars.
 struct WeekChart: View {
     let days: [(day: Date, pages: Int)]
-
-    private let barHeight: CGFloat = 44
+    var barHeight: CGFloat = 44
 
     var body: some View {
         let most = max(days.map(\.pages).max() ?? 0, 1)
@@ -239,7 +234,7 @@ struct WeekChart: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        .frame(height: barHeight + 34, alignment: .bottom)
+        .frame(height: barHeight + 32, alignment: .bottom)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Pages read each day this week: " + days.map { "\($0.pages)" }.joined(separator: ", "))
     }
