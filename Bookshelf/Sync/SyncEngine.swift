@@ -182,6 +182,7 @@ struct SyncEngine {
             }()
             entry.date = record.date
             entry.page = record.page
+            entry.loggedAt = record.loggedAt
             return entry
         }
     }

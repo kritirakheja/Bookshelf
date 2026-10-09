@@ -143,45 +143,40 @@ final class WalkthroughTests: XCTestCase {
 
     func test2Reading() {
         launch(tab: "reading")
-        snap("reading")
-        let row = find("The Left Hand of Darkness")
-        if row.exists {
-            row.swipeLeft()
-            snap("row swiped left")
-            app.swipeDown()
-            tap("Finished")
-            snap("finished button tapped")
-        } else {
-            note("MISSING: reading row")
-        }
-        launch(tab: "reading")
-        snap("reading with progress")
-        if tap("Update progress") {
+        snap("reading two books")
+        // Updating the lower book should bring it to the top.
+        if tap("Update progress for Sapiens") {
             snap("progress sheet")
             let field = app.textFields.firstMatch
             if field.waitForExistence(timeout: 3) {
                 field.tap()
-                field.typeText("110")
+                field.typeText("300")
                 snap("page typed")
             } else {
                 note("MISSING: page field in progress sheet")
             }
             tap("Save")
-            snap("row after logging")
+            snap("updated book now on top")
         }
-        tap("Sapiens")
-        app.swipeUp()
-        snap("progress block with week chart")
         if tap("Update progress") {
             let field = app.textFields.firstMatch
             if field.waitForExistence(timeout: 3) {
                 field.tap()
-                field.typeText("9")   // 2159: past the end
+                field.typeText("999")
                 tap("Save")
                 snap("finished prompt")
                 tap("Not yet")
+                snap("featured after logging")
             }
         }
+        find("Sapiens").press(forDuration: 1.0)
+        snap("long press menu")
+        app.tap()
+        tap("Finished")
+        snap("one book left")
+        tap("Finished")
+        Thread.sleep(forTimeInterval: 1)
+        snap("nothing being read")
         launch(tab: "reading")
         tap("The Left Hand of Darkness")
         snap("details of reading book")

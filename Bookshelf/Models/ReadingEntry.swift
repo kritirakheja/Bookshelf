@@ -9,6 +9,9 @@ final class ReadingEntry {
     var date: Date
     /// The page you stopped on.
     var page: Int
+    /// The moment this was last logged, for putting the most recently updated book
+    /// first. Nil for entries from before this was recorded.
+    var loggedAt: Date?
     var book: Book?
 
     init(date: Date, page: Int) {
@@ -46,9 +49,19 @@ extension Book {
         let day = calendar.startOfDay(for: date)
         if let today = progress.first(where: { calendar.isDate($0.date, inSameDayAs: day) }) {
             today.page = page
+            today.loggedAt = date
         } else {
-            progress.append(ReadingEntry(date: day, page: page))
+            let entry = ReadingEntry(date: day, page: page)
+            entry.loggedAt = date
+            progress.append(entry)
         }
+    }
+
+    /// When you last did something with this book: logged progress, or failing that
+    /// started it. Orders the Reading tab, most recent first.
+    var lastActivity: Date {
+        let logged = progress.map { $0.loggedAt ?? $0.date }.max()
+        return [logged, dateStarted].compactMap { $0 }.max() ?? dateAdded
     }
 
     /// Pages read on a day: that day's page minus where you were before it. Zero for a

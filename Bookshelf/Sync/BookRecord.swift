@@ -88,6 +88,13 @@ struct ProgressRecord: Codable, Equatable {
     var id: UUID
     var date: Date
     var page: Int
+    /// Optional so entries saved before it existed still decode.
+    var loggedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id, date, page
+        case loggedAt = "logged_at"
+    }
 }
 
 /// One loan inside a book's row.
@@ -149,7 +156,7 @@ extension BookRecord {
             .map(LoanRecord.init(loan:))
         progress = book.progress
             .sorted { ($0.date, $0.id.uuidString) < ($1.date, $1.id.uuidString) }
-            .map { ProgressRecord(id: $0.id, date: $0.date, page: $0.page) }
+            .map { ProgressRecord(id: $0.id, date: $0.date, page: $0.page, loggedAt: $0.loggedAt) }
     }
 }
 

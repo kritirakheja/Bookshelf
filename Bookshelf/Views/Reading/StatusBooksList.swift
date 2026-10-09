@@ -2,13 +2,11 @@ import SwiftUI
 import SwiftData
 
 /// Books with one reading status, with swipe actions to move them on.
-/// Has no NavigationStack of its own, so it can be a tab's root or pushed from Profile.
+/// Has no NavigationStack of its own; it's pushed from Profile.
 struct StatusBooksList: View {
     let status: ReadingStatus
     @Query private var books: [Book]
     @State private var bookToDelete: Book?
-    /// The book whose progress is being logged.
-    @State private var updating: Book?
 
     private var visible: [Book] {
         let matching = books.filter { $0.status == status }
@@ -25,11 +23,7 @@ struct StatusBooksList: View {
     var body: some View {
         List(visible) { book in
             NavigationLink(value: book) {
-                if status == .reading {
-                    ReadingRow(book: book, onUpdate: { updating = book }, onFinish: { withAnimation { book.setStatus(.read) } })
-                } else {
-                    BookRow(book: book, showsFinishDate: status == .read)
-                }
+                BookRow(book: book, showsFinishDate: status == .read)
             }
             .swipeActions(edge: .leading) {
                 // One button for each status the book isn't in yet.
@@ -46,9 +40,6 @@ struct StatusBooksList: View {
             }
         }
         .themedScreen()
-        .sheet(item: $updating) { book in
-            ProgressSheet(book: book)
-        }
         .confirmDeletingBook($bookToDelete)
         .overlay {
             if visible.isEmpty {
@@ -71,29 +62,4 @@ struct StatusBooksList: View {
         default: "Books show up here when you mark them as read."
         }
     }
-}
-
-struct CurrentlyReadingView: View {
-    @State private var showingAdd = false
-
-    var body: some View {
-        NavigationStack {
-            StatusBooksList(status: .reading)
-                .themedScreen()
-                .navigationTitle("Currently Reading")
-                .navigationDestination(for: Book.self) { BookDetailView(book: $0) }
-                .toolbar {
-                    Button("Add book", systemImage: "plus") { showingAdd = true }
-                }
-                .sheet(isPresented: $showingAdd) {
-                    AddBookSheet()
-                }
-        }
-    }
-}
-
-#Preview {
-    CurrentlyReadingView()
-        .modelContainer(SampleData.previewContainer)
-        .environment(AccountStore(container: SampleData.previewContainer))
 }

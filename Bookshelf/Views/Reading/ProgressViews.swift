@@ -30,49 +30,132 @@ extension Book {
     }
 }
 
-/// A book on the Reading tab: how far in you are, and buttons to log today's reading
-/// or finish it.
-struct ReadingRow: View {
+/// The book you last picked up, large, at the top of the Reading tab: how far in you
+/// are, this week's reading, and buttons to log today's pages or finish it.
+struct FeaturedReadingCard: View {
     let book: Book
     let onUpdate: () -> Void
     let onFinish: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            CoverView(book: book, width: 56)
-            VStack(alignment: .leading, spacing: 6) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(book.title)
-                        .font(.inter(.headline))
-                        .lineLimit(2)
-                    Text(book.authorLine)
-                        .font(.inter(.subheadline))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+        VStack(alignment: .leading, spacing: 16) {
+            NavigationLink(value: book) {
+                HStack(alignment: .top, spacing: 14) {
+                    CoverView(book: book, width: 96)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(book.title)
+                            .font(.inter(.title3, .bold))
+                            .foregroundStyle(Color.primary)
+                            .lineLimit(3)
+                            .multilineTextAlignment(.leading)
+                        Text(book.authorLine)
+                            .font(.inter(.subheadline))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                        Spacer(minLength: 6)
+                        if let percent = book.progressPercent {
+                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                Text("\(percent)%")
+                                    .font(.inter(size: 38, .bold))
+                                    .foregroundStyle(.tint)
+                                    .contentTransition(.numericText())
+                                Text("read")
+                                    .font(.inter(.subheadline))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                ProgressBar(fraction: book.progressFraction ?? 0)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            VStack(alignment: .leading, spacing: 6) {
+                ProgressBar(fraction: book.progressFraction ?? 0, height: 8)
                 HStack(spacing: 6) {
-                    Text(book.progressSummary)
+                    Text(detail)
                     let today = book.pagesRead(on: .now)
                     if today > 0 {
                         Text("· +\(today) today").foregroundStyle(.tint)
                     }
                 }
-                .font(.inter(.caption))
+                .font(.inter(.footnote))
                 .foregroundStyle(.secondary)
-                HStack(spacing: 8) {
-                    Button("Update progress", action: onUpdate)
-                        .buttonStyle(.borderedProminent)
-                    Button("Finished", action: onFinish)
-                        .buttonStyle(.bordered)
+            }
+
+            if !book.progress.isEmpty {
+                WeekChart(days: book.dailyPages(last: 7))
+            }
+
+            HStack(spacing: 10) {
+                Button(action: onUpdate) {
+                    Text("Update progress").frame(maxWidth: .infinity)
                 }
+                .buttonStyle(.borderedProminent)
+                Button(action: onFinish) {
+                    Text("Finished").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+            }
+            .font(.inter(.subheadline, .semibold))
+            .buttonBorderShape(.capsule)
+            .controlSize(.large)
+        }
+        .padding(18)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 24))
+        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Theme.rule.opacity(0.6), lineWidth: 0.5))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
+    }
+
+    private var detail: String {
+        guard let pageCount = book.pageCount, pageCount > 0 else {
+            return book.currentPage.map { "Page \($0)" } ?? "No progress logged yet"
+        }
+        var text = "Page \(book.currentPage ?? 0) of \(pageCount)"
+        if let left = book.pagesToGo, left > 0 { text += " · \(left) to go" }
+        return text
+    }
+}
+
+/// Another book in progress, compact: how far in you are, and a button to log more.
+struct ReadingRow: View {
+    let book: Book
+    let onUpdate: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            NavigationLink(value: book) {
+                HStack(spacing: 12) {
+                    CoverView(book: book, width: 48)
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(book.title)
+                            .font(.inter(.headline))
+                            .foregroundStyle(Color.primary)
+                            .lineLimit(1)
+                        Text(book.authorLine)
+                            .font(.inter(.caption))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                        ProgressBar(fraction: book.progressFraction ?? 0)
+                        Text(book.progressSummary)
+                            .font(.inter(.caption))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            Button("Update", action: onUpdate)
                 .font(.inter(.footnote, .semibold))
+                .buttonStyle(.bordered)
                 .buttonBorderShape(.capsule)
                 .controlSize(.small)
-                .padding(.top, 2)
-            }
+                .accessibilityLabel("Update progress for \(book.title)")
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
     }
 }
 
@@ -133,7 +216,7 @@ struct ProgressBlock: View {
 }
 
 /// Pages read on each of the last seven days, as small bars.
-private struct WeekChart: View {
+struct WeekChart: View {
     let days: [(day: Date, pages: Int)]
 
     private let barHeight: CGFloat = 44

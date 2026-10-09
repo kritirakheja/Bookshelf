@@ -118,4 +118,34 @@ final class ReadingProgressTests: XCTestCase {
         XCTAssertEqual(BookLookup.pageCount(title: "Blue Sisters", author: "Coco Mellors", among: editions), 368, "The middle of the real editions")
         XCTAssertNil(BookLookup.pageCount(title: "Dr. Cuterus", author: "Tanaya Narendra", among: editions))
     }
+
+    func testTheMostRecentlyUpdatedBookComesFirst() {
+        let morning = book(), evening = book(), justStarted = book(), lastWeek = book()
+        let today = calendar.startOfDay(for: .now)
+        morning.title = "Morning"; evening.title = "Evening"; justStarted.title = "Just started"; lastWeek.title = "Last week"
+        for old in [morning, evening, lastWeek] { old.dateStarted = day(30) }
+        lastWeek.logProgress(page: 40, on: day(7))
+        morning.logProgress(page: 10, on: today.addingTimeInterval(8 * 3600))
+        evening.logProgress(page: 10, on: today.addingTimeInterval(20 * 3600))
+        justStarted.dateStarted = today.addingTimeInterval(3600)
+
+        let order = CurrentlyReadingView.ordered([lastWeek, justStarted, morning, evening]).map(\.title)
+        XCTAssertEqual(order, ["Evening", "Morning", "Just started", "Last week"])
+
+        // An entry from before the time was recorded counts as its day.
+        lastWeek.progress[0].loggedAt = nil
+        XCTAssertEqual(lastWeek.lastActivity, day(7))
+    }
+
+    func testTheLoggedTimeSyncsAndOldEntriesStillDecode() throws {
+        let book = book()
+        let moment = Date(timeIntervalSince1970: 1_800_000_000)
+        book.logProgress(page: 10, on: moment)
+        XCTAssertEqual(BookRecord(book: book, id: UUID()).progress?.first?.loggedAt, moment)
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .secondsSince1970
+        let old = #"{"id":"00000000-0000-0000-0000-000000000001","date":0,"page":12}"#
+        XCTAssertNil(try decoder.decode(ProgressRecord.self, from: Data(old.utf8)).loggedAt)
+    }
 }

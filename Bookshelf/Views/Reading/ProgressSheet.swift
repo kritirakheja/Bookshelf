@@ -16,7 +16,8 @@ struct ProgressSheet: View {
 
     init(book: Book) {
         self.book = book
-        _pageText = State(initialValue: book.currentPage.map(String.init) ?? "")
+        // Starts empty (the current page shows as the hint), so there's nothing to delete first.
+        _pageText = State(initialValue: "")
     }
 
     private var total: Int? { book.pageCount.flatMap { $0 > 0 ? $0 : nil } ?? Int(totalText).flatMap { $0 > 0 ? $0 : nil } }
@@ -47,7 +48,7 @@ struct ProgressSheet: View {
                 Section {
                     HStack {
                         Text("I'm on page")
-                        TextField("0", text: $pageText)
+                        TextField(book.currentPage.map(String.init) ?? "0", text: $pageText)
                             .keyboardType(.numberPad)
                             .multilineTextAlignment(.trailing)
                             .font(.inter(.title3, .semibold))
