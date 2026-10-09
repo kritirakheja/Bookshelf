@@ -6,7 +6,7 @@ A personal library app for iPhone, built with SwiftUI and SwiftData, with one cl
 
 **Tabs**
 - **Explore**: your unread books by category. A card per category with its covers scrolling sideways; tap the category name for a grid of all its books. Tapping a cover "picks the book up" as a 3D book (SceneKit) with a spine and page edges: it turns over to show its back cover with the description, like reading the back of a book in a library. Tap to turn it over; Start reading and Full details sit underneath. Search covers all unread books.
-- **Reading**: books in progress. The one you updated most recently sits at the top as a large card (percentage, progress bar, the last seven days, *Update progress* and *Finished*); the others follow as compact rows, each with a progress bar. Tap *Update progress*, type the page you're on, and the app shows the percentage read, the pages you read today and the pages left; the book's page adds a chart of the last seven days. Reaching the last page offers to mark the book read. *Finished* does that in one tap.
+- **Reading**: books in progress. The one you updated most recently sits at the top as a card with its percentage, progress bar, pages left, today's pages, the last seven days and *Update progress* / *Finished* buttons; the others follow under *Also reading* as compact rows, each with a progress bar and an *Update* button. Updating a book moves it to the top. Tap *Update progress*, type the page you're on, and the app works out the rest; reaching the last page offers to mark the book read. Long-press any book for the same actions, or to put it back to unread or delete it.
 - **Favourites**: a ranked shelf of up to 10 books you'd recommend most, each with its rank, rating and a "why I recommend it" note. Below it, everything you've read year by year, with an optional goal per year ("27 of 30 books").
 - **Bookstores**: a map of bookstores you've saved, with *Find nearby* and *Search this area* (Apple Maps, no key needed), directions, and notes.
 - **Profile**: photo, name and counts, plus All books, Read, Lent out, Borrowed and Categories, and a *Sharpen covers* row while any cover is still blurry. **All books** shows covers face-out in rows, split into Fiction and Non-fiction (or as a list).
@@ -30,10 +30,10 @@ A personal library app for iPhone, built with SwiftUI and SwiftData, with one cl
 
 ## How the code is laid out
 
-- `Models/`: SwiftData models (`Book`, `ReadingEntry`, `Loan`, `BookCategory`, `Bookstore`).
+- `Models/`: SwiftData models (`Book`, `ReadingEntry` for a day's progress, `Loan`, `BookCategory`, `Bookstore`).
 - `Services/`: lookups (`BookLookup` over Open Library, Google Books and Apple Books), covers (`CoverDownloader`, `CoverImage`, `CoverUpgrade`, `CoverColor`), background fill-ins (`DescriptionBackfill`, `PageCountBackfill`), and small pieces of logic (`ReadingYears`, `FavoritesShelf`, `LibraryDuplicates`).
 - `Sync/`: Supabase sync (`SyncEngine`, `BookRecord`, `AccountStore`).
-- `Views/`: one folder per tab, plus `Shared/` (`Theme`, `Components`, `CoverView`, `CoverStrip`).
+- `Views/`: one folder per tab (`Explore`, `Reading`, `Favorites`, `Bookstores`, `Profile`), plus `Library` (the book's page and All books), `Add`, `Categories` and `Shared/` (`Theme`, `Components`, `CoverView`, `CoverStrip`).
 - `Preview/`: sample data and the launch arguments used for screenshots and the walkthrough.
 
 ## Requirements
