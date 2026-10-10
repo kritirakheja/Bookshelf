@@ -167,6 +167,8 @@ final class Book {
             dateRead = nil
             dateReadYearOnly = false
         case .read:
+            // Finishing a book you were reading counts as reading to its last page today.
+            if isReading, let pageCount, pageCount > 0 { logProgress(page: pageCount) }
             isRead = true
             isReading = false
             dateRead = .now

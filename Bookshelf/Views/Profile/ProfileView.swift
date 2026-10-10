@@ -29,6 +29,12 @@ struct ProfileView: View {
                 .listRowInsets(EdgeInsets())
 
                 Section {
+                    ReadingActivityCard(books: books)
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+
+                Section {
                     NavigationLink(value: Route.allBooks) {
                         LabeledContent { Text("\(stats.total)") } label: { Label("All books", systemImage: "books.vertical") }
                     }

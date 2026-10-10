@@ -329,6 +329,20 @@ final class WalkthroughTests: XCTestCase {
     func test6Profile() {
         launch(tab: "profile")
         snap("profile")
+        let squares = app.buttons.matching(NSPredicate(format: "label ENDSWITH ' pages' AND NOT label ENDSWITH ': 0 pages'"))
+        if squares.count > 0 {
+            squares.element(boundBy: squares.count - 1).tap()
+            snap("reading day tapped")
+        } else {
+            note("MISSING: no reading squares with pages on Profile")
+        }
+        let lastYear = String(Calendar.current.component(.year, from: Date()) - 1)
+        if app.buttons[lastYear].exists {
+            app.buttons[lastYear].tap()
+            snap("reading activity last year")
+        } else {
+            note("MISSING: year button \(lastYear)")
+        }
         tap("All books")
         if tap("Options") {
             snap("options menu")

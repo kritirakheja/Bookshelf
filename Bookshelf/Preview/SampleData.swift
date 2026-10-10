@@ -108,6 +108,19 @@ enum SampleData {
                 sapiens.logProgress(page: page, on: calendar.date(byAdding: .day, value: -back, to: today)!)
             }
         }
+        // Months of reading across two years, for the Profile's reading calendar.
+        let today = calendar.startOfDay(for: .now)
+        func log(_ title: String, startingDaysAgo start: Int, everyDays step: Int, pages: [Int]) {
+            guard let book = books.first(where: { $0.title == title }) else { return }
+            var page = 0
+            for (index, read) in pages.enumerated() {
+                page += read
+                book.logProgress(page: page, on: calendar.date(byAdding: .day, value: -(start - index * step), to: today)!)
+            }
+        }
+        log("Pride and Prejudice", startingDaysAgo: 150, everyDays: 3, pages: [20, 35, 10, 60, 25, 15, 45, 30, 12, 70, 22, 18, 40, 28, 33])
+        log("The Hobbit", startingDaysAgo: 400, everyDays: 2, pages: [15, 30, 22, 48, 10, 36, 28, 50, 19, 25])
+        log("Circe", startingDaysAgo: 45, everyDays: 1, pages: [30, 42, 18, 55, 26, 61, 12])
         return container
     }
 
