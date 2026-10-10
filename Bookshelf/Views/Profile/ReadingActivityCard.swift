@@ -72,9 +72,9 @@ struct ReadingActivityCard: View {
         } else {
             let days = activity.daysRead(in: year)
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(pages.formatted()) pages on \(days) \(days == 1 ? "day" : "days") in \(String(year))")
+                Text("\(pages.formatted()) pages read in \(String(year))")
                     .font(.inter(.subheadline, .semibold))
-                Text(streaks(activity))
+                Text("You read on \(days) \(days == 1 ? "day" : "days") · " + streaks(activity))
                     .font(.inter(.caption))
                     .foregroundStyle(.secondary)
             }
@@ -85,9 +85,9 @@ struct ReadingActivityCard: View {
         func days(_ count: Int) -> String { "\(count) \(count == 1 ? "day" : "days")" }
         var parts: [String] = []
         if year == Calendar.current.component(.year, from: .now) {
-            parts.append("Current streak \(days(activity.currentStreak()))")
+            parts.append("\(days(activity.currentStreak())) in a row now")
         }
-        parts.append("Longest \(days(activity.longestStreak(in: year)))")
+        parts.append("best run \(days(activity.longestStreak(in: year)))")
         return parts.joined(separator: " · ")
     }
 
