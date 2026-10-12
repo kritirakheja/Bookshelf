@@ -72,13 +72,6 @@ struct FeaturedReadingCard: View {
                             .contentTransition(.numericText())
                     }
                     ProgressBar(fraction: book.progressFraction ?? 0, height: 7)
-                    let today = book.pagesRead(on: .now)
-                    if today > 0 {
-                        Text("+\(today) today")
-                            .font(.inter(.caption, .semibold))
-                            .foregroundStyle(.tint)
-                            .fixedSize()
-                    }
                 }
                 Text(detail)
                     .font(.inter(.caption))
