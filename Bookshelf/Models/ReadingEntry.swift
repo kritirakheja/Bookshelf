@@ -73,14 +73,6 @@ extension Book {
         return max(0, entries[index].page - before)
     }
 
-    /// Pages read on each of the last `days` days, oldest first, ending today.
-    func dailyPages(last days: Int, until now: Date = .now, calendar: Calendar = .current) -> [(day: Date, pages: Int)] {
-        let today = calendar.startOfDay(for: now)
-        return (0..<days).reversed().compactMap { back in
-            calendar.date(byAdding: .day, value: -back, to: today).map { ($0, pagesRead(on: $0, calendar: calendar)) }
-        }
-    }
-
     /// Forgets the log (the book went back to Unread).
     func clearProgress() {
         for entry in progress { modelContext?.delete(entry) }

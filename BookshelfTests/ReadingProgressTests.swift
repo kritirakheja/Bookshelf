@@ -42,7 +42,6 @@ final class ReadingProgressTests: XCTestCase {
         XCTAssertEqual(book.pagesRead(on: day(2)), 50)
         XCTAssertEqual(book.pagesRead(on: day(1)), 0, "Nothing logged that day")
         XCTAssertEqual(book.pagesRead(on: day(0)), 60)
-        XCTAssertEqual(book.dailyPages(last: 4).map(\.pages), [0, 50, 0, 60])
     }
 
     func testLoggingAgainTheSameDayReplacesTheEntry() {

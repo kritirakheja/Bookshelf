@@ -31,7 +31,7 @@ extension Book {
 }
 
 /// The book you last picked up, large, at the top of the Reading tab: how far in you
-/// are, this week's reading, and buttons to log today's pages or finish it.
+/// are, and buttons to log today's pages or finish it.
 struct FeaturedReadingCard: View {
     let book: Book
     let onUpdate: () -> Void
@@ -79,10 +79,6 @@ struct FeaturedReadingCard: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-
-            if !book.progress.isEmpty {
-                WeekChart(days: book.dailyPages(last: 7), barHeight: 26)
-            }
 
             HStack(spacing: 8) {
                 Button(action: onUpdate) {
@@ -155,8 +151,7 @@ struct ReadingRow: View {
     }
 }
 
-/// On a book's page while reading it: the percentage, large, with the bar, what's
-/// left, and the last week's reading day by day.
+/// On a book's page while reading it: the percentage, large, with the bar and what's left.
 struct ProgressBlock: View {
     let book: Book
     let onUpdate: () -> Void
@@ -189,9 +184,6 @@ struct ProgressBlock: View {
             Text(detail)
                 .font(.inter(.footnote))
                 .foregroundStyle(.secondary)
-            if !book.progress.isEmpty {
-                WeekChart(days: book.dailyPages(last: 7))
-            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -208,34 +200,5 @@ struct ProgressBlock: View {
             parts.append("started \(started.formatted(.dateTime.day().month(.abbreviated)))")
         }
         return parts.joined(separator: " · ")
-    }
-}
-
-/// Pages read on each of the last seven days, as small bars.
-struct WeekChart: View {
-    let days: [(day: Date, pages: Int)]
-    var barHeight: CGFloat = 44
-
-    var body: some View {
-        let most = max(days.map(\.pages).max() ?? 0, 1)
-        HStack(alignment: .bottom, spacing: 8) {
-            ForEach(days, id: \.day) { entry in
-                VStack(spacing: 4) {
-                    Text(entry.pages > 0 ? "\(entry.pages)" : " ")
-                        .font(.inter(.caption2, .medium))
-                        .foregroundStyle(.secondary)
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(entry.pages > 0 ? AnyShapeStyle(.tint) : AnyShapeStyle(Theme.rule.opacity(0.6)))
-                        .frame(height: entry.pages > 0 ? max(4, barHeight * CGFloat(entry.pages) / CGFloat(most)) : 3)
-                    Text(entry.day.formatted(.dateTime.weekday(.narrow)))
-                        .font(.inter(.caption2))
-                        .foregroundStyle(Calendar.current.isDateInToday(entry.day) ? AnyShapeStyle(.primary) : AnyShapeStyle(.tertiary))
-                }
-                .frame(maxWidth: .infinity)
-            }
-        }
-        .frame(height: barHeight + 32, alignment: .bottom)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Pages read each day this week: " + days.map { "\($0.pages)" }.joined(separator: ", "))
     }
 }
