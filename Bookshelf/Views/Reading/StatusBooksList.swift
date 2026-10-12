@@ -29,7 +29,7 @@ struct StatusBooksList: View {
                 // One button for each status the book isn't in yet.
                 ForEach(ReadingStatus.allCases.filter { $0 != book.status }.reversed()) { newStatus in
                     Button(newStatus.actionTitle, systemImage: newStatus.systemImage) {
-                        withAnimation { book.setStatus(newStatus) }
+                        if newStatus == .read { Celebration.shared.finish(book) } else { withAnimation { book.setStatus(newStatus) } }
                     }
                     .tint(newStatus.tint)
                 }

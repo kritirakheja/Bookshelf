@@ -79,7 +79,7 @@ struct CurrentlyReadingView: View {
     }
 
     private func finish(_ book: Book) {
-        withAnimation { book.setStatus(.read) }
+        Celebration.shared.finish(book)
     }
 
     /// Long-press actions on any book here.

@@ -133,7 +133,7 @@ struct LibraryView: View {
         }
         if book.status != .read {
             Button("Mark as read", systemImage: ReadingStatus.read.systemImage) {
-                withAnimation { book.setStatus(.read) }
+                Celebration.shared.finish(book)
             }
         }
         Divider()

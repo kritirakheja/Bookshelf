@@ -82,7 +82,7 @@ struct StatusSection: View {
     private func statusButton(_ status: ReadingStatus) -> some View {
         let selected = book.status == status
         return Button {
-            withAnimation(.snappy) { book.setStatus(status) }
+            if status == .read { Celebration.shared.finish(book) } else { withAnimation(.snappy) { book.setStatus(status) } }
         } label: {
             Label(status.rawValue, systemImage: status.systemImage)
                 .font(.inter(.subheadline, .semibold))

@@ -94,7 +94,7 @@ struct ExploreView: View {
             }
         }
         Button("Mark as read", systemImage: ReadingStatus.read.systemImage) {
-            withAnimation { book.setStatus(.read) }
+            Celebration.shared.finish(book)
             message = "Marked as read"
         }
         Divider()

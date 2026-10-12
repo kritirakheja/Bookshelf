@@ -31,6 +31,7 @@ struct RootTabView: View {
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
                 .tag("profile")
         }
+        .celebratesFinishedBooks()
         .task {
             SampleData.seedSimulatorIfEmpty(context)
             LibraryFixes.runPending(in: context)

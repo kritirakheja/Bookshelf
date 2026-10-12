@@ -89,7 +89,7 @@ struct ProgressSheet: View {
             }
             .alert("Finished the book?", isPresented: $askingFinished) {
                 Button("Mark as read") {
-                    book.setStatus(.read)
+                    Celebration.shared.finish(book)
                     dismiss()
                 }
                 Button("Not yet", role: .cancel) { dismiss() }

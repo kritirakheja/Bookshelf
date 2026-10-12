@@ -174,6 +174,10 @@ final class WalkthroughTests: XCTestCase {
         // Dismiss by tapping clear of the menu (the middle of the screen is a menu item).
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.93)).tap()
         tap("Finished")
+        // Confetti: catch it mid-fall.
+        Thread.sleep(forTimeInterval: 1.1)
+        step += 1
+        try? XCUIScreen.main.screenshot().pngRepresentation.write(to: folder.appendingPathComponent("\(flow)-confetti.png"))
         snap("one book left")
         tap("Finished")
         Thread.sleep(forTimeInterval: 1)
