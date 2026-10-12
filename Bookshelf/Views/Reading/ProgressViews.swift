@@ -38,63 +38,67 @@ struct FeaturedReadingCard: View {
     let onFinish: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        // One block beside the cover, no taller than the cover: title, how far in,
+        // then the two buttons.
+        HStack(alignment: .top, spacing: 12) {
             NavigationLink(value: book) {
-                HStack(alignment: .top, spacing: 12) {
-                    CoverView(book: book, width: 70)
-                    VStack(alignment: .leading, spacing: 3) {
+                CoverView(book: book, width: 78)
+            }
+            .buttonStyle(.plain)
+
+            VStack(alignment: .leading, spacing: 5) {
+                NavigationLink(value: book) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text(book.title)
                             .font(.inter(.headline))
                             .foregroundStyle(Color.primary)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
+                            .lineLimit(1)
                         Text(book.authorLine)
                             .font(.inter(.footnote))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
-                        Spacer(minLength: 4)
-                        // The percentage sits on the bar's line; the detail underneath.
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            if let percent = book.progressPercent {
-                                Text("\(percent)%")
-                                    .font(.inter(size: 24, .bold))
-                                    .foregroundStyle(.tint)
-                                    .contentTransition(.numericText())
-                            }
-                            let today = book.pagesRead(on: .now)
-                            if today > 0 {
-                                Text("+\(today) today")
-                                    .font(.inter(.caption, .semibold))
-                                    .foregroundStyle(.tint)
-                            }
-                        }
-                        ProgressBar(fraction: book.progressFraction ?? 0, height: 7)
-                        Text(detail)
-                            .font(.inter(.caption))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
                 }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
+                .buttonStyle(.plain)
 
-            HStack(spacing: 8) {
-                Button(action: onUpdate) {
-                    Text("Update progress").frame(maxWidth: .infinity)
+                HStack(spacing: 8) {
+                    if let percent = book.progressPercent {
+                        Text("\(percent)%")
+                            .font(.inter(.headline, .bold))
+                            .foregroundStyle(.tint)
+                            .monospacedDigit()
+                            .contentTransition(.numericText())
+                    }
+                    ProgressBar(fraction: book.progressFraction ?? 0, height: 7)
+                    let today = book.pagesRead(on: .now)
+                    if today > 0 {
+                        Text("+\(today) today")
+                            .font(.inter(.caption, .semibold))
+                            .foregroundStyle(.tint)
+                            .fixedSize()
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-                Button(action: onFinish) {
-                    Text("Finished").frame(maxWidth: .infinity)
+                Text(detail)
+                    .font(.inter(.caption))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+
+                Spacer(minLength: 2)
+                HStack(spacing: 8) {
+                    Button("Update progress", action: onUpdate)
+                        .buttonStyle(.borderedProminent)
+                    Button("Finished", action: onFinish)
+                        .buttonStyle(.bordered)
                 }
-                .buttonStyle(.bordered)
+                .font(.inter(.footnote, .semibold))
+                .buttonBorderShape(.capsule)
+                .controlSize(.small)
             }
-            .font(.inter(.footnote, .semibold))
-            .buttonBorderShape(.capsule)
-            .controlSize(.regular)
+            .frame(height: 117)   // the cover's height
         }
-        .padding(14)
+        .padding(12)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 20))
         .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.rule.opacity(0.6), lineWidth: 0.5))
         .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
