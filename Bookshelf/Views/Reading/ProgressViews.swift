@@ -37,32 +37,24 @@ struct FeaturedReadingCard: View {
     let onUpdate: () -> Void
     let onFinish: () -> Void
 
+    private static let coverWidth: CGFloat = 58
+
     var body: some View {
-        // One block beside the cover, no taller than the cover: title, how far in,
-        // then the two buttons.
-        HStack(alignment: .top, spacing: 12) {
+        // The cover says which book it is, so there's no title or author here: just
+        // how far in you are and the two buttons, in a block no taller than the cover.
+        HStack(alignment: .center, spacing: 12) {
             NavigationLink(value: book) {
-                CoverView(book: book, width: 78)
+                CoverView(book: book, width: Self.coverWidth)
             }
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 5) {
-                NavigationLink(value: book) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(book.title)
-                            .font(.inter(.headline))
-                            .foregroundStyle(Color.primary)
-                            .lineLimit(1)
-                        Text(book.authorLine)
-                            .font(.inter(.footnote))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
+                // Without a cover image the placeholder is only a colour: name the book.
+                if book.coverImage == nil {
+                    Text(book.title)
+                        .font(.inter(.subheadline, .semibold))
+                        .lineLimit(1)
                 }
-                .buttonStyle(.plain)
-
                 HStack(spacing: 8) {
                     if let percent = book.progressPercent {
                         Text("\(percent)%")
@@ -77,8 +69,6 @@ struct FeaturedReadingCard: View {
                     .font(.inter(.caption))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-
-                Spacer(minLength: 2)
                 HStack(spacing: 8) {
                     Button("Update progress", action: onUpdate)
                         .buttonStyle(.borderedProminent)
@@ -88,12 +78,12 @@ struct FeaturedReadingCard: View {
                 .font(.inter(.footnote, .semibold))
                 .buttonBorderShape(.capsule)
                 .controlSize(.small)
+                .padding(.top, 2)
             }
-            .frame(height: 117)   // the cover's height
         }
-        .padding(12)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 20))
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.rule.opacity(0.6), lineWidth: 0.5))
+        .padding(10)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.rule.opacity(0.6), lineWidth: 0.5))
         .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
     }
 
