@@ -8,7 +8,7 @@ A personal library app for iPhone, built with SwiftUI and SwiftData, with one cl
 - **Explore**: your unread books by category. A card per category with its covers scrolling sideways; tap the category name for a grid of all its books. Tapping a cover "picks the book up" as a 3D book (SceneKit) with a spine and page edges: it turns over to show its back cover with the description, like reading the back of a book in a library. Tap to turn it over; Start reading and Full details sit underneath. Search covers all unread books.
 - **Reading**: books in progress. The one you updated most recently sits at the top as a card with its percentage, progress bar, pages left and *Update progress* / *Finished* buttons; the others follow under *Also reading* as compact rows, each with a progress bar and an *Update* button. Updating a book moves it to the top. Tap *Update progress*, type the page you're on, and the app works out the rest; reaching the last page offers to mark the book read. Finishing a book, from anywhere in the app, throws confetti. Long-press any book for the same actions, or to put it back to unread or delete it.
 - **Favourites**: a ranked shelf of up to 10 books you'd recommend most, each with its rank, rating and a "why I recommend it" note. Below it, everything you've read year by year, with an optional goal per year ("27 of 30 books").
-- **Bookstores**: a map of bookstores you've saved, with *Find nearby* and *Search this area* (Apple Maps, no key needed), directions, and notes.
+- **Bookstores**: a full-screen map of bookstores you've saved, with swipeable cards, *Find nearby* and *Search this area* (Apple Maps, no key needed). A shop's page has photos (yours, plus Google Maps photos when a Places key is set), your ratings for *Good for reading* and *Coffee nearby*, directions and a note.
 - **Profile**: photo, name and counts; a **reading activity** calendar in the style of a GitHub contribution graph (one square per day, brighter for more pages read across all books, a year at a time; tap a square for that day); plus All books, Read, Lent out, Borrowed and Categories. Blurry covers are swapped for sharp ones automatically at launch, and ones with nothing better online are tried again about once a month. **All books** shows covers face-out in rows, split into Fiction and Non-fiction (or as a list).
 
 **Adding books**
@@ -26,7 +26,7 @@ A personal library app for iPhone, built with SwiftUI and SwiftData, with one cl
 - **Lending**: lend to a friend (from Contacts or by name) and mark it returned; history is kept.
 - **Borrowing**: mark a book as borrowed from someone and give it back later.
 
-**Backup & sync** (optional): sign up with email and password to back up your library to [Supabase](https://supabase.com) and keep it in sync across devices: books, covers, reading progress, lending history, your profile and saved bookstores. Yearly goals, a cover's "set by hand" marker and the cover a swap replaced stay on the device. Without an account, everything stays on the device.
+**Backup & sync** (optional): sign up with email and password to back up your library to [Supabase](https://supabase.com) and keep it in sync across devices: books, covers, reading progress, lending history, your profile and saved bookstores (with their ratings and your photos; Google's photos are only shown, never stored). Yearly goals, a cover's "set by hand" marker and the cover a swap replaced stay on the device. Without an account, everything stays on the device.
 
 ## How the code is laid out
 
@@ -55,10 +55,14 @@ The Xcode project is generated from `project.yml` and isn't checked in. `Config/
 
 Create a free API key in Google Cloud (enable the **Books API**), ideally restricted to your bundle ID and the Books API, and put it in `Config/Local.xcconfig` as `GOOGLE_BOOKS_KEY`. Without it, lookups use Open Library only.
 
+### Google Places (optional, for bookstore photos)
+
+Enable **Places API (New)** in the same Google Cloud project (it needs billing switched on; personal use stays within the free monthly allowance, and a daily quota cap keeps it that way), allow it on your key, and set `GOOGLE_PLACES_KEY = $(GOOGLE_BOOKS_KEY)` in `Config/Local.xcconfig`. Without it, a shop's page shows only your own photos.
+
 ### Backup & sync (optional)
 
 1. Create a free Supabase project.
-2. In its SQL Editor, run [`supabase/schema.sql`](supabase/schema.sql). It creates the `books`, `profiles` and `bookstores` tables, a private storage bucket, and row-level security so each account only sees its own data. It's safe to re-run, and **must be re-run after pulling an update that adds a column** (most recently `progress`, for daily reading progress): the app's sync fails against a table that lacks a column it sends.
+2. In its SQL Editor, run [`supabase/schema.sql`](supabase/schema.sql). It creates the `books`, `profiles` and `bookstores` tables, a private storage bucket, and row-level security so each account only sees its own data. It's safe to re-run, and **must be re-run after pulling an update that adds a column** (most recently the bookstore `reading_rating`, `coffee_rating`, `google_place_id` and `photo_ids` columns): the app's sync fails against a table that lacks a column it sends.
 3. Under Authentication → Sign In / Providers, turn off **Confirm email** (the confirmation link can't open the app).
 4. Put the project host and publishable key in `Config/Local.xcconfig` (see the example file).
 

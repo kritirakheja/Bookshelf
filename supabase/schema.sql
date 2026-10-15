@@ -99,6 +99,13 @@ create table if not exists public.bookstores (
   updated_at  timestamptz not null default now()
 );
 
+-- Your two ratings, the shop's Google listing (for its photos) and your own photos' ids
+-- (files at <user>/bookstores/<store>/<photo>.jpg in the storage bucket).
+alter table public.bookstores add column if not exists reading_rating int;
+alter table public.bookstores add column if not exists coffee_rating int;
+alter table public.bookstores add column if not exists google_place_id text;
+alter table public.bookstores add column if not exists photo_ids jsonb not null default '[]';
+
 create index if not exists bookstores_user_updated on public.bookstores (user_id, updated_at);
 
 drop trigger if exists bookstores_touch on public.bookstores;
