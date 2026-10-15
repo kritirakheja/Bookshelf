@@ -62,33 +62,14 @@ struct ReadingActivityCard: View {
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
     }
 
+    /// Only when nothing is logged yet: how the grid fills in.
     @ViewBuilder
     private func summary(_ activity: ReadingActivity) -> some View {
-        let pages = activity.totalPages(in: year)
-        if pages == 0 {
+        if activity.totalPages(in: year) == 0 {
             Text("Update a book's progress and the day lights up.")
                 .font(.inter(.footnote))
                 .foregroundStyle(.secondary)
-        } else {
-            let days = activity.daysRead(in: year)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("\(pages.formatted()) pages read in \(String(year))")
-                    .font(.inter(.subheadline, .semibold))
-                Text("You read on \(days) \(days == 1 ? "day" : "days") · " + streaks(activity))
-                    .font(.inter(.caption))
-                    .foregroundStyle(.secondary)
-            }
         }
-    }
-
-    private func streaks(_ activity: ReadingActivity) -> String {
-        func days(_ count: Int) -> String { "\(count) \(count == 1 ? "day" : "days")" }
-        var parts: [String] = []
-        if year == Calendar.current.component(.year, from: .now) {
-            parts.append("\(days(activity.currentStreak())) in a row now")
-        }
-        parts.append("best run \(days(activity.longestStreak(in: year)))")
-        return parts.joined(separator: " · ")
     }
 
     private func grid(_ activity: ReadingActivity) -> some View {
