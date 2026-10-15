@@ -395,10 +395,25 @@ final class WalkthroughTests: XCTestCase {
     func test7Bookstores() {
         launch(tab: "bookstores")
         snap("bookstores")
+        let card = find("Atta Galatta")
+        if card.exists {
+            card.swipeLeft()
+            snap("cards swiped")
+        } else {
+            note("MISSING: bookstore card")
+        }
         tap("Blossom Book House")
         snap("store detail")
-        app.swipeUp()
-        snap("store detail lower")
+        tap("Directions")
+        snap("directions menu")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)).tap()
         tap("Done")
+        let search = app.textFields["Search bookstores"]
+        if search.waitForExistence(timeout: 3) {
+            search.tap()
+            snap("typing a search")
+        } else {
+            note("MISSING: bookstore search box")
+        }
     }
 }

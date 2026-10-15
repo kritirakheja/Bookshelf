@@ -57,6 +57,8 @@ enum SampleData {
         blossom.address = "Church Street, Bengaluru"
         blossom.city = "Bengaluru"
         blossom.note = "Three floors of second-hand books"
+        blossom.phone = "+91 80 2532 0400"
+        blossom.website = "https://example.com"
         context.insert(blossom)
         let atta = Bookstore(name: "Atta Galatta", latitude: 12.9352, longitude: 77.6245)
         atta.address = "Koramangala, Bengaluru"

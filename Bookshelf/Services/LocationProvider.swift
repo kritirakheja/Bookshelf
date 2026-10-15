@@ -33,6 +33,13 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
         }
     }
 
+    /// Where you are, without asking: only if location is already allowed (for showing distances).
+    func currentIfAllowed() async {
+        let status = manager.authorizationStatus
+        guard status == .authorizedWhenInUse || status == .authorizedAlways else { return }
+        _ = await current()
+    }
+
     private func finish(_ location: CLLocation?) {
         if let location { self.location = location }
         let continuations = waiting
