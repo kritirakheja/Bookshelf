@@ -40,13 +40,33 @@ final class ExploreCategoriesTests: XCTestCase {
         let explore = ExploreCategories(books: books)
 
         XCTAssertEqual(titles(in: "category-Fantasy", of: explore), ["Short one", "Long one"], "Only unread books, newest first")
-        XCTAssertEqual(explore.categories.map(\.id), ["category-Fantasy", "category-Business"], "Fullest category first")
+        XCTAssertEqual(explore.categories.map(\.id), ["category-Fantasy", "category-Business"], "Most recently added to first")
     }
 
-    func testBooksWithoutACategoryComeLast() {
-        let explore = ExploreCategories(books: [book("Loose"), book("Sorted", category: "Fantasy")])
-        XCTAssertEqual(explore.categories.map(\.title), ["Fantasy", "Not sorted yet"])
-        XCTAssertEqual(titles(in: ExploreCategories.unsortedID, of: explore), ["Loose"])
+    func testTheCategoryYouJustAddedToComesFirst() {
+        let explore = ExploreCategories(books: [
+            book("Old 1", category: "Fantasy", addedDaysAgo: 5),
+            book("Old 2", category: "Fantasy", addedDaysAgo: 6),
+            book("Old 3", category: "Fantasy", addedDaysAgo: 7),
+            book("Just added", category: "Poetry"),
+        ])
+        XCTAssertEqual(explore.categories.map(\.title), ["Poetry", "Fantasy"], "A small but new category beats a full older one")
+    }
+
+    func testSameMomentFullerFirst() {
+        let books = [book("A", category: "Poetry"), book("B", category: "Fantasy"), book("C", category: "Fantasy")]
+        let added = Date.now
+        books.forEach { $0.dateAdded = added }
+        XCTAssertEqual(ExploreCategories(books: books).categories.map(\.title), ["Fantasy", "Poetry"])
+    }
+
+    func testBooksWithoutACategoryFollowTheSameOrder() {
+        let older = ExploreCategories(books: [book("Loose", addedDaysAgo: 2), book("Sorted", category: "Fantasy")])
+        XCTAssertEqual(older.categories.map(\.title), ["Fantasy", "Not sorted yet"])
+        XCTAssertEqual(titles(in: ExploreCategories.unsortedID, of: older), ["Loose"])
+
+        let justAdded = ExploreCategories(books: [book("New loose"), book("Sorted", category: "Fantasy", addedDaysAgo: 2)])
+        XCTAssertEqual(justAdded.categories.map(\.title), ["Not sorted yet", "Fantasy"])
     }
 
     func testNothingUnreadMeansNoCategories() {

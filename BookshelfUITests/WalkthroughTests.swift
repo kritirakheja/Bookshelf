@@ -285,6 +285,7 @@ final class WalkthroughTests: XCTestCase {
             search.typeText("Circe Madeline Miller")
             Thread.sleep(forTimeInterval: 5)
             snap("online results")
+            back() // closes the search box first
         }
         back()
         let isbn = app.textFields["e.g. 9780141439518"]
@@ -294,6 +295,16 @@ final class WalkthroughTests: XCTestCase {
             snap("isbn typed")
             tap("Find")
             snap("owned isbn")
+            tap("OK")
+            // A book not in the library: the lookup screen covers the whole sheet.
+            isbn.tap()
+            isbn.press(forDuration: 1.2)
+            if app.menuItems["Select All"].waitForExistence(timeout: 2) { app.menuItems["Select All"].tap() }
+            isbn.typeText("9780143039433")
+            app.buttons["Find"].tap()
+            snap("looking up")
+            if !app.buttons["Save"].waitForExistence(timeout: 30) { note("LOOKUP DIDN'T FINISH in 30s") }
+            snap("after lookup")
         } else {
             note("MISSING: ISBN field")
         }

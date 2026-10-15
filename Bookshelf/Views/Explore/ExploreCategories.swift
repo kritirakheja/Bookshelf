@@ -11,8 +11,9 @@ struct ExploreCategories {
 
     static let unsortedID = "unsorted"
 
-    /// One entry per category that has unread books, fullest first, then the unread
-    /// books with no category at all.
+    /// One entry per category that has unread books (plus "Not sorted yet" for books
+    /// with none), the one you added to most recently first, so a book you just added
+    /// is in the top card.
     let categories: [Category]
 
     init(books: [Book]) {
@@ -27,16 +28,21 @@ struct ExploreCategories {
                 byCategory[category.name, default: []].append(book)
             }
         }
-        let fullestFirst = byCategory.keys.sorted { a, b in
-            let countA = byCategory[a]!.count, countB = byCategory[b]!.count
-            return countA != countB ? countA > countB : a < b
-        }
-        var categories = fullestFirst.map { Category(id: "category-\($0)", title: $0, books: byCategory[$0]!) }
+        var categories = byCategory.keys.map { Category(id: "category-\($0)", title: $0, books: byCategory[$0]!) }
 
         let unsorted = unread.filter { $0.categories.isEmpty }
         if !unsorted.isEmpty {
             categories.append(Category(id: Self.unsortedID, title: "Not sorted yet", books: unsorted))
         }
-        self.categories = categories
+        self.categories = categories.sorted(by: Self.newestFirst)
+    }
+
+    /// Each category's books are newest first, so its first book says when it was
+    /// last added to.
+    private static func newestFirst(_ a: Category, _ b: Category) -> Bool {
+        let newestA = a.books[0].dateAdded, newestB = b.books[0].dateAdded
+        if newestA != newestB { return newestA > newestB }
+        if a.books.count != b.books.count { return a.books.count > b.books.count }
+        return a.title < b.title
     }
 }

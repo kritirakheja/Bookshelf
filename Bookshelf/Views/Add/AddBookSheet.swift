@@ -87,22 +87,7 @@ struct AddBookSheet: View {
                 }
             }
             .disabled(model.progress != nil)
-            .overlay {
-                if let progress = model.progress {
-                    VStack(spacing: 10) {
-                        Image(systemName: "books.vertical.fill")
-                            .font(.system(size: 36))
-                            .foregroundStyle(.tint)
-                            .symbolEffect(.variableColor.iterative.reversing)
-                        Text(progress)
-                            .font(.inter(.subheadline))
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(22)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-                    .transition(.scale(scale: 0.85).combined(with: .opacity))
-                }
-            }
+            .lookupProgress(model.progress)
             .fullScreenCover(isPresented: $scanning) {
                 BarcodeScanScreen { isbn in
                     scanning = false
@@ -153,5 +138,42 @@ struct AddBookSheet: View {
 
     private func lookUp(_ text: String) {
         Task { await model.lookUp(text, library: library) }
+    }
+}
+
+/// "Finding the book…" on a screen of its own: it covers the page (and its bar)
+/// completely, rather than floating over the choices underneath.
+struct LookupProgressView: View {
+    let text: String
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "books.vertical.fill")
+                .font(.system(size: 44))
+                .foregroundStyle(Theme.accent)
+                .symbolEffect(.variableColor.iterative.reversing)
+            Text(text)
+                .font(.inter(.body, .medium))
+                .foregroundStyle(.secondary)
+                .contentTransition(.opacity)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.background.ignoresSafeArea())
+        .accessibilityElement(children: .combine)
+    }
+}
+
+extension View {
+    /// While `text` is set, the page is replaced (to the eye) by `LookupProgressView`.
+    /// An overlay rather than a swap, so a page pushed from this one stays put.
+    func lookupProgress(_ text: String?) -> some View {
+        overlay {
+            if let text {
+                LookupProgressView(text: text)
+                    .transition(.opacity)
+            }
+        }
+        .toolbar(text == nil ? .visible : .hidden, for: .navigationBar)
+        .animation(.easeInOut(duration: 0.25), value: text)
     }
 }

@@ -3,7 +3,7 @@ import SwiftData
 
 /// Search Open Library and Google Books by title or author, and pick a result to add.
 struct BookSearchView: View {
-    /// Shows a "getting details" overlay while the picked book is fetched.
+    /// Shows a "Getting book details…" screen while the picked book is fetched.
     var isLoading = false
     let onPick: (BookCandidate) -> Void
 
@@ -40,13 +40,6 @@ struct BookSearchView: View {
         }
         .listStyle(.plain)
         .disabled(isLoading)
-        .overlay {
-            if isLoading {
-                ProgressView("Getting book details…")
-                    .padding()
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-            }
-        }
         .themedScreen()
         .navigationTitle("Search")
         .navigationBarTitleDisplayMode(.inline)
@@ -82,6 +75,7 @@ struct BookSearchView: View {
                 if !Task.isCancelled { failed = true }
             }
         }
+        .lookupProgress(isLoading ? "Getting book details…" : nil)
     }
 }
 
