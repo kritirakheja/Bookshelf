@@ -11,11 +11,14 @@ struct CoverRows<Menu: View>: View {
     var body: some View {
         GeometryReader { proxy in
             let perRow = Self.booksPerRow(width: proxy.size.width, coverWidth: coverWidth, spacing: spacing)
+            // Headings line up with the left edge of the covers below them.
+            let inset = (proxy.size.width - CGFloat(perRow) * coverWidth - CGFloat(perRow - 1) * spacing) / 2
             ScrollView {
                 LazyVStack(spacing: 20) {
                     ForEach(sections) { section in
                         SectionHeader(title: section.title, count: section.books.count)
-                            .padding(.top, section.id == sections.first?.id ? 0 : 20)
+                            .padding(.horizontal, max(inset, 16))
+                            .padding(.top, section.id == sections.first?.id ? 0 : 16)
                         ForEach(section.books.chunked(into: perRow), id: \.first!.persistentModelID) { row in
                             CoverRow(books: row, perRow: perRow, coverWidth: coverWidth, spacing: spacing, menu: menu)
                         }
@@ -40,18 +43,15 @@ struct SectionHeader: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(title.uppercased())
+            Text(title)
                 .font(.inter(.title3, .bold))
-                .tracking(2)
             Text("\(count)")
                 .font(.inter(.subheadline))
                 .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 8)
-        .background(Theme.card, in: Capsule())
-        .overlay(Capsule().stroke(Theme.rule, lineWidth: 1))
-        .shadow(color: .black.opacity(0.08), radius: 3, y: 2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
     }
 }
 

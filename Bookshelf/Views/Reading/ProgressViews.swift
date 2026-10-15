@@ -91,7 +91,8 @@ struct FeaturedReadingCard: View {
         guard let pageCount = book.pageCount, pageCount > 0 else {
             return book.currentPage.map { "Page \($0)" } ?? "No progress logged yet"
         }
-        var text = "Page \(book.currentPage ?? 0) of \(pageCount)"
+        guard let page = book.currentPage, page > 0 else { return "Not started · \(pageCount) pages" }
+        var text = "Page \(page) of \(pageCount)"
         if let left = book.pagesToGo, left > 0 { text += " · \(left) to go" }
         return text
     }

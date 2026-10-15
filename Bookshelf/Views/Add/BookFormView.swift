@@ -66,12 +66,9 @@ struct BookFormView: View {
                 }
 
                 Section("Details") {
-                    TextField("ISBN", text: $draft.isbn)
-                        .keyboardType(.numbersAndPunctuation)
-                    TextField("Year published", text: $draft.publishedYear)
-                        .keyboardType(.numberPad)
-                    TextField("Pages", text: $draft.pageCount)
-                        .keyboardType(.numberPad)
+                    labelledField("ISBN", text: $draft.isbn, prompt: "978…", keyboard: .numbersAndPunctuation)
+                    labelledField("Year published", text: $draft.publishedYear, prompt: "e.g. 1813", keyboard: .numberPad)
+                    labelledField("Pages", text: $draft.pageCount, prompt: "e.g. 320", keyboard: .numberPad)
                 }
 
                 Section("About this book") {
@@ -139,6 +136,18 @@ struct BookFormView: View {
                 Text("You already have “\(existing.title)” by \(existing.authorLine). Add this one as well? (For example, a different edition.)")
             }
             .keyboardDoneButton()
+        }
+    }
+
+    /// A form row that keeps its name visible once filled in ("Pages   480").
+    private func labelledField(_ label: String, text: Binding<String>, prompt: String, keyboard: UIKeyboardType) -> some View {
+        HStack {
+            Text(label)
+            Spacer(minLength: 12)
+            TextField(label, text: text, prompt: Text(prompt))
+                .keyboardType(keyboard)
+                .multilineTextAlignment(.trailing)
+                .foregroundStyle(.secondary)
         }
     }
 
