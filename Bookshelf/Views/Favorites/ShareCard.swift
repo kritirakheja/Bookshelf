@@ -24,7 +24,8 @@ struct FavouritesShareCard: View {
     let format: ShareFormat
 
     static let perShelf = 5
-    static let footer = "TOP 10 FAVOURITE BOOKS"
+    /// The app's name, small, where a repeat of the title used to be.
+    static let footer = "BOOKSHELF"
 
     private var isStory: Bool { format == .story }
     private var coverWidth: CGFloat { isStory ? 54 : 46 }
@@ -48,10 +49,13 @@ struct FavouritesShareCard: View {
                 shelf(Array(books.dropFirst(Self.perShelf).prefix(Self.perShelf)), startRank: Self.perShelf + 1)
             }
             Spacer(minLength: 12)
-            Text(Self.footer)
-                .font(.inter(size: isStory ? 10 : 8.5, .semibold))
-                .tracking(isStory ? 3 : 2.5)
-                .foregroundStyle(.white.opacity(0.65))
+            HStack(spacing: 10) {
+                Rectangle().fill(.white.opacity(0.5)).frame(width: 18, height: 1)
+                Text(Self.footer)
+                    .font(.inter(size: isStory ? 10 : 8.5, .semibold))
+                    .tracking(isStory ? 3 : 2.5)
+                    .foregroundStyle(.white.opacity(0.65))
+            }
         }
         .padding(padding)
         .frame(width: format.size.width, height: format.size.height, alignment: .topLeading)

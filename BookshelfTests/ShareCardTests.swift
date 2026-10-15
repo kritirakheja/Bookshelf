@@ -9,7 +9,7 @@ final class ShareCardTests: XCTestCase {
         XCTAssertEqual(FavouritesShareCard.owner("  Kriti Rakheja "), "KRITI’S")
         XCTAssertEqual(FavouritesShareCard.owner("James"), "JAMES’")
         XCTAssertEqual(FavouritesShareCard.owner(""), "MY")
-        XCTAssertEqual(FavouritesShareCard.footer, "TOP 10 FAVOURITE BOOKS", "Always Top 10, as she asked")
+        XCTAssertEqual(FavouritesShareCard.footer, "BOOKSHELF", "The app's name, not a repeat of the title")
     }
 
     func testTheImageIs1080PixelsWide() throws {
