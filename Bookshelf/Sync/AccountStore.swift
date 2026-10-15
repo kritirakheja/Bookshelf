@@ -116,7 +116,7 @@ final class AccountStore {
 
             try await syncProfile(engine: engine, userID: userID)
 
-            let stores = BookstoreSync(context: context, remote: SupabaseRemote(client: client))
+            let stores = BookstoreSync(context: context, remote: SupabaseRemote(client: client), userID: userID)
             let storesPulled = defaults.object(forKey: key("lastPulledStores", userID)) as? Date
             defaults.set(try await stores.sync(lastPulledAt: storesPulled), forKey: key("lastPulledStores", userID))
 

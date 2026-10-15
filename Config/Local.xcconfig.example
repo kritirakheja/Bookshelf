@@ -11,3 +11,7 @@ SUPABASE_KEY =
 
 // Optional: Google Books API key (Google Cloud → Books API), restricted to your bundle ID.
 GOOGLE_BOOKS_KEY =
+
+// Optional: Google Places API (New) key, for bookstore photos. Can be the same key
+// (enable "Places API (New)" for it), e.g. GOOGLE_PLACES_KEY = $(GOOGLE_BOOKS_KEY)
+GOOGLE_PLACES_KEY =

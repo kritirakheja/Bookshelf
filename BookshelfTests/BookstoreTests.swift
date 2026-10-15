@@ -1,13 +1,14 @@
 import XCTest
 import SwiftData
 import CoreLocation
+import UIKit
 @testable import Bookshelf
 
 @MainActor
 final class BookstoreTests: XCTestCase {
     private func container() throws -> ModelContainer {
         try ModelContainer(
-            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, ReadingEntry.self, Bookstore.self, DeletedBookstore.self,
+            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, ReadingEntry.self, Bookstore.self, DeletedBookstore.self, BookstorePhoto.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
     }
@@ -74,6 +75,129 @@ final class BookstoreTests: XCTestCase {
         _ = try await phoneSync.sync(lastPulledAt: phonePulled)
         _ = try await ipadSync.sync(lastPulledAt: ipadPulled)
         XCTAssertEqual(try ipad.mainContext.fetchCount(FetchDescriptor<Bookstore>()), 0)
+    }
+
+    func testRatingsAndPhotosSyncBetweenDevices() async throws {
+        let remote = FakeRemote()
+        let user = UUID()
+        let phone = try container(), ipad = try container()
+        let phoneSync = BookstoreSync(context: phone.mainContext, remote: remote, userID: user)
+        let ipadSync = BookstoreSync(context: ipad.mainContext, remote: remote, userID: user)
+
+        let store = BookstoreSearch.save(blossom, in: phone.mainContext, existing: [])
+        store.readingRating = 4
+        store.coffeeRating = 2
+        let photo = BookstorePhoto(data: Data("shelves".utf8))
+        phone.mainContext.insert(photo)
+        photo.store = store
+        var phonePulled = try await phoneSync.sync(lastPulledAt: nil)
+        XCTAssertEqual(remote.uploads, 1, "The new photo is uploaded")
+        XCTAssertEqual(photo.remotePath, BookstoreSync.photoPath(user: user, store: store.id, photo: photo.id))
+
+        var ipadPulled = try await ipadSync.sync(lastPulledAt: nil)
+        let copy = try XCTUnwrap(try ipad.mainContext.fetch(FetchDescriptor<Bookstore>()).first)
+        XCTAssertEqual(copy.readingRating, 4)
+        XCTAssertEqual(copy.coffeeRating, 2)
+        XCTAssertEqual(copy.sortedPhotos.map(\.data), [Data("shelves".utf8)])
+        XCTAssertEqual(copy.sortedPhotos.first?.id, photo.id)
+
+        // Nothing changed: syncing again uploads nothing.
+        phonePulled = try await phoneSync.sync(lastPulledAt: phonePulled)
+        XCTAssertEqual(remote.uploads, 1)
+
+        // Deleting the photo and clearing a rating on the iPad reaches the phone.
+        ipad.mainContext.delete(try XCTUnwrap(copy.sortedPhotos.first))
+        copy.coffeeRating = nil
+        ipadPulled = try await ipadSync.sync(lastPulledAt: ipadPulled)
+        _ = try await phoneSync.sync(lastPulledAt: phonePulled)
+        XCTAssertNil(store.coffeeRating)
+        XCTAssertTrue(store.sortedPhotos.isEmpty)
+    }
+
+    func testAPhotoWaitingToUploadCountsAsAChange() throws {
+        let container = try container()   // kept alive for the whole test
+        let context = container.mainContext
+        let store = BookstoreSearch.save(blossom, in: context, existing: [])
+        store.syncedFingerprint = BookstoreSync.fingerprint(of: store)
+        let sync = BookstoreSync(context: context, remote: FakeRemote())
+        XCTAssertFalse(sync.hasLocalChanges(store))
+
+        let photo = BookstorePhoto(data: Data([1]))
+        context.insert(photo)
+        photo.store = store
+        XCTAssertTrue(sync.hasLocalChanges(store))
+        XCTAssertTrue(BookstoreRecord(store: store).photoIDs.isEmpty, "Not listed until it's uploaded")
+
+        store.syncedFingerprint = BookstoreSync.fingerprint(of: store)
+        store.readingRating = 5
+        XCTAssertTrue(sync.hasLocalChanges(store), "A rating is a change too")
+    }
+
+    func testOlderRowsWithoutTheNewColumnsStillDecode() throws {
+        let json = """
+        {"id":"\(UUID().uuidString)","name":"Atta Galatta","address":"","city":"","latitude":1,"longitude":2,
+         "note":"","date_saved":"2026-10-01T10:00:00Z","deleted":false}
+        """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let record = try decoder.decode(BookstoreRecord.self, from: Data(json.utf8))
+        XCTAssertNil(record.readingRating)
+        XCTAssertEqual(record.photoIDs, [])
+    }
+
+    // MARK: Google photos
+
+    func testGooglePlaceMustBeTheSameShopNearby() throws {
+        let json = """
+        {"places":[
+          {"id":"cafe","displayName":{"text":"Matteo Coffea"},"location":{"latitude":12.97561,"longitude":77.60502}},
+          {"id":"far","displayName":{"text":"Blossom Book House"},"location":{"latitude":12.99,"longitude":77.62}},
+          {"id":"right","displayName":{"text":"Blossom Book House"},"location":{"latitude":12.97565,"longitude":77.60508}}
+        ]}
+        """
+        let places = try GooglePlacesClient.parsePlaces(Data(json.utf8))
+        let here = CLLocationCoordinate2D(latitude: 12.9756, longitude: 77.6050)
+        XCTAssertEqual(GooglePlacesClient.match(places, name: "Blossom Book House", near: here)?.id, "right",
+                       "Not the café next door, not a branch across town")
+        XCTAssertNil(GooglePlacesClient.match(Array(places.prefix(2)), name: "Blossom Book House", near: here))
+    }
+
+    func testGooglePhotoCreditsAreRead() throws {
+        let json = """
+        {"photos":[{"name":"places/x/photos/1","authorAttributions":[{"displayName":"Priya S."}]},{"name":"places/x/photos/2"}]}
+        """
+        let refs = try GooglePlacesClient.parsePhotos(Data(json.utf8))
+        XCTAssertEqual(refs.map(\.name), ["places/x/photos/1", "places/x/photos/2"])
+        XCTAssertEqual(refs.first?.authorAttributions?.first?.displayName, "Priya S.")
+    }
+
+    func testWithoutAFinderThereAreNoGooglePhotos() async throws {
+        let container = try container()
+        let store = BookstoreSearch.save(blossom, in: container.mainContext, existing: [])
+        let photos = await PlacePhotoCache.photos(for: store, finder: nil)
+        XCTAssertTrue(photos.isEmpty)
+        XCTAssertNil(store.googlePlaceID)
+    }
+
+    func testThePlaceIsLookedUpOnceAndRemembered() async throws {
+        final class Finder: PlacePhotoFinding {
+            var searches = 0
+            func placeID(name: String, address: String, near coordinate: CLLocationCoordinate2D) async -> String? {
+                searches += 1
+                return "place-1"
+            }
+            func photos(placeID: String, limit: Int) async -> [PlacePhoto] {
+                [PlacePhoto(image: UIImage(), credit: "Priya S.")]
+            }
+        }
+        let finder = Finder()
+        let container = try container()
+        let store = BookstoreSearch.save(blossom, in: container.mainContext, existing: [])
+        let photos = await PlacePhotoCache.photos(for: store, finder: finder)
+        XCTAssertEqual(photos.count, 1)
+        XCTAssertEqual(store.googlePlaceID, "place-1")
+        _ = await PlacePhotoCache.photos(for: store, finder: finder)
+        XCTAssertEqual(finder.searches, 1)
     }
 
     /// Real Apple Maps search. Run with TEST_RUNNER_LIVE_TESTS=1.

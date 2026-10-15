@@ -86,11 +86,15 @@ struct BookstoreCard: View {
                         .lineLimit(2)
                 }
                 Spacer(minLength: 0)
-                HStack {
+                HStack(spacing: 12) {
                     if let distance {
                         Label(distance, systemImage: "figure.walk")
                             .font(.inter(.caption))
                             .foregroundStyle(.secondary)
+                    }
+                    if case .saved(let store) = place {
+                        ratingMark(store.readingRating, systemImage: "book.fill", label: "Good for reading")
+                        ratingMark(store.coffeeRating, systemImage: "cup.and.saucer.fill", label: "Coffee nearby")
                     }
                     Spacer()
                     if place.isSaved {
@@ -119,6 +123,28 @@ struct BookstoreCard: View {
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 18))
         .shadow(color: .black.opacity(0.12), radius: 10, y: 4)
         .contentShape(RoundedRectangle(cornerRadius: 18))
+    }
+
+    /// One of your ratings, small: an icon and its number of stars.
+    @ViewBuilder
+    private func ratingMark(_ rating: Int?, systemImage: String, label: String) -> some View {
+        if let rating {
+            Label("\(rating)", systemImage: systemImage)
+                .font(.inter(.caption, .semibold))
+                .foregroundStyle(Theme.accent)
+                .labelStyle(TightLabel())
+                .accessibilityLabel("\(label): \(rating) of 5")
+        }
+    }
+}
+
+/// Icon and text closer together than a standard label.
+private struct TightLabel: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 3) {
+            configuration.icon
+            configuration.title
+        }
     }
 }
 

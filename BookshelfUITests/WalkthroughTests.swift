@@ -404,6 +404,19 @@ final class WalkthroughTests: XCTestCase {
         }
         tap("Blossom Book House")
         snap("store detail")
+        app.swipeUp()
+        snap("store ratings")
+        let coffee = app.buttons.matching(NSPredicate(format: "label == '5 stars'"))
+        if coffee.count >= 2 {
+            coffee.element(boundBy: 1).tap()
+            snap("coffee rated 5")
+        } else {
+            note("MISSING: rating stars on the store page")
+        }
+        app.swipeDown()
+        tap("Your photo")
+        snap("photo viewer")
+        tap("Done")
         tap("Directions")
         snap("directions menu")
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)).tap()

@@ -87,7 +87,7 @@ final class Device {
 
     init(remote: SyncRemote, userID: UUID) throws {
         container = try ModelContainer(
-            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, ReadingEntry.self, Bookstore.self, DeletedBookstore.self,
+            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, ReadingEntry.self, Bookstore.self, DeletedBookstore.self, BookstorePhoto.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         engine = SyncEngine(context: container.mainContext, remote: remote, userID: userID)

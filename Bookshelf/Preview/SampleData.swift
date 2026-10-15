@@ -59,6 +59,8 @@ enum SampleData {
         blossom.note = "Three floors of second-hand books"
         blossom.phone = "+91 80 2532 0400"
         blossom.website = "https://example.com"
+        blossom.readingRating = 4
+        blossom.coffeeRating = 3
         context.insert(blossom)
         let atta = Bookstore(name: "Atta Galatta", latitude: 12.9352, longitude: 77.6245)
         atta.address = "Koramangala, Bengaluru"
@@ -75,7 +77,7 @@ enum SampleData {
     @MainActor
     static func walkthroughContainer() -> ModelContainer {
         let container = try! ModelContainer(
-            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, ReadingEntry.self, Bookstore.self, DeletedBookstore.self,
+            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, ReadingEntry.self, Bookstore.self, DeletedBookstore.self, BookstorePhoto.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         let context = container.mainContext
@@ -123,7 +125,39 @@ enum SampleData {
         log("Pride and Prejudice", startingDaysAgo: 150, everyDays: 3, pages: [20, 35, 10, 60, 25, 15, 45, 30, 12, 70, 22, 18, 40, 28, 33])
         log("The Hobbit", startingDaysAgo: 400, everyDays: 2, pages: [15, 30, 22, 48, 10, 36, 28, 50, 19, 25])
         log("Circe", startingDaysAgo: 45, everyDays: 1, pages: [30, 42, 18, 55, 26, 61, 12])
+        // A photo of a saved bookstore (a drawn stand-in: shelves on a warm wall).
+        if let blossom = try? context.fetch(FetchDescriptor<Bookstore>()).first(where: { $0.name == "Blossom Book House" }),
+           let shelves = drawnShelves() {
+            let photo = BookstorePhoto(data: shelves)
+            context.insert(photo)
+            photo.store = blossom
+        }
         return container
+    }
+
+    private static func drawnShelves() -> Data? {
+        let size = CGSize(width: 800, height: 600)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let spines: [UIColor] = [.systemTeal, .systemRed, .systemIndigo, .systemOrange, .systemGreen, .brown, .systemPurple]
+        return UIGraphicsImageRenderer(size: size, format: format).image { context in
+            UIColor(red: 0.93, green: 0.89, blue: 0.82, alpha: 1).setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+            for shelf in 0..<3 {
+                let y = CGFloat(60 + shelf * 180)
+                var x: CGFloat = 40
+                var index = shelf * 3
+                while x < 760 {
+                    let width = CGFloat(28 + (index * 13) % 22)
+                    spines[index % spines.count].setFill()
+                    context.fill(CGRect(x: x, y: y + CGFloat((index * 7) % 30), width: width, height: 140 - CGFloat((index * 7) % 30)))
+                    x += width + 4
+                    index += 1
+                }
+                UIColor(white: 0.35, alpha: 1).setFill()
+                context.fill(CGRect(x: 20, y: y + 140, width: 760, height: 12))
+            }
+        }.jpegData(compressionQuality: 0.85)
     }
 
     private static func drawnCover(_ title: String, _ colour: UIColor) -> Data? {
@@ -153,7 +187,7 @@ enum SampleData {
     @MainActor
     static let previewContainer: ModelContainer = {
         let container = try! ModelContainer(
-            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, ReadingEntry.self, Bookstore.self, DeletedBookstore.self,
+            for: Book.self, BookCategory.self, DeletedBook.self, Loan.self, ReadingEntry.self, Bookstore.self, DeletedBookstore.self, BookstorePhoto.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         insert(into: container.mainContext)
