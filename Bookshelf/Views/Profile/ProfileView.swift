@@ -52,8 +52,6 @@ struct ProfileView: View {
                     }
                 }
 
-                coversSection(blurry: books.filter(CoverUpgrade.isBlurry).count)
-
                 AccountSection()
             }
             .themedScreen()
@@ -133,36 +131,6 @@ struct ProfileView: View {
                 .submitLabel(.done)
         }
         .frame(maxWidth: .infinity)
-    }
-
-    // MARK: Covers
-
-    /// Progress while blurry covers are being replaced with sharp ones, or a button
-    /// to try again for the ones still blurry. Hidden when every cover is sharp.
-    @ViewBuilder
-    private func coversSection(blurry: Int) -> some View {
-        let upgrade = CoverUpgrade.shared
-        if upgrade.isRunning {
-            Section {
-                HStack(spacing: 10) {
-                    ProgressView()
-                    Text("Sharpening covers… \(upgrade.done) of \(upgrade.total)")
-                        .foregroundStyle(.secondary)
-                }
-            } footer: {
-                Text("Keep the app open. Blurry covers are swapped for sharp ones of the same book.")
-            }
-        } else if blurry > 0 {
-            Section {
-                Button {
-                    Task { await upgrade.run(in: context, retryingChecked: true) }
-                } label: {
-                    LabeledContent { Text("\(blurry)") } label: { Label("Sharpen covers", systemImage: "sparkles") }
-                }
-            } footer: {
-                Text("Looks online again for sharp covers. Some books have none; you can photograph those from a book's Edit screen.")
-            }
-        }
     }
 
     // MARK: Stats

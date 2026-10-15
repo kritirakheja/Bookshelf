@@ -147,19 +147,22 @@ final class CoverUpgradePassTests: XCTestCase {
         XCTAssertNil(bare.coverImage)
     }
 
-    func testABookWithNothingFoundIsNotTriedAgainUnlessAsked() async {
+    func testABookWithNothingFoundIsTriedAgainAfterAMonth() async {
         let small = cover(width: 300)
         let blurry = book("Blurry", cover: small)
         let upgrade = CoverUpgrade()
-        await upgrade.run(in: container.mainContext, finder: FakeFinder(sharp: nil), defaults: defaults)
+        let start = Date(timeIntervalSince1970: 1_800_000_000)
+        await upgrade.run(in: container.mainContext, finder: FakeFinder(sharp: nil), defaults: defaults, now: start)
         XCTAssertEqual(blurry.coverImage, small)
 
         let sharp = cover(width: 900)
-        await upgrade.run(in: container.mainContext, finder: FakeFinder(sharp: sharp), defaults: defaults)
-        XCTAssertEqual(blurry.coverImage, small, "Already checked on this device")
+        await upgrade.run(in: container.mainContext, finder: FakeFinder(sharp: sharp), defaults: defaults,
+                          now: start.addingTimeInterval(29 * 86_400))
+        XCTAssertEqual(blurry.coverImage, small, "Checked less than a month ago: left alone")
 
-        await upgrade.run(in: container.mainContext, finder: FakeFinder(sharp: sharp), defaults: defaults, retryingChecked: true)
-        XCTAssertEqual(blurry.coverImage, sharp, "Sharpen covers tries everything again")
+        await upgrade.run(in: container.mainContext, finder: FakeFinder(sharp: sharp), defaults: defaults,
+                          now: start.addingTimeInterval(31 * 86_400))
+        XCTAssertEqual(blurry.coverImage, sharp, "A month on, every blurry cover is tried again")
         XCTAssertFalse(upgrade.isRunning)
     }
 }

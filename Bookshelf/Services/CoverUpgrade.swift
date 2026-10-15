@@ -12,7 +12,8 @@ extension BookLookup: SharperCoverFinding {}
 /// Replaces small, blurry covers with sharp ones, one book at a time: the same
 /// artwork when a sharp copy exists, otherwise another edition of the same book.
 /// The cover it replaces is kept on the book, and covers you set yourself are left
-/// alone. Each book is tried once per device unless you ask again.
+/// alone. Each book is tried once, then again about once a month (new editions and
+/// sharper scans turn up online over time).
 @MainActor
 @Observable
 final class CoverUpgrade {
@@ -21,6 +22,9 @@ final class CoverUpgrade {
     /// Covers at least this wide are already sharp enough.
     nonisolated static let sharpEnough = 700
     nonisolated static let checkedKey = "coverUpgrade.checked.v3"   // v3: other editions allowed
+    /// When books that found nothing were last tried again.
+    nonisolated static let lastRetryKey = "coverUpgrade.lastRetry"
+    nonisolated static let retryEvery: TimeInterval = 30 * 86_400
 
     private(set) var isRunning = false
     /// Progress through this run's books.
@@ -33,11 +37,22 @@ final class CoverUpgrade {
         return width < sharpEnough
     }
 
-    /// - Parameter retryingChecked: also retry books that found nothing before.
+    /// Runs at every launch: tries books not tried yet, and once a month all the
+    /// blurry ones again.
     func run(in context: ModelContext, finder: any SharperCoverFinding = BookLookup(),
-             defaults: UserDefaults = .standard, retryingChecked: Bool = false) async {
+             defaults: UserDefaults = .standard, now: Date = .now) async {
         guard !isRunning else { return }
-        var checked = retryingChecked ? [] : Set(defaults.stringArray(forKey: Self.checkedKey) ?? [])
+        var checked = Set(defaults.stringArray(forKey: Self.checkedKey) ?? [])
+        if let last = defaults.object(forKey: Self.lastRetryKey) as? Date {
+            if now.timeIntervalSince(last) >= Self.retryEvery {
+                checked = []
+                defaults.set(Array(checked), forKey: Self.checkedKey)
+                defaults.set(now, forKey: Self.lastRetryKey)
+            }
+        } else {
+            // The month starts now; this run already tries everything not yet tried.
+            defaults.set(now, forKey: Self.lastRetryKey)
+        }
         let books = ((try? context.fetch(FetchDescriptor<Book>())) ?? [])
             .filter { Self.isBlurry($0) && !checked.contains(Self.key(for: $0)) }
         guard !books.isEmpty else { return }
