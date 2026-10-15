@@ -12,10 +12,6 @@ struct AccountSection: View {
                 if let email = account.email {
                     LabeledContent("Account", value: email)
                     statusRow
-                    Button("Sync now", systemImage: "arrow.triangle.2.circlepath") {
-                        Task { await account.sync() }
-                    }
-                    .disabled(account.status == .syncing)
                     Button("Log out", role: .destructive) { confirmingLogOut = true }
                 } else {
                     Button("Sign up or log in", systemImage: "person.badge.key") { showingAuth = true }
@@ -51,9 +47,14 @@ struct AccountSection: View {
             }
             .foregroundStyle(.secondary)
         case .failed(let message):
-            Label(message, systemImage: "exclamationmark.triangle")
-                .foregroundStyle(.red)
-                .font(.inter(.footnote))
+            // Syncing happens by itself when the app opens and closes; only a failure needs a hand.
+            VStack(alignment: .leading, spacing: 8) {
+                Label(message, systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.red)
+                    .font(.inter(.footnote))
+                Button("Try again") { Task { await account.sync() } }
+                    .font(.inter(.subheadline, .semibold))
+            }
         case .idle:
             LabeledContent("Last synced") {
                 if let lastSynced = account.lastSynced {
