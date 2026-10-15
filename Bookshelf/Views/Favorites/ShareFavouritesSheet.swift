@@ -21,6 +21,7 @@ struct ShareFavouritesSheet: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 40)
+                .zIndex(1)
 
                 // The card itself, scaled to fit, exactly as it will be sent.
                 GeometryReader { proxy in
@@ -31,6 +32,9 @@ struct ShareFavouritesSheet: View {
                         .scaleEffect(fit)
                         .frame(width: size.width * fit, height: size.height * fit)
                         .shadow(color: .black.opacity(0.18), radius: 18, y: 8)
+                        // Only a picture: its blurred background reaches past its edges
+                        // and would otherwise take the taps meant for Story / Square.
+                        .allowsHitTesting(false)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 .padding(.horizontal, 24)
