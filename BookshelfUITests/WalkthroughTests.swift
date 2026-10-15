@@ -321,6 +321,12 @@ final class WalkthroughTests: XCTestCase {
             tap("Done")
             break
         }
+        if tap("Share favourites") {
+            snap("share story")
+            tap("Square")
+            snap("share square")
+            tap("Close")
+        }
         let year = Calendar.current.component(.year, from: Date())
         if tap(String(year)) {
             snap("year page")

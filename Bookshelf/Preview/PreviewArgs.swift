@@ -17,5 +17,7 @@ enum PreviewArgs {
     static var uiTesting: Bool { UserDefaults.standard.bool(forKey: "uiTesting") }
     /// `-previewScanFound YES`: have the scanner "catch" a barcode after a moment.
     static var scanFound: Bool { UserDefaults.standard.bool(forKey: "previewScanFound") }
+    /// `-previewShareCard YES`: write the favourites share images (Story, Square) to tmp/.
+    static var shareCard: Bool { UserDefaults.standard.bool(forKey: "previewShareCard") }
 }
 #endif

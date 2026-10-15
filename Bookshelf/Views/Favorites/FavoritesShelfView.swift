@@ -9,6 +9,8 @@ struct FavoritesShelfView: View {
     @Query private var books: [Book]
     @State private var editing = false
     @State private var showingAdd = false
+    @State private var sharing = false
+    @AppStorage("profileName") private var profileName = ""
 
     var body: some View {
         let reading = ReadingYears(books: books)
@@ -38,6 +40,7 @@ struct FavoritesShelfView: View {
                     .fontWeight(.semibold)
                 } else {
                     if !shelf.isEmpty {
+                        Button("Share favourites", systemImage: "square.and.arrow.up") { sharing = true }
                         Button("Edit") {
                             withAnimation { editing = true }
                         }
@@ -48,6 +51,19 @@ struct FavoritesShelfView: View {
             .sheet(isPresented: $showingAdd) {
                 AddBookSheet()
             }
+            .sheet(isPresented: $sharing) {
+                ShareFavouritesSheet(books: shelf, name: profileName)
+            }
+            #if DEBUG
+            .task {
+                // `-previewShareCard YES`: write both share images to tmp/ for checking.
+                guard PreviewArgs.shareCard, !shelf.isEmpty else { return }
+                for format in ShareFormat.allCases {
+                    let url = FileManager.default.temporaryDirectory.appendingPathComponent("share-\(format.rawValue).png")
+                    try? ShareFavouritesSheet.render(books: shelf, name: profileName, format: format)?.pngData()?.write(to: url)
+                }
+            }
+            #endif
         }
     }
 
